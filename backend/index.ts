@@ -1,6 +1,6 @@
 import cors from "cors";
 import express from "express";
-import morgan from "morgan";
+//import morgan from "morgan";
 import indexRoutes from "./src/routes/index.routes.js";
 import { PORT, HOST } from "./src/config/configEnv.js";
 import { connectDB } from "./src/config/configDb.js";
@@ -18,7 +18,12 @@ async function setupServer(): Promise<void> {
   );
 
   app.use(express.json());
-  app.use(morgan("dev"));
+
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+  });
+  //app.use(morgan("dev"));
   app.use("/api", indexRoutes);
   app.listen(Number(PORT), () => {
     console.log(`Servidor corriendo en ${HOST}:${PORT}`);
