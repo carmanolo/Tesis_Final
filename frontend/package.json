@@ -1,8 +1,8 @@
 {
-  "name": "examen-integrador-ISW",
+  "name": "proyecto-tesis",
   "author": "Carlos Domínguez",
   "version": "0.0.1",
-  "description": "Frontend para el curso de MDD 2025-1",
+  "description": "frontend para centro de estudiantes",
   "type": "module",
   "scripts": {
     "dev": "vite",
