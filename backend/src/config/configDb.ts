@@ -2,6 +2,7 @@
 import { DataSource } from "typeorm";
 import { DATABASE, DB_USERNAME, PASSWORD, DB_HOST, DB_PORT } from "./configEnv.js";
 import UserEntity from "../entity/user.entity.js";
+import CarreraEntity from "../entity/carrera.entity.js";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -10,8 +11,8 @@ export const AppDataSource = new DataSource({
     username: DB_USERNAME,
     password: PASSWORD,
     database: DATABASE,
-    entities: [UserEntity],
-    synchronize: true,
+    entities: [UserEntity, CarreraEntity],
+    synchronize: false,
     logging: false,
 });
 
