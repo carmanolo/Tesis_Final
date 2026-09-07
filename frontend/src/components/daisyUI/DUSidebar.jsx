@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { logout } from "@services/auth.service.js";
 import { FaHome, FaUsers, FaSignOutAlt } from "react-icons/fa";
-import { CgProfile } from "react-icons/cg";
+import { CgProfile, CgWorkAlt } from "react-icons/cg";
 import { DUSidebarItem } from "./DUSidebarItem";
 
 export const DUSidebar = ({PageContent, SidebarTitle}) => {
@@ -45,6 +45,7 @@ export const DUSidebar = ({PageContent, SidebarTitle}) => {
                 <ul className="menu w-full grow">
                     {DUSidebarItem((FaHome), "Inicio", "/home")}
                     {DUSidebarItem((FaUsers), "Usuarios", "/users")}
+                    {DUSidebarItem((CgWorkAlt), "Carreras", "/carreras")}
                     {DUSidebarItem((CgProfile), "Perfil", "/profile")}
                     {DUSidebarItem((FaSignOutAlt), "Cerrar Sesión", "/login", logoutSubmit)}
                 </ul>
