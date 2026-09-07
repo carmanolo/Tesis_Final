@@ -1,18 +1,20 @@
 // import "@styles/Clase.css";
 import useGetCarrera from "@hooks/carreras/useConseguirCarrera.jsx";
 import useCreateCarrera from "@hooks/carreras/useCrearCarrera.jsx"
-import useEditCarrera from "@hooks/carreras/useActualizarCarrera.jsx";
+import { useEditCarrera } from "@hooks/carreras/useActualizarCarrera.jsx";
 import useDeleteCarreras from "@hooks/carreras/useEliminarCarrera.jsx"
 import { useEffect, useState } from "react";
 
 import { DUCarreraTable } from "../components/daisyUI/DUCarreraTable.jsx";
 import { getUserRole } from "../services/user.service.js";
-import { DUPageBrowser } from "../components/daisyui/DUPageBrowser.jsx";
+import { DUPageBrowser } from "../components/daisyUI/DUPageBrowser.jsx";
 import { PERMISOS } from "../constants/user.constants.jsx";
 
 const Clase = () => {
 
     const userRole = getUserRole();
+    console.log("userRole:", userRole);
+    console.log("PERMISOS:", PERMISOS);
     const canCrudCarreras = PERMISOS.includes(userRole);
 
     const [carreraData, setCarreraData] = useState([]);
@@ -20,8 +22,8 @@ const Clase = () => {
     const [Carreras, fetchCarrera] = useGetCarrera(carreraData, setCarreraData);
 
     const { handleCreateCarrera } = useCreateCarrera(fetchCarrera);
-    const { handleEditCarrera } = useEditCarrera(fetchCarrera);
-    const { handleDeleteCarrera } = useDeleteCarreras(fetchCarrera);
+    const { handleEditCarreras } = useEditCarrera(fetchCarrera);
+    const { handleDeleteCarreras } = useDeleteCarreras(fetchCarrera);
 
     const [buscar, setBuscar] = useState("");
 
@@ -57,8 +59,8 @@ const Clase = () => {
             </div>
             <div className="Clase2-page">
                 <DUCarreraTable data={currentPageContent || []}  
-                    handleEditClase={handleEditCarrera} 
-                    handleDeleteClase={handleDeleteCarrera} 
+                    handleEditCarreras={handleEditCarreras} 
+                    handleDeleteCarreras={handleDeleteCarreras} 
                     canCrudCarreras={canCrudCarreras} />
             </div>
             <DUPageBrowser setCurrentPageNumber={setCurrentPage} currentPageNumber={currentPage} pageAmount={pageAmount}></DUPageBrowser>

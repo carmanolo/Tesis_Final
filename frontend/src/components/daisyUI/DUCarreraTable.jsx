@@ -4,7 +4,7 @@ import { FaUserAlt } from "react-icons/fa";
 import { AiFillStar } from "react-icons/ai";
 
 
-const mostrarClases = (data, handleEditCarrera, handleDeleteCarrera, canCrudCarreras) => {
+const mostrarClases = (data, handleEditCarreras, handleDeleteCarreras, canCrudCarreras) => {
   if (Array.isArray(data) && data.length > 0) {
            
       return data.map((Carrera) => {
@@ -23,8 +23,8 @@ const mostrarClases = (data, handleEditCarrera, handleDeleteCarrera, canCrudCarr
 
                       {canCrudCarreras && (
                       <td>
-                      <button className="btn btn-primary m-1" onClick={() => {handleEditCarrera(Carrera.id_carrera, Carrera)}}><MdSettings></MdSettings></button>
-                      <button className="btn btn-secondary m-1" onClick={() => {handleDeleteCarrera(Carrera.id_carrera, Carrera)}}><MdDeleteForever></MdDeleteForever></button>
+                      <button className="btn btn-primary m-1" onClick={() => {handleEditCarreras(Carrera.id_carrera, Carrera)}}><MdSettings></MdSettings></button>
+                      <button className="btn btn-secondary m-1" onClick={() => {handleDeleteCarreras(Carrera.id_carrera)}}><MdDeleteForever></MdDeleteForever></button>
                       
                       </td>
                       )}
@@ -40,7 +40,7 @@ const mostrarClases = (data, handleEditCarrera, handleDeleteCarrera, canCrudCarr
 }
 
 
-export const DUCarreraTable = ({data, handleEditCarrera, handleDeleteCarrera, canCrudCarreras}) => {
+export const DUCarreraTable = ({data, handleEditCarreras, handleDeleteCarreras, canCrudCarreras}) => {
 
     return (
         <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 m-3 max-h-full">
@@ -55,8 +55,8 @@ export const DUCarreraTable = ({data, handleEditCarrera, handleDeleteCarrera, ca
             </thead>
             <tbody>
               {mostrarClases(data, 
-                handleEditCarrera, 
-                handleDeleteCarrera,
+                handleEditCarreras, 
+                handleDeleteCarreras,
                 canCrudCarreras)}
             </tbody>
         </table>
