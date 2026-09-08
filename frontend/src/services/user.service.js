@@ -1,8 +1,8 @@
-import axios from './root.service.js';
+import axios from "./root.service.js";
 
 export async function getUsersService() {
     try {
-        const response = await axios.get('/users');
+        const response = await axios.get("/users");
         // console.log(response);
         return response.data.data;
     } catch (error) {
@@ -12,7 +12,7 @@ export async function getUsersService() {
 
 export async function createUserService(userData) {
     try {
-        const response = await axios.post('/users/crear/', userData);
+        const response = await axios.post("/users/crear/", userData);
         return Object.assign(response.data, {status: response.status});
     } catch (error) {
         console.error("Error al crear usuarios",error);
@@ -41,13 +41,24 @@ export async function deleteUserSer(userId) {
 
 export async function getProfile() { 
     try {
-        const response = await axios.get('/users/profile');
+        const response = await axios.get("/users/profile");
         return response.data;
     } catch (error) {
         console.error("Error al obtener perfil:", error);
         throw error;
     }
 }
+
+export const getUserRole = () => {
+   try {
+        const user = JSON.parse(sessionStorage.getItem("usuario"));
+        const role = String(user?.role || "no existe").toLowerCase();
+        return role;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 
 export async function getStats() {
     try {

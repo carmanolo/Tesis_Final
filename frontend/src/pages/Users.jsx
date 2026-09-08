@@ -20,7 +20,7 @@ const Users = () => {
 
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
-    if(typeof(fetchUsers) === 'function'){
+    if(typeof(fetchUsers) === "function"){
       fetchUsers();
     }
   }, []);

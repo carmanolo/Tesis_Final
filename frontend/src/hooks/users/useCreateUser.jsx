@@ -26,9 +26,9 @@ async function createUser() {
         confirmButtonText:"Crear",
         cancelButtonText:"Cancelar",
         preConfirm: () => {
-            const username = String(gebi('swal2-input1')?.value);
-            const email = gebi('swal2-input2')?.value;
-            const password = String(gebi('swal2-input3')?.value);
+            const username = String(gebi("swal2-input1")?.value);
+            const email = gebi("swal2-input2")?.value;
+            const password = String(gebi("swal2-input3")?.value);
             const role =DEFAULT_ROL
 
             return {username, email, password, role}

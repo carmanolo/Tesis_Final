@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { getUsersService } from '../../services/user.service.js';
+import { useState } from "react";
+import { getUsersService } from "../../services/user.service.js";
 
 export const useGetUsers = () => { 
     const [users, setUsers] = useState([]);
