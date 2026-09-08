@@ -52,8 +52,8 @@ export async function getProfile() {
 export const getUserRole = () => {
    try {
         const user = JSON.parse(sessionStorage.getItem("usuario"));
-        const rol = String(user?.rol || "no existe").toLowerCase();
-        return rol;
+        const role = String(user?.role || "no existe").toLowerCase();
+        return role;
     } catch (error) {
         console.error(error);
     }

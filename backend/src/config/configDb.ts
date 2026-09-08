@@ -12,7 +12,7 @@ export const AppDataSource = new DataSource({
     password: PASSWORD,
     database: DATABASE,
     entities: [UserEntity, CarreraEntity],
-    synchronize: false,
+    synchronize: true,
     logging: false,
 });
 
