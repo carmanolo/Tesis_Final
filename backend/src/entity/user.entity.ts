@@ -7,6 +7,8 @@ export interface IUser {
     email: string;
     password?: string; // Opcional por seguridad al retornar datos
     role: string;
+    carreraId: number;
+    carreras?: any;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -38,6 +40,10 @@ export const UserEntity = new EntitySchema<IUser>({
             type: String,
             default: "user",
         },
+        carreraId: {
+            type: "int",
+            nullable: true,
+        },
         createdAt: {
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
@@ -46,8 +52,21 @@ export const UserEntity = new EntitySchema<IUser>({
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
             onUpdate: "CURRENT_TIMESTAMP",
+        },
     },
-    },
+    relations: {
+        carreras: {
+            type: "many-to-one",
+            target: "Carrera", 
+            joinColumn: {
+                name: "carreraId", 
+                referencedColumnName: "id_carrera", 
+            },
+            onDelete: "CASCADE", 
+            inverseSide: "users",
+        },
+    }
+
 });
 
 export default UserEntity;

@@ -7,6 +7,7 @@ import { SHOW_ERRORS } from "../constants/ajustes.constants.js"
 import { idValidation } from "../validations/modules/id.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 import { USER_NO_ENCONTRADO } from "../constants/user.constants.js";
+import { obtenerCarreraPorSigla, getCarreraSer } from "../services/carrera.service.js";
 
 export async function createUser(req: Request, res: Response): Promise<any> {
   try {
@@ -15,7 +16,12 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, "datos no proporcionados");
     }
 
-    const { username, email, password, role } = req.body;
+    if (req?.body?.siglaCarrera) {
+      req.body.id_carrera = ((await obtenerCarreraPorSigla(req.body.siglaCarrera)) || {id: 0})?.id_carrera;
+      delete req.body.siglaCarrera;
+    }
+
+    const { username, email, password, role, carreraId } = req.body;
 
     const { error } = integrityValidation.validate(req.body);
     if (error) {
@@ -27,7 +33,7 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, "faltan parametros", result.error.message);
     }
 
-    newUser = await createUserSer(username, email, password, role);
+    newUser = await createUserSer(username, email, password, role, carreraId);
     if (newUser) {
       newUser.password = undefined;
       return handleSuccess(res, 201, "Usuario registrado exitosamente", newUser.data || newUser);
@@ -77,6 +83,7 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
     if (!req.params || !req.body) {
       return handleErrorClient(res, 400, "datos no prporcionados");
     }
+
     const { id } = req.params;
     if (!id) {
       return handleErrorClient(res, 400, "el id de usuario es obligatorio");
@@ -106,8 +113,18 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 404, "Usuario no encontrado");
     }
 
-    Object.assign(userUpdate, req.body);
+    if (req.body.carreraId) {
+      const carreraExiste = await getCarreraSer(Number(req.body.carreraId));
+      if (!carreraExiste) {
+        return handleErrorClient(res, 404, "La carrera especificada no existe");
+      }
+      userUpdate.carreraId = Number(req.body.carreraId);
+    }
 
+    if (req.body.username) userUpdate.username = req.body.username;
+    if (req.body.email) userUpdate.email = req.body.email;
+    if (req.body.role) userUpdate.role = req.body.role;
+    
     const updateUser = await patchUserSer(userUpdate);
     if (!(updateUser.data)) {
       return handleErrorClient(res, 400, updateUser.message);
@@ -172,7 +189,7 @@ export async function getUserStats(req: Request, res: Response): Promise<any> {
   try {
     const userRepository = AppDataSource.getRepository(User as any);
     const usuariosCreados = await userRepository.count();
-    const usuarios = await userRepository.count({ where: { role: "usuario" } });
+    const usuarios = await userRepository.count({ where: { role: "usuario" }, relations: {carreras: true} });
     const admninistradores = await userRepository.count({ where: { role: "administrador" } });
     
     return res.status(200).json({
