@@ -1,26 +1,19 @@
 import { patchUserService } from "@services/user.service";
 import Swal from "sweetalert2";
+import { createSwalField } from "../utils/swalField";
+//import { fireDynamicSwal } from "../utils/dynamicSwal";
+import { StaticDropdownList } from "../utils/DropdownList";
+import { getCarreraSigla, processCarreras } from "../../utils/user.utils";
 
-async function editUserInfo(user) {
+async function editUserInfo(user, carreras) {
   const { value: formValues } = await Swal.fire({
     title: "Editar Usuario",
     html: `
-    <div>
-      <label for="swal2-input1">Nombre de usuario</label>  
-      <input id="swal2-input1" class="swal2-input" placeholder="Nombre de usuario" value = "${user.username}">
-    </div>
-    <div>
-      <label for="swal2-input2">Correo electrónico</label>
-      <input id="swal2-input2" class="swal2-input" placeholder="Correo electrónico" value = "${user.email}">
-    </div>
-    <div>
-      <label for="swal3-input3">Contraseña</label>
-      <input id="swal3-input3" class="swal2-input" placeholder="Contraseña" value = "${user.password}">
-    </div>
-    <div>
-      <label for="swal4-input4">Rol</label>
-      <input id="swal4-input4" class="swal2-input" placeholder="Rol" value = "${user.role}">
-    </div>
+        ${createSwalField(1, "Nombre de usuario: ", user.username)}
+        ${createSwalField(2, "gmail: ", user.email)}
+        ${createSwalField(3, "Contrseña", "")}
+        ${createSwalField(4, "Rol: ", user.role)}
+        ${StaticDropdownList(carreras, `${user?.carreraObject?.nombre_carrera} (${user?.carreraObject?.sigla})`, "swal2-input5", "m-1", false)}
         `,
     focusConfirm: false,
     showCancelButton: true,
@@ -30,6 +23,7 @@ async function editUserInfo(user) {
       const email = document.getElementById("swal2-input2").value;
       const password = document.getElementById("swal3-input3").value;
       const role = document.getElementById("swal4-input4").value;
+      const sigla_carrera = getCarreraSigla(String(document.getElementById("swal2-input5")?.value))
 
       if (!username || !email) {
         Swal.showValidationMessage("Por favor, completa todos los campos");
@@ -50,9 +44,9 @@ async function editUserInfo(user) {
         return false;
       }
 
-      if (!email || email.length < 15 || email.length > 50) {
+      if (!email || email.length < 6 || email.length > 50) {
         Swal.showValidationMessage(
-          "El correo electrónico debe tener entre 15 y 50 caracteres"
+          "El correo electrónico debe tener entre 6 y 50 caracteres"
         );
         return false;
       }
@@ -63,7 +57,7 @@ async function editUserInfo(user) {
         );
         return false;
       }
-      return { username, email, password, role };
+      return { username, email, password, role, sigla_carrera };
     },
   });
   if (formValues) {
@@ -71,15 +65,17 @@ async function editUserInfo(user) {
       username: formValues.username,
       email: formValues.email,
       password: formValues.password,
-      role: formValues.role
+      role: formValues.role,
+      sigla_carrera:formValues.sigla_carrera
     };
   }
 }
 
-export const useEditUser = (fetchUsers) => {
+export const useEditUser = (fetchUsers, carreras) => {
+  carreras = processCarreras(carreras);
   const handleEditUser = async (userId, user) => {
     try {
-      const formValues = await editUserInfo(user);
+      const formValues = await editUserInfo(user, carreras);
       if (!formValues) return;
 
       const response = await patchUserService(userId, formValues);

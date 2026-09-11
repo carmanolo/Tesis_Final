@@ -1,5 +1,5 @@
 import { AppDataSource } from "../config/configDb.js";
-import CarreraEntity from "../entity/carrera.entity.js";
+import {CarreraEntity, Carrera} from "../entity/carrera.entity.js";
 import { SHOW_ERRORS } from "../constants/ajustes.constants.js";
 
 export async function createCarreraSer(
@@ -29,7 +29,7 @@ export async function createCarreraSer(
 export async function getCarrerasSer(): Promise<any> {
     try {
         const carreraRepository = AppDataSource.getRepository(CarreraEntity as any);
-        const carreras = await carreraRepository.find({where: {users: true}});
+        const carreras = await carreraRepository.find({relations: {users: true}});
         
         if (!carreras || carreras.length === 0) return { message: "Arreglo vacío" };
         return [carreras, null];
@@ -85,6 +85,18 @@ export async function deleteCarreraSer(id_carrera: number): Promise<any> {
         console.error(error);
         return { result: null, message: "Error al eliminar la carrera" };
     }
+}
+
+// Agrega 'typeof' antes del nombre
+export async function obtenerListaCarreras(): Promise<Carrera[]> {
+  try {
+    const carreraRepository = AppDataSource.getRepository(CarreraEntity);
+    const carreras = await carreraRepository.find();
+    return carreras;
+  } catch (error) {
+    console.error("Error al obtener la lista de carreras:", error);
+    return [];
+  }
 }
 
 export async function obtenerCarreraPorSigla(sigla: string) { 

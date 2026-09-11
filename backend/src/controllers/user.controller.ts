@@ -16,9 +16,9 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, "datos no proporcionados");
     }
 
-    if (req?.body?.siglaCarrera) {
-      req.body.id_carrera = ((await obtenerCarreraPorSigla(req.body.siglaCarrera)) || {id: 0})?.id_carrera;
-      delete req.body.siglaCarrera;
+    if (req?.body?.sigla_carrera) {
+      req.body.carreraId = ((await obtenerCarreraPorSigla(req.body.sigla_carrera)) || {id: 0})?.id_carrera;
+      delete req.body.sigla_carrera;
     }
 
     const { username, email, password, role, carreraId } = req.body;

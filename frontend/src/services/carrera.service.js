@@ -38,3 +38,13 @@ export async function deleteCarreraSer(carreraId) {
         console.error("Error al eliminar :", error);
     }
 }
+
+export const getCarreraList = async () => {
+    try {
+        const response = await axios.get("/carreras/carrerasList");
+        return response?.data?.data || [];
+    } catch (error) {
+        console.error(error);
+        return [];
+    }        
+}

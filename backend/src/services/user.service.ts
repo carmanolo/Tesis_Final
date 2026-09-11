@@ -6,13 +6,13 @@ export async function createUserSer(
     username: string,
     email: string,
     password: string,
-    rol: string,
+    role: string,
     carreraId: number
 ): Promise<any | null>  {
     const userRepository = AppDataSource.getRepository(UserEntity as any);
 
     try {
-        if (!username || !email || !password || !rol ||!carreraId) {
+        if (!username || !email || !password || !role ||!carreraId) {
             throw new Error("Funcion mal llamada");
         }
 
@@ -20,7 +20,7 @@ export async function createUserSer(
             username,
             email,
             password,
-            rol,
+            role,
             carreraId
         });
 
