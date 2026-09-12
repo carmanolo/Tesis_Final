@@ -16,10 +16,18 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, "datos no proporcionados");
     }
 
-    if (req?.body?.sigla_carrera) {
-      req.body.carreraId = ((await obtenerCarreraPorSigla(req.body.sigla_carrera)) || {id: 0})?.id_carrera;
+    const sigla = req.body.sigla_carrera || req.body.siglaCarrera;
+    if (sigla) {
+      const carrera = await obtenerCarreraPorSigla(sigla);
+      if (!carrera) {
+        return handleErrorClient(res, 404, "La carrera especificada no existe");
+      }
+      req.body.carreraId = carrera.id_carrera;
       delete req.body.sigla_carrera;
+      delete req.body.siglaCarrera;
     }
+
+    console.log("req.body: ", req.body);
 
     const { username, email, password, role, carreraId } = req.body;
 
@@ -97,6 +105,20 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, validateId?.error?.message || "Error desconocido");
     }
 
+    const sigla = req.body.sigla_carrera || req.body.siglaCarrera;
+    if (sigla) {
+      const carrera = await obtenerCarreraPorSigla(sigla);
+      if (carrera) {
+        req.body.carreraId = carrera.id_carrera;
+      }
+      delete req.body.sigla_carrera;
+      delete req.body.siglaCarrera;
+    }
+
+    if (!req.body.password || req.body.password.trim() === "") {
+      delete req.body.password;
+    }
+
     const { error } = integrityValidation.validate(req.body);
     if (error) {
       return handleErrorClient(res, 400, "Parámetros invalidos", error.message);
@@ -124,7 +146,7 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
     if (req.body.username) userUpdate.username = req.body.username;
     if (req.body.email) userUpdate.email = req.body.email;
     if (req.body.role) userUpdate.role = req.body.role;
-    
+
     const updateUser = await patchUserSer(userUpdate);
     if (!(updateUser.data)) {
       return handleErrorClient(res, 400, updateUser.message);
@@ -144,7 +166,7 @@ export async function deleteUserById(req: Request, res: Response): Promise<any> 
     }
 
     const result = await deleteUserSer(Number(id));
-    
+
     if (result && result.result && result.result.affected >= 1) {
       return handleSuccess(res, 200, "Usuario elimnado exitosamnete");
     }
@@ -163,7 +185,7 @@ export async function getProfile(req: Request, res: Response): Promise<any> {
   try {
     const userRepository = AppDataSource.getRepository(User as any);
     const userEmail = req.user?.email; // Tipado gracias a tu archivo types/express.d.ts
-    
+
     const user = await userRepository.findOne({ where: { email: userEmail } });
 
     if (!user) {
@@ -189,9 +211,9 @@ export async function getUserStats(req: Request, res: Response): Promise<any> {
   try {
     const userRepository = AppDataSource.getRepository(User as any);
     const usuariosCreados = await userRepository.count();
-    const usuarios = await userRepository.count({ where: { role: "usuario" }, relations: {carreras: true} });
+    const usuarios = await userRepository.count({ where: { role: "usuario" }, relations: { carreras: true } });
     const admninistradores = await userRepository.count({ where: { role: "administrador" } });
-    
+
     return res.status(200).json({
       usuariosCreados: Number(usuariosCreados || 0),
       usuarios: Number(usuarios || 0),

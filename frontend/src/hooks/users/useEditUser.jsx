@@ -21,8 +21,8 @@ async function editUserInfo(user, carreras) {
     preConfirm: () => {
       const username = document.getElementById("swal2-input1").value;
       const email = document.getElementById("swal2-input2").value;
-      const password = document.getElementById("swal3-input3").value;
-      const role = document.getElementById("swal4-input4").value;
+      const password = document.getElementById("swal2-input3")?.value || "";
+      const role = document.getElementById("swal2-input4")?.value || "";
       const sigla_carrera = getCarreraSigla(String(document.getElementById("swal2-input5")?.value))
 
       if (!username || !email) {
@@ -66,7 +66,7 @@ async function editUserInfo(user, carreras) {
       email: formValues.email,
       password: formValues.password,
       role: formValues.role,
-      sigla_carrera:formValues.sigla_carrera
+      sigla_carrera: formValues.sigla_carrera
     };
   }
 }

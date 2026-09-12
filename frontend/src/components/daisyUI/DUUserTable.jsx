@@ -6,10 +6,11 @@ import { FaUserAlt } from "react-icons/fa";
 import { AiFillStar } from "react-icons/ai";
 import {DisplayCarrera} from "../../class/DisplayCarrera.ts"
 
-const mostrarUsuarios = (data, handleEditUser, handleDeleteUser,  canCrudUsuarios, carreraList) => {
+const mostrarUsuarios = (data, handleEditUser, handleDeleteUser, carreraList) => {
   if (Array.isArray(data) && data.length > 0) {
       return data.map((user) => {
-        // console.log("VEHICULOLIST ANTES DE ASIGNAR: ", vehiculoList);
+       console.log("carreraList:", carreraList);
+       console.log("user.carreraId:", user.carreraId);
 
         const currentCarrera = new DisplayCarrera(carreraList, user.carreraId || 0);
         
@@ -35,12 +36,13 @@ const mostrarUsuarios = (data, handleEditUser, handleDeleteUser,  canCrudUsuario
                                 </div>
                             </div>
                         </td>
-                    {canCrudUsuarios && (
+                        <td>
+                            {currentCarrera.nombre_carrera} {currentCarrera.sigla ? `(${currentCarrera.sigla})` : ""}
+                        </td>
                       <td>
                             <button className="btn btn-warning m-1" onClick={() => {handleEditUser(user?.id, user || {})}}><MdSettings /></button>
                             <button className="btn btn-error m-1" onClick={() => {handleDeleteUser(user?.id)}}><MdDeleteForever /></button>
-                      </td> 
-                    )}     
+                      </td>    
                   </tr>
       )});
   } else {
@@ -53,7 +55,7 @@ const mostrarUsuarios = (data, handleEditUser, handleDeleteUser,  canCrudUsuario
 }
 //{currentTeacher.name !== SIN_ASIGNAR && ENABLED_MAILTO ? <a href={`mailto:${currentTeacher.email}`}><button className="btn btn-warning m-1"><MdEmail /></button></a> : <></>}
 
-export const DUUserTable = ({data, handleEditUser, handleDeleteUser,  canCrudUsuarios, carreraList}) => {
+export const DUUserTable = ({data, handleEditUser, handleDeleteUser, carreraList}) => {
 
     return (
         <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 m-3 max-h-full">
@@ -65,14 +67,14 @@ export const DUUserTable = ({data, handleEditUser, handleDeleteUser,  canCrudUsu
                 <th>Gmail</th>
                 <th>Rol</th>
                 <th>Carrera</th>
-                {canCrudUsuarios && (<th>Acciones</th>)}             
+                <th>Acciones</th>            
             </tr>
             </thead>
             <tbody>
               {mostrarUsuarios(data, 
                 handleEditUser, 
                 handleDeleteUser,  
-                canCrudUsuarios, carreraList)}
+                carreraList)}
             </tbody>
         </table>
         </div>

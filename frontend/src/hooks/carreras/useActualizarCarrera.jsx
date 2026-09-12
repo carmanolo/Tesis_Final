@@ -33,7 +33,7 @@ async function editCarreraInfo(carrera) {
         return false;
       }
 
-      if (/^[A-Za-zÁÉÍÓÚáéíóúÑñ ]*$/.test(nombre_carrera)) {
+      if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ ]*$/.test(nombre_carrera)) {
         Swal.showValidationMessage(
           "El nombre de la carrera solo puede contener letras, números y guiones bajos"
         );
