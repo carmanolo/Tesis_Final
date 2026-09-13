@@ -102,7 +102,7 @@ export async function obtenerListaCarreras(): Promise<Carrera[]> {
 export async function obtenerCarreraPorSigla(sigla: string) { 
   try {
     if (SHOW_ERRORS) {
-      console.log("PATENTE DADA: ", sigla);
+      console.log("SIGLA DADA: ", sigla);
     }
     const carreraRepository = AppDataSource.getRepository(CarreraEntity);
     const carrera = await carreraRepository.findOne({where: { sigla: sigla}});

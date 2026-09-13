@@ -70,7 +70,12 @@ export async function patchUserSer(user: Partial<any>): Promise<any> {
             throw new Error("Funcion mal llamada");
         }
         
-        const savedUser = await userRepository.save(user as any);
+        await userRepository.save(user as any);
+
+        const savedUser = await userRepository.findOne({
+            where: { id: user.id },
+            relations: { carreras: true }
+        });
 
         return { data: savedUser, message: "Usuario actualizado por exito", error: null };
     } catch (error) {

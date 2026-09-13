@@ -111,6 +111,7 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
       if (carrera) {
         req.body.carreraId = carrera.id_carrera;
       }
+      console.log(req.body.carreraId);
       delete req.body.sigla_carrera;
       delete req.body.siglaCarrera;
     }
@@ -129,11 +130,14 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, "falto actualizar parametros", result.error.message);
     }
 
+
     const userUpdate = await getUserSer(Number(id));
 
     if (!userUpdate) {
       return handleErrorClient(res, 404, "Usuario no encontrado");
     }
+
+    delete userUpdate.carreras;
 
     if (req.body.carreraId) {
       const carreraExiste = await getCarreraSer(Number(req.body.carreraId));
@@ -143,9 +147,7 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
       userUpdate.carreraId = Number(req.body.carreraId);
     }
 
-    if (req.body.username) userUpdate.username = req.body.username;
-    if (req.body.email) userUpdate.email = req.body.email;
-    if (req.body.role) userUpdate.role = req.body.role;
+    Object.assign(userUpdate, req.body);
 
     const updateUser = await patchUserSer(userUpdate);
     if (!(updateUser.data)) {
