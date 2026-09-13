@@ -1,13 +1,5 @@
 import { Router } from "express";
-import {
-    getReuniones,
-    getReunionById,
-    createReunion,
-    patchReunionById,
-    deleteReunionById,
-    subirActa,
-    descargarActa
-} from "../controllers/reunion.controller.js";
+import { getReuniones, getReunionById, createReunion, patchReunionById, deleteReunionById, subirActa, descargarActa} from "../controllers/reunion.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { authorizeRoles } from "../middleware/authorization.middleware.js";
 import { uploadActaMiddleware } from "../middleware/reunion.upload.middleware.js";
