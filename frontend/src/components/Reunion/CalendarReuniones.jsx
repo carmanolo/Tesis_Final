@@ -1,4 +1,4 @@
-import { MESES, DIAS_SEMANA, generalDiasDelMes, obtenerFechaKey, esMismodia } from "../../utils/calendarUtils.js";
+import { MESES, DIAS_SEMANA, generalDiasDelMes, obtenerFechaKey, esMismodia } from "../../utils/calendar.utils.js"
 
 export const CalendarioReuniones = ({ anio, mes, onCambiarMes, onIrHoy, reunionesPorFecha, onClickReunion }) => {
     const celdas = generalDiasDelMes(anio, mes);

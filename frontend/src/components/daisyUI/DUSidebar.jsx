@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { logout } from "@services/auth.service.js";
 import { FaHome, FaUsers, FaSignOutAlt } from "react-icons/fa";
 import { CgProfile, CgWorkAlt } from "react-icons/cg";
+import { ImCalendar } from "react-icons/im";
 import { DUSidebarItem } from "./DUSidebarItem";
 
 export const DUSidebar = ({PageContent, SidebarTitle}) => {
@@ -46,6 +47,7 @@ export const DUSidebar = ({PageContent, SidebarTitle}) => {
                     {DUSidebarItem((FaHome), "Inicio", "/home")}
                     {DUSidebarItem((FaUsers), "Usuarios", "/users")}
                     {DUSidebarItem((CgWorkAlt), "Carreras", "/carreras")}
+                    {DUSidebarItem((ImCalendar), "Reuniones", "/reuniones")}
                     {DUSidebarItem((CgProfile), "Perfil", "/profile")}
                     {DUSidebarItem((FaSignOutAlt), "Cerrar Sesión", "/login", logoutSubmit)}
                 </ul>

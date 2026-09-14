@@ -15,7 +15,8 @@ export const useDescargarActa = () => {
                 return;
             }
 
-            await descargarActaService(reunion.id_reunion);
+            await descargarActaService(reunion.id_reunion, reunion.nombre_original);
+
         } catch (error) {
             console.error("Error al descargar el acta:", error);
             await Swal.fire({

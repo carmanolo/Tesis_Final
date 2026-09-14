@@ -14,8 +14,11 @@ async function setupServer(): Promise<void> {
     cors({
       credentials: true,
       origin: true,
+      exposedHeaders: ["Content-Disposition"], // <-- Permite al frontend leer el nombre original
     })
   );
+
+
 
   app.use(express.json());
 

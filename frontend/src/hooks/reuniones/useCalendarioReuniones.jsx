@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { obtenerFechaKey } from "../../utils/calendarUtils.js";
+import { obtenerFechaKey } from "../../utils/calendar.utils.js"
 
 export function useCalendarioReuniones(reuniones) {
     const reunionesPorFecha = useMemo(() => {

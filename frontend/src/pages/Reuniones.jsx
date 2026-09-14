@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
-import { getUserRole } from "../services/profile.service.js";
+import { getUserRole } from "../services/user.service.js";
 import { ACCESO_GESTION_ACTAS } from "../constants/reunion.constants.jsx";
 
-import { CalendarioReuniones } from "../components/Reunion/CalendarioReuniones.jsx";
+import { CalendarioReuniones } from "../components/Reunion/CalendarReuniones.jsx";
 import { DetalleReunion } from "../components/Reunion/DetalleReunion.jsx";
 
-import { useGetReuniones } from "@hooks/Reunion/useGetReuniones.jsx";
-import { useCalendarioReuniones } from "@hooks/Reunion/useCalendarioReuniones.jsx";
-import { useCreateReunion } from "@hooks/Reunion/useCreateReunion.jsx";
-import { usePatchReunion } from "@hooks/Reunion/usePatchReunion.jsx";
-import { useDeleteReunion } from "@hooks/Reunion/useDeleteReunion.jsx";
-import { useSubirActa } from "@hooks/Reunion/useSubirActa.jsx";
-import { useDescargarActa } from "@hooks/Reunion/useDescargarActa.jsx";
-import { obtenerFechaKey } from "../utils/calendarUtils.js";
+import { useGetReuniones } from "@hooks/reuniones/useGetReuniones.jsx";
+import { useCalendarioReuniones } from "@hooks/reuniones/useCalendarioReuniones.jsx";
+import { useCreateReunion } from "@hooks/reuniones/useCreateReunion.jsx";
+import { usePatchReunion } from "@hooks/reuniones/usePatchReunion.jsx";
+import { useDeleteReunion } from "@hooks/reuniones/useDeleteReunion.jsx";
+import { useSubirActa } from "@hooks/reuniones/useSubirActa.jsx";
+import { useDescargarActa } from "@hooks/reuniones/useDescargarActa.jsx";
+import { obtenerFechaKey } from "../utils/calendar.utils.js";
 
 const Reunion = () => {
     const [reunionData, setReunionData] = useState([]);
