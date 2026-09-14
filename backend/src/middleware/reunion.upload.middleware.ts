@@ -27,6 +27,7 @@ const storage = multer.diskStorage({
     }
 });
 
+//Verrifica estandar mime
 function fileFilter(_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) {
     if (ACTA_MIME_TYPES.includes(file.mimetype)) {
         cb(null, true);

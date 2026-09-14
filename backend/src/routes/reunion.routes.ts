@@ -12,7 +12,7 @@ router.get("/", getReuniones);
 router.get("/:id_reunion", getReunionById);
 router.post("/crear", authorizeRoles("administrador", "presidente cee", "secreatario cee", "tesorero cee", "vocal cee"), createReunion);
 router.patch("/editar/:id_reunion", authorizeRoles("administrador", "presidente cee", "secreatario cee", "tesorero cee", "vocal cee"), patchReunionById);
-router.delete("/eliminar/:id_reunion", authorizeRoles("administrador"), deleteReunionById);
+router.delete("/eliminar/:id_reunion", authorizeRoles("administrador", "presidente cee", "secreatario cee", "tesorero cee", "vocal cee"), deleteReunionById);
 
 // Gestión de actas (importación/exportación de archivos PDF y Word)
 router.post("/:id_reunion/acta", authorizeRoles("administrador", "presidente cee", "secreatario cee", "tesorero cee", "vocal cee"), uploadActaMiddleware, subirActa);
