@@ -1,11 +1,44 @@
+@import url(./oswald-font.css);
 @import "tailwindcss";
 @plugin "daisyui" {
-   themes: fantasy --default;
+  themes: ubb --default;
 };
-@plugin "@tailwindcss/typography";
+@plugin "daisyui/theme" {
+  name: "ubb";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: #FFFFFF;
+  --color-base-200: #DDECFA;
+  --color-base-300: #B9BBBB;
+  --color-base-content: #14375C;
+  --color-primary: #2F4697;
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: #F0800E;
+  --color-secondary-content: oklch(100% 0 0);
+  --color-accent: #B6014C;
+  --color-accent-content: oklch(100% 0 0);
+  --color-neutral: #14375C;
+  --color-neutral-content: oklch(100% 0 0);
+  --color-info: oklch(68% 0.169 237.323);
+  --color-info-content: oklch(100% 0 0);
+  --color-success: #BEBE00;
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: #FAB414;
+  --color-warning-content: oklch(100% 0 0);
+  --color-error: #E11113;
+  --color-error-content: oklch(100% 0 0);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.5rem;
+  --size-selector: 0.28125rem;
+  --size-field: 0.28125rem;
+  --border: 1.5px;
+  --depth: 1;
+  --noise: 0;
+};
+@plugin '@tailwindcss/typography';
 
-body {
-   background-image: url(../assets/bg.jpg);
-   background-repeat: no-repeat;
-   background-size: cover;
-};
+* {
+  font-family: Oswald, sans-serif;
+}

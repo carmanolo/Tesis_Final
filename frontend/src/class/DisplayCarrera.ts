@@ -37,19 +37,21 @@ export class DisplayCarrera {
     try {
       const foundCarrera = findCarrera(carreraList, id_carrera);
 
-      if (foundCarrera === DEFAULT_CARRERA) {
-        throw new Error("Carrera no encontrada");
+      if (foundCarrera === DEFAULT_CARRERA || !foundCarrera) {
+        this._id_carrera = DEFAULT_ID;
+        this._nombre_carrera = DEFAULT_NAME;
+        this._sigla = DEFAULT_SIGLA;
+        return;
       }
 
       const [idPart, ...rest] = foundCarrera.split(". ");
       const remainingText = rest.join(". ");
       const [nombrePart, siglaPart] = remainingText.split("(");
 
-      this._id_carrera = Number(idPart?.trim());
+      this._id_carrera = Number(idPart?.trim()) || DEFAULT_ID;
       this._nombre_carrera = nombrePart ? nombrePart.trim() : DEFAULT_NAME;
       this._sigla = siglaPart ? siglaPart.replace(")", "").trim() : DEFAULT_SIGLA;
-    } catch (error) {
-      console.error(error);
+    } catch {
       this._id_carrera = DEFAULT_ID;
       this._nombre_carrera = DEFAULT_NAME;
       this._sigla = DEFAULT_SIGLA;
