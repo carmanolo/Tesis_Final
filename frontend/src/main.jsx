@@ -8,6 +8,7 @@ import Error404 from "@pages/Error404"
 import Users from "@pages/Users"
 import Carreras from "@pages/Carreras"
 import Profile from "@pages/Profile"
+import Reuniones from "@pages/Reuniones"
 import ProtectedRoute from "@components/ProtectedRoute"
 import "@styles/global.css";
 
@@ -35,6 +36,12 @@ const router = createBrowserRouter([
           <ProtectedRoute allowedRoles={["administrador"]}>
             <Carreras />
           </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/reuniones",
+        element: (
+            <Reuniones />
         ),
       },
       {

@@ -7,6 +7,7 @@ import { SHOW_ERRORS } from "../constants/ajustes.constants.js"
 import { idValidation } from "../validations/modules/id.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 import { USER_NO_ENCONTRADO } from "../constants/user.constants.js";
+import { obtenerCarreraPorSigla, getCarreraSer } from "../services/carrera.service.js";
 
 export async function createUser(req: Request, res: Response): Promise<any> {
   try {
@@ -15,7 +16,20 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, "datos no proporcionados");
     }
 
-    const { username, email, password, role } = req.body;
+    const sigla = req.body.sigla_carrera || req.body.siglaCarrera;
+    if (sigla) {
+      const carrera = await obtenerCarreraPorSigla(sigla);
+      if (!carrera) {
+        return handleErrorClient(res, 404, "La carrera especificada no existe");
+      }
+      req.body.carreraId = carrera.id_carrera;
+      delete req.body.sigla_carrera;
+      delete req.body.siglaCarrera;
+    }
+
+    console.log("req.body: ", req.body);
+
+    const { username, email, password, role, carreraId } = req.body;
 
     const { error } = integrityValidation.validate(req.body);
     if (error) {
@@ -27,7 +41,7 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, "faltan parametros", result.error.message);
     }
 
-    newUser = await createUserSer(username, email, password, role);
+    newUser = await createUserSer(username, email, password, role, carreraId);
     if (newUser) {
       newUser.password = undefined;
       return handleSuccess(res, 201, "Usuario registrado exitosamente", newUser.data || newUser);
@@ -77,6 +91,7 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
     if (!req.params || !req.body) {
       return handleErrorClient(res, 400, "datos no prporcionados");
     }
+
     const { id } = req.params;
     if (!id) {
       return handleErrorClient(res, 400, "el id de usuario es obligatorio");
@@ -90,6 +105,21 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, validateId?.error?.message || "Error desconocido");
     }
 
+    const sigla = req.body.sigla_carrera || req.body.siglaCarrera;
+    if (sigla) {
+      const carrera = await obtenerCarreraPorSigla(sigla);
+      if (carrera) {
+        req.body.carreraId = carrera.id_carrera;
+      }
+      console.log(req.body.carreraId);
+      delete req.body.sigla_carrera;
+      delete req.body.siglaCarrera;
+    }
+
+    if (!req.body.password || req.body.password.trim() === "") {
+      delete req.body.password;
+    }
+
     const { error } = integrityValidation.validate(req.body);
     if (error) {
       return handleErrorClient(res, 400, "Parámetros invalidos", error.message);
@@ -100,10 +130,21 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, "falto actualizar parametros", result.error.message);
     }
 
+
     const userUpdate = await getUserSer(Number(id));
 
     if (!userUpdate) {
       return handleErrorClient(res, 404, "Usuario no encontrado");
+    }
+
+    delete userUpdate.carreras;
+
+    if (req.body.carreraId) {
+      const carreraExiste = await getCarreraSer(Number(req.body.carreraId));
+      if (!carreraExiste) {
+        return handleErrorClient(res, 404, "La carrera especificada no existe");
+      }
+      userUpdate.carreraId = Number(req.body.carreraId);
     }
 
     Object.assign(userUpdate, req.body);
@@ -127,7 +168,7 @@ export async function deleteUserById(req: Request, res: Response): Promise<any> 
     }
 
     const result = await deleteUserSer(Number(id));
-    
+
     if (result && result.result && result.result.affected >= 1) {
       return handleSuccess(res, 200, "Usuario elimnado exitosamnete");
     }
@@ -146,7 +187,7 @@ export async function getProfile(req: Request, res: Response): Promise<any> {
   try {
     const userRepository = AppDataSource.getRepository(User as any);
     const userEmail = req.user?.email; // Tipado gracias a tu archivo types/express.d.ts
-    
+
     const user = await userRepository.findOne({ where: { email: userEmail } });
 
     if (!user) {
@@ -172,9 +213,9 @@ export async function getUserStats(req: Request, res: Response): Promise<any> {
   try {
     const userRepository = AppDataSource.getRepository(User as any);
     const usuariosCreados = await userRepository.count();
-    const usuarios = await userRepository.count({ where: { role: "usuario" } });
+    const usuarios = await userRepository.count({ where: { role: "usuario" }, relations: { carreras: true } });
     const admninistradores = await userRepository.count({ where: { role: "administrador" } });
-    
+
     return res.status(200).json({
       usuariosCreados: Number(usuariosCreados || 0),
       usuarios: Number(usuarios || 0),

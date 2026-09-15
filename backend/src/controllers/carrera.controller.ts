@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 import CarreraEntity from "../entity/carrera.entity.js";
-import { getCarreraSer, getCarrerasSer, createCarreraSer, patchCarreraSer, deleteCarreraSer } from "../services/carrera.service.js";
+import { getCarreraSer, getCarrerasSer, createCarreraSer, patchCarreraSer, deleteCarreraSer, obtenerListaCarreras } from "../services/carrera.service.js";
 import { AppDataSource } from "../config/configDb.js";
 import { createValidation, integrityValidation, updateValidation } from "../validations/carrera.validations.js"
 import { idValidation } from "../validations/modules/id.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 import { CARRERA_NO_ENCONTRADA } from "../constants/carrera.constants.js"; 
 import { SHOW_ERRORS } from "../constants/ajustes.constants.js";
+import { processCarreras } from "../utils/carrera.utils.js";
 
 export async function createCarrera(req: Request, res: Response): Promise<any> {
   try {
@@ -142,6 +143,18 @@ export async function deleteCarreraById(req: Request, res: Response): Promise<an
   } catch (error: any) {
     return handleErrorServer(res, 500, "Error al eliminar la carrera", error.message);
   }
+}
+
+export async function getCarreraList(req: Request, res: Response): Promise<any> {
+    const DEFAULT_ARRAY: any[] = [];
+    try {
+        let carreraList: any = await obtenerListaCarreras();
+        carreraList = processCarreras(carreraList);
+        return handleSuccess(res, 200, "Vehiculos encontrados con éxito", carreraList);
+    } catch (error) {
+        console.error(error);
+        return handleSuccess(res, 200, "Error al obtener vehiculos; disimular", DEFAULT_ARRAY);
+    }
 }
 
 

@@ -44,6 +44,7 @@ export const integrityValidation = Joi.object({
         "string.empty": "El rol no puede ser vacío",
         "string.max": `El rol no debe ser de más de ${MAX_FULLNAME} caracteres`,
     }),
+    carreraId: Joi.custom(idValidationFunction),
     created_at: Joi.string().min(MIN_DATE_LENGTH).max(MAX_DATE_LENGTH).messages({
         "string.base": "La fecha de creación debe ser un string",
         "string.min": "La fecha de creación no puede ser vacía",
@@ -76,6 +77,9 @@ export const createValidation = Joi.object({
         "any.required": ROL_OBLIGATORIO,
         "any.valid": `El rol debe ser uno de los siguientes: ${ROLES_VALIDOS}`,
     }),
+    carreraId: Joi.any().required().messages({
+        "any.required": "la carrera es obligatorio",
+    }),
 }).min(1).unknown(false)
   .messages({
     "object.min": "Debe proporcionar al menos un campo para actualizar",
@@ -88,7 +92,8 @@ export const updateValidation = Joi.object({
     username: Joi.any(),
     email: Joi.any(),
     password: Joi.any(),
-    role: Joi.any(),    
+    role: Joi.any(),
+    carreraId: Joi.any(),   
 }).min(1).unknown(false).messages({
     "object.min": "Debe proporcionar al menos un campo para actualizar",
     "any.min": "Debe proporcionar al menos un campo para actualizar",

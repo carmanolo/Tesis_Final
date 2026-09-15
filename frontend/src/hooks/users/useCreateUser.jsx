@@ -1,25 +1,20 @@
 import { createUserService } from "../../services/user.service.js";
+import { StaticDropdownList } from "../utils/DropdownList.jsx";
+import { getCarreraSigla, processCarreras } from "../../utils/user.utils.js";
+import { createSwalField } from "../utils/swalField.jsx";
 import { gebi } from "../utils/getElementById.jsx";
-import { DEFAULT_ROL } from "../../constants/user.constants.jsx";
 import { fireDynamicSwal } from "../utils/dynamicSwal.jsx";
 import Swal from "sweetalert2";
 
-async function createUser() {
+async function createUser(carreras) {
     const {value: formValues} = await Swal.fire({
         title:"Crear Nuevo Usuario",
         html: `
-        <div>
-            <label for= "swal2-input1">Nombre del usuario</label>
-            <input id="swal2-input1" class="swal2-input" placeholder="Nombred de usuario" value = "">
-        </div>
-        <div>
-            <label for="swal2-input2">Correo elctronico</label>
-            <input id="swal2-input2" class="swal2-input" placeholder="Correo electronico" value = "">
-        </div>
-        <div>
-            <label for="swal2-input3">Contraseña</label>
-            <input id="swal2-input3" class="swal2-input" placeholder="Contraseña" value = "">
-        </div>
+            ${createSwalField(1, "Nombre de usuario: ", "")}
+            ${createSwalField(2, "Gmail: ", "")}
+            ${createSwalField(3, "Contraseña: ")}
+            ${createSwalField(4, "Rol: ")}
+            ${StaticDropdownList(carreras , "Carrera: ", "swal2-input5", "m-1", false)}
         `,
         focusConfirm: false,
         showCancelButton: true,
@@ -29,9 +24,9 @@ async function createUser() {
             const username = String(gebi("swal2-input1")?.value);
             const email = gebi("swal2-input2")?.value;
             const password = String(gebi("swal2-input3")?.value);
-            const role =DEFAULT_ROL
-
-            return {username, email, password, role}
+            const role = String(gebi("swal2-input4")?.value);
+            const sigla_carrera = getCarreraSigla(String(gebi("swal2-input5")?.value));
+            return {username, email, password, role, sigla_carrera}
         },
         theme: "light",
 
@@ -41,12 +36,13 @@ async function createUser() {
     }
 }
 
-export const useCreateUser = (fetchUsuarios) => {
+export const useCreateUser = (fetchUsuarios, carreras) => {
+    carreras = processCarreras(carreras);
     const handleCreateUser = async () =>{
         let response = null;
 
         try {
-            let formValues = await createUser();
+            let formValues = await createUser(carreras);
             
             if(!formValues) return;
 

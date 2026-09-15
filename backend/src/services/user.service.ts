@@ -6,12 +6,13 @@ export async function createUserSer(
     username: string,
     email: string,
     password: string,
-    rol: string
+    role: string,
+    carreraId: number
 ): Promise<any | null>  {
     const userRepository = AppDataSource.getRepository(UserEntity as any);
 
     try {
-        if (!username || !email || !password || !rol) {
+        if (!username || !email || !password || !role ||!carreraId) {
             throw new Error("Funcion mal llamada");
         }
 
@@ -19,7 +20,8 @@ export async function createUserSer(
             username,
             email,
             password,
-            rol,
+            role,
+            carreraId
         });
 
         newUser.password = await encryptPassword(newUser.password);
@@ -37,7 +39,7 @@ export async function createUserSer(
 export async function getUsersSer(): Promise<any> {
     try {
         const userRepository = AppDataSource.getRepository(UserEntity as any);
-        const users = await userRepository.find();
+        const users = await userRepository.find({relations: {carreras:true}});
         
         if (!users || users.length === 0) return { message: "Arreglo vacío" };
         return [users, null];
@@ -52,6 +54,7 @@ export async function getUserSer(id: number): Promise<any> {
         const userRepository = AppDataSource.getRepository(UserEntity as any);
         const user = await userRepository.findOne({
             where: { id: id },
+            relations: {carreras:true}
         });
         return user;
     } catch (error) {
@@ -67,7 +70,12 @@ export async function patchUserSer(user: Partial<any>): Promise<any> {
             throw new Error("Funcion mal llamada");
         }
         
-        const savedUser = await userRepository.save(user as any);
+        await userRepository.save(user as any);
+
+        const savedUser = await userRepository.findOne({
+            where: { id: user.id },
+            relations: { carreras: true }
+        });
 
         return { data: savedUser, message: "Usuario actualizado por exito", error: null };
     } catch (error) {
@@ -78,7 +86,7 @@ export async function patchUserSer(user: Partial<any>): Promise<any> {
 export async function deleteUserSer(id: number): Promise<any> {
     try {
         const userRepository = AppDataSource.getRepository(UserEntity);
-        const user = await userRepository.findOne({ where: { id: id } });
+        const user = await userRepository.findOne({ where: { id: id }, relations: {carreras:true} });
 
         if (!user) {
             return { result: null, message: "usuario no encontrado" };

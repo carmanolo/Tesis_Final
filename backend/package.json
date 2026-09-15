@@ -27,6 +27,8 @@
     "express": "5.2.1",
     "joi": "18.2.5",
     "jsonwebtoken": "9.0.3",
+    "morgan": "^1.12.1",
+    "multer": "^2.3.0",
     "pg": "8.23.0",
     "reflect-metadata": "0.2.2",
     "typeorm": "1.1.0"
@@ -34,9 +36,11 @@
   "devDependencies": {
     "@types/bcrypt": "6.0.0",
     "@types/cors": "2.8.19",
-    "@types/express": "5.0.6",
+    "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "9.0.10",
-    "@types/node": "26.4.0",
+    "@types/morgan": "^1.9.10",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^26.4.0",
     "ts-node": "10.9.2",
     "tsx": "4.23.12",
     "typescript": "7.0.2"

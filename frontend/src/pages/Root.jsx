@@ -22,7 +22,7 @@ function PageRoot() {
 
   return (
     <div className="page-root h-fit">
-      <DUSidebar PageContent={pageContent} SidebarTitle={"Sistema de Gestión"}></DUSidebar>
+      <DUSidebar PageContent={pageContent} SidebarTitle={"Sistema de Gestión del centro de estudiantes"}></DUSidebar>
     </div>
   );
 }

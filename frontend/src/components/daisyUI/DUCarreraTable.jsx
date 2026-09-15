@@ -4,7 +4,7 @@ import { FaUserAlt } from "react-icons/fa";
 import { AiFillStar } from "react-icons/ai";
 
 
-const mostrarClases = (data, handleEditCarreras, handleDeleteCarreras, canCrudCarreras) => {
+const mostrarClases = (data, handleEditCarreras, handleDeleteCarreras) => {
   if (Array.isArray(data) && data.length > 0) {
            
       return data.map((Carrera) => {
@@ -20,14 +20,12 @@ const mostrarClases = (data, handleEditCarreras, handleDeleteCarreras, canCrudCa
                           {String(Carrera.sigla).toUpperCase()}
                         </div>
                       </td>   
-
-                      {canCrudCarreras && (
                       <td>
                       <button className="btn btn-primary m-1" onClick={() => {handleEditCarreras(Carrera.id_carrera, Carrera)}}><MdSettings></MdSettings></button>
                       <button className="btn btn-secondary m-1" onClick={() => {handleDeleteCarreras(Carrera.id_carrera)}}><MdDeleteForever></MdDeleteForever></button>
                       
                       </td>
-                      )}
+                    
                   </tr>
       )});
   } else {
@@ -40,7 +38,7 @@ const mostrarClases = (data, handleEditCarreras, handleDeleteCarreras, canCrudCa
 }
 
 
-export const DUCarreraTable = ({data, handleEditCarreras, handleDeleteCarreras, canCrudCarreras}) => {
+export const DUCarreraTable = ({data, handleEditCarreras, handleDeleteCarreras}) => {
 
     return (
         <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 m-3 max-h-full">
@@ -50,14 +48,14 @@ export const DUCarreraTable = ({data, handleEditCarreras, handleDeleteCarreras, 
                 {/*<th></th> */} 
                 <th>Nombre de la carrera</th>
                 <th>Sigla</th>
-                {canCrudCarreras && (<th>Acciones</th>)}             
+                <th>Acciones</th>             
             </tr>
             </thead>
             <tbody>
               {mostrarClases(data, 
                 handleEditCarreras, 
                 handleDeleteCarreras,
-                canCrudCarreras)}
+                )}
             </tbody>
         </table>
         </div>
