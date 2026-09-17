@@ -1,10 +1,10 @@
 import cors from "cors";
 import express from "express";
 import morgan from "morgan";
-import indexRoutes from "./src/routes/index.routes.js";
-import { PORT, HOST } from "./src/config/configEnv.js";
-import { connectDB } from "./src/config/configDb.js";
-import { createUsers } from "./src/config/initDb.js";
+import indexRoutes from "./routes/index.routes.js";
+import { PORT, HOST } from "./config/configEnv.js";
+import { connectDB } from "./config/configDb.js";
+import { createUsers } from "./config/initDb.js";
 
 async function setupServer(): Promise<void> {
   const app = express();
