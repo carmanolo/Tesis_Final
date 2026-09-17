@@ -26,7 +26,9 @@ jobs:
           npm install
 
       - name: Inyectar variables de entorno Backend
-        run: cp ~/backend.env ./backend/src/config/.env
+        run: |
+          cp ~/backend.env ./backend/src/config/.env
+          cp ~/backend.env ./backend/dist/config/.env
 
       - name: Inyectar variables de entorno Frontend
         run: cp ~/frontend.env ./frontend/.env
