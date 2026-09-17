@@ -1,4 +1,5 @@
 import { MESES, DIAS_SEMANA, generalDiasDelMes, obtenerFechaKey, esMismodia } from "../../utils/calendar.utils.js"
+import { HiChevronLeft, HiChevronRight } from "react-icons/hi2";
 
 export const CalendarioReuniones = ({ anio, mes, onCambiarMes, onIrHoy, reunionesPorFecha, onClickReunion }) => {
     const celdas = generalDiasDelMes(anio, mes);
@@ -9,9 +10,17 @@ export const CalendarioReuniones = ({ anio, mes, onCambiarMes, onIrHoy, reunione
             <div className="flex items-center justify-between p-3 border-b border-base-content/10">
                 <button className="btn btn-sm" onClick={onIrHoy}>Hoy</button>
                 <div className="flex items-center gap-2">
-                    <button className="btn btn-sm btn-circle btn-ghost" onClick={() => onCambiarMes(-1)}> ⬅️ </button>
-                    <span className="font-semibold text-lg">{MESES[mes]} {anio}</span>
-                    <button className="btn btn-sm btn-circle btn-ghost" onClick={() => onCambiarMes(1)}> ➡️ </button>
+                    <div className="join">
+                        <button className="join-item btn btn-sm" onClick={() => onCambiarMes(-1)}>
+                            <HiChevronLeft className="text-base" />
+                        </button>
+                        <span className="join-item btn btn-sm btn-disabled font-semibold !text-base-content">
+                            {MESES[mes]} {anio}
+                        </span>
+                        <button className="join-item btn btn-sm" onClick={() => onCambiarMes(1)}>
+                            <HiChevronRight className="text-base" />
+                        </button>
+                    </div>
                 </div>
                 <div className="w-16" />
             </div>
