@@ -50,7 +50,8 @@ const Clase = () => {
     return (
         <div className="Clase-page">
             <div className="flex gap-4 mb-4">
-                {canCrudCarreras && (<button className="btn btn-primary" onClick={() => handleCreateCarrera()}>Crear Carrera</button>)}
+                <h2 className="text-xl font-semibold">Lista de carreras</h2>
+                {canCrudCarreras && (<button className="btn btn-primary ml-auto" onClick={() => handleCreateCarrera()}>Crear Carrera</button>)}
                 {(buscar ) && (
                     <button className="solicitud-limpiar-btn btn" onClick={limpiarFiltros}>
                         Limpiar

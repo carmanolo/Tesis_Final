@@ -42,8 +42,10 @@ export const CalendarioReuniones = ({ anio, mes, onCambiarMes, onIrHoy, reunione
                                         key={reunion.id_reunion}
                                         onClick={() => onClickReunion(reunion)}
                                         // Verde = ya tiene acta subida, amarillo = pendiente
-                                        className={`text-left text-xs truncate rounded px-1 py-0.5 text-white ${
-                                            reunion.ruta_archivo ? "bg-success" : "bg-warning"
+                                       className={`text-left text-xs truncate rounded px-1 py-0.5 text-white ${
+                                            reunion.ruta_archivo
+                                            ? "bg-[#014898]"
+                                            : "bg-[#EE820F]"
                                         }`}
                                         title={reunion.descripcion}
                                     >

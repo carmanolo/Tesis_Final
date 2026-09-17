@@ -4,12 +4,13 @@ import { FaHome, FaUsers, FaSignOutAlt } from "react-icons/fa";
 import { CgProfile, CgWorkAlt } from "react-icons/cg";
 import { ImCalendar } from "react-icons/im";
 import { DUSidebarItem } from "./DUSidebarItem";
+import marcaUbb from "../../assets/escudo-color-gradiente.svg";
 
 export const DUSidebar = ({PageContent, SidebarTitle}) => {
     const navigate = useNavigate();
 
     const user = JSON.parse(sessionStorage.getItem("usuario")) || "";
-    const userRole = user?.rol;
+    const userRole = user?.role;
 
     const logoutSubmit = () => {
         try {
@@ -31,7 +32,19 @@ export const DUSidebar = ({PageContent, SidebarTitle}) => {
                     {/* Sidebar toggle icon */}
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" fill="none" stroke="currentColor" className="my-1.5 inline-block size-4"><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M9 4v16"></path><path d="M14 10l2 2l-2 2"></path></svg>
                 </label>
-                <div className="px-4">{String(SidebarTitle)}</div>
+                <div className="flex flex-1 items-center justify-between gap-4 px-4">
+                    <span className="truncate font-semibold">
+                    {String(SidebarTitle)}
+                    </span>
+
+                    {/* Marca Institucional UBB — esquina superior derecha del header */}
+                    {/* h-10 mantiene proporciones; px-2 respeta el espacio de protección */}
+                    <img
+                    src={marcaUbb}
+                    alt="Universidad del Bío-Bío"
+                    className="h-10 w-auto shrink-0 px-2"
+                    />
+                </div>
                 </nav>
                 {/* Page content here */}
                 <div className="p-4">

@@ -1,18 +1,13 @@
 import { patchCarreraService} from "@services/carrera.service.js"
 import Swal from "sweetalert2";
+import { createSwalField } from "../utils/swalField";
 
 async function editCarreraInfo(carrera) {
   const { value: formValues } = await Swal.fire({
     title: "Editar Carrera",
     html: `
-    <div>
-      <label for="swal2-input1">Nombre de Carrera</label>  
-      <input id="swal2-input1" class="swal2-input" placeholder="nombre de la carrera" value = "${carrera.nombre_carrera}">
-    </div>
-    <div>
-      <label for="swal2-input2">Sigla</label>
-      <input id="swal2-input2" class="swal2-input" placeholder="sigla" value = "${carrera.sigla}">
-    </div>
+      ${createSwalField(1, "Nombre de la carrera", carrera.nombre_carrera)}
+      ${createSwalField(2, "Sigla", carrera.sigla)}
         `,
     focusConfirm: false,
     showCancelButton: true,
