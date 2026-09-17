@@ -2,19 +2,14 @@ import { createCarreraService } from "@services/carrera.service.js";
 import { gebi } from "../utils/getElementById.jsx";
 import { fireDynamicSwal } from "../utils/dynamicSwal.jsx";
 import Swal from "sweetalert2";
+import { createSwalField } from "../utils/swalField.jsx";
 
 async function createCarrera() {
     const {value: formValues} = await Swal.fire({
         title:"Crear Nueva Carrera",
         html: `
-        <div>
-            <label for= "swal2-input1">Nombre de la carrera</label>
-            <input id="swal2-input1" class="swal2-input" placeholder="Nombred de la carrera" value = "">
-        </div>
-        <div>
-            <label for="swal2-input2">Sigla</label>
-            <input id="swal2-input2" class="swal2-input" placeholder="sigla" value = "">
-        </div>
+            ${createSwalField(1, "Nombre de la carrera", "")}
+            ${createSwalField(2, "Sigla", "")}
         `,
         focusConfirm: false,
         showCancelButton: true,

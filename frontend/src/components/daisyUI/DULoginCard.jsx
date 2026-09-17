@@ -1,9 +1,10 @@
 import { DUTextInput } from "./DUTextInput.jsx";
 import DUGenericCard from "./DUGenericCard.jsx";
-import { VscError } from 'react-icons/vsc';
+import { VscError } from "react-icons/vsc";
 import { useEffect, useState } from "react";
 import { isValidEmail } from "../../validations/isValidEmail.js";
 import { isValidPassword } from "../../validations/isValidPassword.js";
+import escudoUBB from "../../assets/escudo-color-gradiente.svg";
 
 export const DULoginCard = ({onSubmit, loginError, setLoginError, className, email, setEmail, password, setPassword}) => {  
     const [error, setError] = useState("Debe ingresar datos");
@@ -23,6 +24,16 @@ export const DULoginCard = ({onSubmit, loginError, setLoginError, className, ema
 
     const insideContent = (
         <div className={className}>
+            <div className="flex flex-col items-center mb-4">
+                <img
+                    src={escudoUBB}
+                    alt="Escudo Universidad del Bío-Bío"
+                    className="w-20 h-20 object-contain mb-2"
+                />
+                <h1 className="text-2xl font-bold tracking-wide text-primary">
+                    Facecore
+                </h1>
+            </div>
             <h2 className="card-title mb-3">Iniciar sesión</h2>
             {DUTextInput("email", "nombre@email.com", "Correo", "mb-3 w-full", "email-field", email, handleEmailChange)}
             {DUTextInput("password", "**********", "Clave", "mb-3 w-full", "password-field", password, handlePasswordChange)}
@@ -38,4 +49,3 @@ export const DULoginCard = ({onSubmit, loginError, setLoginError, className, ema
         <>{DUGenericCard(insideContent)}</>
     );
 }
-

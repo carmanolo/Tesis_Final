@@ -45,10 +45,10 @@ const Users = () => {
 
   return (
     <div className="users2-page">
-      <div>
-        { (<button className="btn btn-primary" onClick={() => handleCreateUser(carreras, setCarreras)}>Crear Usuario </button>)}
+      <h2 className="text-xl font-semibold">Lista de usuarios</h2>
+      <div className="flex justify-end">
+        { (<button className="btn btn-primary " onClick={() => handleCreateUser(carreras, setCarreras)}>Crear Usuario </button>)}
       </div>
-      <h2 className="card-title mb-2">Lista de Usuarios</h2>
       <div className="usuario2-page">
         <DUUserTable data={currentPageContent || []}
           handleEditUser={handleEditUser}

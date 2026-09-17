@@ -23,6 +23,7 @@ backend/
 │   ├── routes/
 │   ├── services/
 │   ├── types/
+│   ├── utils/
 │   └── validations/
 │
 ├── .gitignore
@@ -39,6 +40,7 @@ frontend/
 │
 ├── src/
 │   ├── assets/
+│   ├── class/
 │   ├── components/
 │   ├── config/
 │   ├── constants/
