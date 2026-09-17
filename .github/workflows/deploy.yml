@@ -26,9 +26,7 @@ jobs:
           npm install
 
       - name: Inyectar variables de entorno Backend
-        run: |
-          cp ~/backend.env ./backend/src/config/.env
-          cp ~/backend.env ./backend/dist/config/.env
+        run: cp ~/backend.env ./backend/src/config/.env
 
       - name: Inyectar variables de entorno Frontend
         run: cp ~/frontend.env ./frontend/.env
@@ -37,7 +35,9 @@ jobs:
         run: |
           source ~/.nvm/nvm.sh
           cd backend
-          setsid npm run build && npm start ./dist/index.js
+          npm run build
+          cp ./src/config/.env ./dist/config/.env -p
+          setsid npm start ./dist/index.js
           pm2 save
 
       - name: Reiniciar Frontend con PM2
