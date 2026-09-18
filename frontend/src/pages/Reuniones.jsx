@@ -3,7 +3,7 @@ import { getUserRole } from "../services/user.service.js";
 import { ACCESO_GESTION_ACTAS } from "../constants/reunion.constants.jsx";
 
 import { CalendarioReuniones } from "../components/Reunion/CalendarReuniones.jsx";
-import { DetalleReunion } from "../components/Reunion/DetalleReunion.jsx";
+import { DetalleReunion } from "../components/Reunion/Detallereunion.jsx";
 
 import { useGetReuniones } from "@hooks/reuniones/useGetReuniones.jsx";
 import { useCalendarioReuniones } from "@hooks/reuniones/useCalendarioReuniones.jsx";
