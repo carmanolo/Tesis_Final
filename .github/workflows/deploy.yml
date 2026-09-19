@@ -37,8 +37,7 @@ jobs:
           cd backend
           npm run build
           cp ./src/config/.env ./dist/config/.env -p
-          pm2 start ./dist/index.js
-          pm2 save
+          setsid pm2 start ./dist/index.js && setsid pm2 save
 
       - name: Reiniciar Frontend con PM2
         run: |
