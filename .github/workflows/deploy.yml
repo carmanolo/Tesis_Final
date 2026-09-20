@@ -44,4 +44,4 @@ jobs:
           source ~/.nvm/nvm.sh
           cd frontend
           npm run build
-          setsid pm2 start npm -- run preview
+          setsid pm2 start npm --name "frontend" -f -- run preview
