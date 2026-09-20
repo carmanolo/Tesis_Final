@@ -3,6 +3,7 @@ import { StaticDropdownList } from "../utils/DropdownList.jsx";
 import { getCarreraSigla, processCarreras } from "../../utils/user.utils.js";
 import { createSwalField } from "../utils/swalField.jsx";
 import { gebi } from "../utils/getElementById.jsx";
+import { ROLES_VALIDOS } from "../../constants/user.constants.jsx";
 import { fireDynamicSwal } from "../utils/dynamicSwal.jsx";
 import Swal from "sweetalert2";
 
@@ -10,10 +11,10 @@ async function createUser(carreras) {
     const {value: formValues} = await Swal.fire({
         title:"Crear Nuevo Usuario",
         html: `
-            ${createSwalField(1, "Nombre de usuario: ", "")}
+            ${createSwalField(1, "Nombre de Usuario: ", "")}
             ${createSwalField(2, "Gmail: ", "")}
             ${createSwalField(3, "Contraseña: ")}
-            ${createSwalField(4, "Rol: ")}
+            ${StaticDropdownList(ROLES_VALIDOS, "Rol: ","swal2-input4","m-1", false)}
             ${StaticDropdownList(carreras , "Carrera: ", "swal2-input5", "m-1", false)}
         `,
         focusConfirm: false,
