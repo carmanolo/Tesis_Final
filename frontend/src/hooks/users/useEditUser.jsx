@@ -4,6 +4,7 @@ import { createSwalField } from "../utils/swalField";
 //import { fireDynamicSwal } from "../utils/dynamicSwal";
 import { StaticDropdownList } from "../utils/DropdownList";
 import { getCarreraSigla, processCarreras } from "../../utils/user.utils";
+import { ROLES_VALIDOS } from "../../constants/user.constants";
 
 async function editUserInfo(user, carreras) {
   const { value: formValues } = await Swal.fire({
@@ -12,7 +13,7 @@ async function editUserInfo(user, carreras) {
         ${createSwalField(1, "Nombre de usuario: ", user.username)}
         ${createSwalField(2, "gmail: ", user.email)}
         ${createSwalField(3, "Contrseña", "")}
-        ${createSwalField(4, "Rol: ", user.role)}
+        ${StaticDropdownList(ROLES_VALIDOS, user.role, "swal2-input4", "m-1", false)}
         ${StaticDropdownList(carreras, `${user?.carreraObject?.nombre_carrera} (${user?.carreraObject?.sigla})`, "swal2-input5", "m-1", false)}
         `,
     focusConfirm: false,
@@ -53,7 +54,7 @@ async function editUserInfo(user, carreras) {
 
       if (!/^[a-zA-Z0-9._%+-]+@alumnos.ubiobio\.(cl)$/.test(email)) {
         Swal.showValidationMessage(
-          "Por favor, ingresa un correo de Gmail válido (@gmail.com o @gmail.cl)"
+          "Por favor, ingresa un correo de Gmail válido (@ubiobio.cl)"
         );
         return false;
       }
