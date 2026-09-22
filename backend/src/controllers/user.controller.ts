@@ -11,7 +11,6 @@ import { obtenerCarreraPorSigla, getCarreraSer } from "../services/carrera.servi
 
 export async function createUser(req: Request, res: Response): Promise<any> {
   try {
-    let newUser: any = null;
     if (!req.body || !req.params) {
       return handleErrorClient(res, 400, "datos no proporcionados");
     }
@@ -41,13 +40,17 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, "faltan parametros", result.error.message);
     }
 
-    newUser = await createUserSer(username, email, password, role, carreraId);
-    if (newUser) {
-      newUser.password = undefined;
-      return handleSuccess(res, 201, "Usuario registrado exitosamente", newUser.data || newUser);
-    } else {
-      return handleErrorServer(res, 500, "error al registrar usuario");
+    const val = await createUserSer(username, email, password, role, carreraId);
+
+    if (val?.data) {
+      return handleSuccess(res, 201, "Usuario registrado exitosamente", val.data);
     }
+
+    if (val?.error) {
+      return handleErrorClient(res, 400, val.error);
+    }
+
+    return handleErrorServer(res, 500, result?.error || "error al registrar usuario");
   } catch (error: any) {
     console.error("error en registro de usuario");
     return handleErrorServer(res, 500, "error interno del servidor", error.message);
@@ -150,8 +153,8 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
     Object.assign(userUpdate, req.body);
 
     const updateUser = await patchUserSer(userUpdate);
-    if (!(updateUser.data)) {
-      return handleErrorClient(res, 400, updateUser.message);
+    if (!updateUser || !updateUser.data) {
+      return handleErrorClient(res, 400, updateUser?.message || "Error al actualizar usuario");
     }
 
     return handleSuccess(res, 200, "Usuario actualizado con éxito", updateUser.data);

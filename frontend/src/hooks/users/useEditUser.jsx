@@ -1,10 +1,11 @@
 import { patchUserService } from "@services/user.service";
 import Swal from "sweetalert2";
 import { createSwalField } from "../utils/swalField";
-//import { fireDynamicSwal } from "../utils/dynamicSwal";
+import { fireDynamicSwal } from "../utils/dynamicSwal";
 import { StaticDropdownList } from "../utils/DropdownList";
 import { getCarreraSigla, processCarreras } from "../../utils/user.utils";
 import { ROLES_VALIDOS } from "../../constants/user.constants";
+import { isValidEmail } from "../../validations/isValidEmail";
 
 async function editUserInfo(user, carreras) {
   const { value: formValues } = await Swal.fire({
@@ -19,6 +20,7 @@ async function editUserInfo(user, carreras) {
     focusConfirm: false,
     showCancelButton: true,
     confirmButtonText: "Editar",
+    cancelButtonText: "Cancelar",
     preConfirm: () => {
       const username = document.getElementById("swal2-input1").value;
       const email = document.getElementById("swal2-input2").value;
@@ -38,26 +40,19 @@ async function editUserInfo(user, carreras) {
         return false;
       }
 
-      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      if (!/^[a-zA-Z0-9_ ]+$/.test(username)) {
         Swal.showValidationMessage(
           "El nombre de usuario solo puede contener letras, números y guiones bajos"
         );
         return false;
       }
 
-      if (!email || email.length < 6 || email.length > 50) {
-        Swal.showValidationMessage(
-          "El correo electrónico debe tener entre 6 y 50 caracteres"
-        );
+      const emailValidation = isValidEmail(email);
+      if (emailValidation) {
+        Swal.showValidationMessage(emailValidation);
         return false;
       }
 
-      if (!/^[a-zA-Z0-9._%+-]+@alumnos.ubiobio\.(cl)$/.test(email)) {
-        Swal.showValidationMessage(
-          "Por favor, ingresa un correo de Gmail válido (@ubiobio.cl)"
-        );
-        return false;
-      }
       return { username, email, password, role, sigla_carrera };
     },
   });
@@ -75,16 +70,28 @@ async function editUserInfo(user, carreras) {
 export const useEditUser = (fetchUsers, carreras) => {
   carreras = processCarreras(carreras);
   const handleEditUser = async (userId, user) => {
+    let response = null;
     try {
       const formValues = await editUserInfo(user, carreras);
       if (!formValues) return;
 
-      const response = await patchUserService(userId, formValues);
+      response = await patchUserService(userId, formValues);
       if (response) {
-        await fetchUsers();
+        if (typeof fetchUsers === "function") {
+          await fetchUsers();
+        }
       }
     } catch (error) {
       console.error("Error al editar usuario:", error);
+      response = error?.response || { status: 500, message: "Error desconocido" };
+    }
+
+    if (response) {
+      fireDynamicSwal(
+        response?.status || (response?.data ? 200 : 400),
+        null,
+        response?.data?.message || response?.message
+      );
     }
   };
 
