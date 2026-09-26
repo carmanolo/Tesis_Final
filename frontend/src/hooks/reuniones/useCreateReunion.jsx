@@ -4,6 +4,18 @@ import { createSwalField, createSwalDateField } from "../utils/swalField.jsx";
 import { gebi } from "../utils/getElementById.jsx";
 import { fireDynamicSwal } from "../utils/dynamicSwal.jsx";
 
+function parseFechaLocal(fechaStr) {
+    const [year, month, day] = fechaStr.split("-").map(Number);
+    return new Date(year, month - 1, day); // mes es 0-indexado
+}
+
+function esFechaAnteriorAHoy(fechaStr) {
+    const fecha = parseFechaLocal(fechaStr);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    return fecha < hoy;
+}
+
 async function pedirDatosReunion(fechaSugerida) {
     const { value: formValues } = await Swal.fire({
         title: "Nueva reunión",
@@ -21,6 +33,11 @@ async function pedirDatosReunion(fechaSugerida) {
 
             if (!fecha_reunion || !descripcion) {
                 Swal.showValidationMessage("Por favor complete todos los campos");
+                return false;
+            }
+
+            if (esFechaAnteriorAHoy(fecha_reunion)) {
+                Swal.showValidationMessage("La fecha de la reunión no puede ser anterior a hoy");
                 return false;
             }
 

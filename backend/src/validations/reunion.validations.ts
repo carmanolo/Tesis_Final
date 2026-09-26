@@ -8,11 +8,32 @@ import {
     CAMPOS_ADICIONALES
 } from "../constants/reunion.constants.js"
 
+
+function hoyEnChile(): string {
+    return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Santiago",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).format(new Date());
+}
+
+export function fechaNoPasadaValidation(value: any, helpers: Joi.CustomHelpers) {
+    const original = String(helpers.original ?? value);
+    const fechaStr = original.slice(0, 10);
+
+    if (fechaStr < hoyEnChile()) {
+        return helpers.error("date.min");
+    }
+    return value;
+}
+
 export const integrityValidation = Joi.object({
     id_reunion: Joi.any().custom(idValidationFunction),
 
-    fecha_reunion: Joi.date().messages({
+    fecha_reunion: Joi.date().custom(fechaNoPasadaValidation).messages({
         "date.base": "La fecha de la reunión debe ser una fecha válida",
+        "date.min": "La fecha de la reunión no puede ser anterior a hoy",
     }),
 
     descripcion: Joi.string().min(MIN_DESCRIPCION).max(MAX_DESCRIPCION).messages({
