@@ -124,7 +124,7 @@ export const DetalleReunion = ({
                                     <button className="btn btn-primary" onClick={() => onSubirActa(reunion)}>
                                         📤 {tieneActa ? "Reemplazar acta" : "Subir acta"}
                                     </button>
-                                    <button className="btn btn-info" onClick={() => setEditando(true)}>
+                                    <button className="btn btn-primary" onClick={() => setEditando(true)}>
                                         ✏️ Editar
                                     </button>
                                     <button

@@ -13,7 +13,7 @@ async function editUserInfo(user, carreras) {
     html: `
         ${createSwalField(1, "Nombre de usuario: ", user.username)}
         ${createSwalField(2, "gmail: ", user.email)}
-        ${createSwalField(3, "Contrseña", "")}
+        ${createSwalField(3, "Nueva contraseña (opcional): ", "", "password")}
         ${StaticDropdownList(ROLES_VALIDOS, user.role, "swal2-input4", "m-1", false)}
         ${StaticDropdownList(carreras, `${user?.carreraObject?.nombre_carrera} (${user?.carreraObject?.sigla})`, "swal2-input5", "m-1", false)}
         `,
@@ -57,13 +57,16 @@ async function editUserInfo(user, carreras) {
     },
   });
   if (formValues) {
-    return {
+    const payload = {
       username: formValues.username,
       email: formValues.email,
-      password: formValues.password,
       role: formValues.role,
       sigla_carrera: formValues.sigla_carrera
     };
+    if (formValues.password && formValues.password.trim() !== "") {
+      payload.password = formValues.password.trim();
+    }
+    return payload;
   }
 }
 

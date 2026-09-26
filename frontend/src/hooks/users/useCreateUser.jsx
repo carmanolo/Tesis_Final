@@ -13,7 +13,7 @@ async function createUser(carreras) {
         html: `
             ${createSwalField(1, "Nombre de Usuario: ", "")}
             ${createSwalField(2, "Gmail: ", "")}
-            ${createSwalField(3, "Contraseña: ")}
+            ${createSwalField(3, "Contraseña: ", "", "password")}
             ${StaticDropdownList(ROLES_VALIDOS, "Rol: ","swal2-input4","m-1", false)}
             ${StaticDropdownList(carreras , "Carrera: ", "swal2-input5", "m-1", false)}
         `,

@@ -9,11 +9,12 @@ export const createSwalField_OLD = (inputId, label, value) => {
 
 
 
-export const createSwalField = (inputId, label, value) => {
+export const createSwalField = (inputId, label, value = "", type = "text") => {
   return `
     <div class="input m-1 form-group">
       <label for="swal2-input${inputId}" class="label">${label}</label>  
       <input 
+        type="${type}"
         id="swal2-input${inputId}" 
         placeholder="${label}" 
         value="${value ?? ""}">

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import User from "../entity/user.entity.js";
 import { createUserSer, getUsersSer, patchUserSer, deleteUserSer, getUserSer } from "../services/user.service.js";
+import { encryptPassword } from "../helpers/bcrypt.helper.js";
 import { AppDataSource } from "../config/configDb.js";
 import { createValidation, integrityValidation, updateValidation } from "../validations/user.validations.js"
 import { SHOW_ERRORS } from "../constants/ajustes.constants.js"
@@ -143,6 +144,9 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
     if (req.body.username) userUpdate.username = req.body.username;
     if (req.body.email) userUpdate.email = req.body.email;
     if (req.body.role) userUpdate.role = req.body.role;
+    if (req.body.password && typeof req.body.password === "string" && req.body.password.trim() !== "") {
+      userUpdate.password = await encryptPassword(req.body.password.trim());
+    }
 
     const updateUser = await patchUserSer(userUpdate);
     if (!(updateUser.data)) {

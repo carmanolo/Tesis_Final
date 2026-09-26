@@ -40,7 +40,7 @@ const mostrarUsuarios = (data, handleEditUser, handleDeleteUser, carreraList) =>
                             {currentCarrera.nombre_carrera} {currentCarrera.sigla ? `(${currentCarrera.sigla})` : ""}
                         </td>
                       <td>
-                            <button className="btn btn-warning m-1" onClick={() => {handleEditUser(user?.id, user || {})}}><MdSettings /></button>
+                            <button className="btn btn-primary m-1" onClick={() => {handleEditUser(user?.id, user || {})}}><MdSettings /></button>
                             <button className="btn btn-error m-1" onClick={() => {handleDeleteUser(user?.id)}}><MdDeleteForever /></button>
                       </td>    
                   </tr>
