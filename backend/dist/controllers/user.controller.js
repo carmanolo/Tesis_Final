@@ -1,0 +1,205 @@
+import User from "../entity/user.entity.js";
+import { createUserSer, getUsersSer, patchUserSer, deleteUserSer, getUserSer } from "../services/user.service.js";
+import { encryptPassword } from "../helpers/bcrypt.helper.js";
+import { AppDataSource } from "../config/configDb.js";
+import { createValidation, integrityValidation, updateValidation } from "../validations/user.validations.js";
+import { SHOW_ERRORS } from "../constants/ajustes.constants.js";
+import { idValidation } from "../validations/modules/id.validation.js";
+import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
+import { USER_NO_ENCONTRADO } from "../constants/user.constants.js";
+import { obtenerCarreraPorSigla, getCarreraSer } from "../services/carrera.service.js";
+export async function createUser(req, res) {
+    try {
+        let newUser = null;
+        if (!req.body || !req.params) {
+            return handleErrorClient(res, 400, "datos no proporcionados");
+        }
+        const sigla = req.body.sigla_carrera || req.body.siglaCarrera;
+        if (sigla) {
+            const carrera = await obtenerCarreraPorSigla(sigla);
+            if (!carrera) {
+                return handleErrorClient(res, 404, "La carrera especificada no existe");
+            }
+            req.body.carreraId = carrera.id_carrera;
+            delete req.body.sigla_carrera;
+            delete req.body.siglaCarrera;
+        }
+        const { username, email, password, role, carreraId } = req.body;
+        const { error } = integrityValidation.validate(req.body);
+        if (error) {
+            return handleErrorClient(res, 400, "parametros invalidos", error.message);
+        }
+        let result = createValidation.validate(req.body);
+        if (result.error) {
+            return handleErrorClient(res, 400, "faltan parametros", result.error.message);
+        }
+        newUser = await createUserSer(username, email, password, role, carreraId);
+        if (newUser) {
+            newUser.password = undefined;
+            return handleSuccess(res, 201, "Usuario registrado exitosamente", newUser.data || newUser);
+        }
+        else {
+            return handleErrorServer(res, 500, "error al registrar usuario");
+        }
+    }
+    catch (error) {
+        console.error("error en registro de usuario");
+        return handleErrorServer(res, 500, "error interno del servidor", error.message);
+    }
+}
+export async function getUsers(req, res) {
+    try {
+        const userData = await getUsersSer();
+        if (!userData) {
+            return handleErrorClient(res, 400, "Usuarios no encontrados");
+        }
+        return handleSuccess(res, 200, "Usuarios obtenidos exitosamnete", userData[0]);
+    }
+    catch (error) {
+        console.error("Error en user.controller.ts -> getUsers(): ", error);
+        return res.status(500).json({ message: "Error interno del servidor." });
+    }
+}
+export async function getUserById(req, res) {
+    try {
+        const userRepository = AppDataSource.getRepository(User);
+        const { id } = req.params;
+        const user = await userRepository.findOne({ where: { id: Number(id) } });
+        if (!user) {
+            return res.status(404).json({ message: "Usuario no encontrado." });
+        }
+        return res.status(200).json({ message: "Usuario encontrado: ", data: user });
+    }
+    catch (error) {
+        console.error("Error en user.controller.ts -> getUserById(): ", error);
+        return res.status(500).json({ message: "Error interno del servidor." });
+    }
+}
+export async function patchUserById(req, res) {
+    try {
+        if (!req.params || !req.body) {
+            return handleErrorClient(res, 400, "datos no prporcionados");
+        }
+        const { id } = req.params;
+        if (!id) {
+            return handleErrorClient(res, 400, "el id de usuario es obligatorio");
+        }
+        let validateId = idValidation.validate({ id: id });
+        if (validateId.error) {
+            if (SHOW_ERRORS) {
+                console.error(validateId?.error?.cause || JSON.stringify(validateId?.error));
+            }
+            return handleErrorClient(res, 400, validateId?.error?.message || "Error desconocido");
+        }
+        const sigla = req.body.sigla_carrera || req.body.siglaCarrera;
+        if (sigla) {
+            const carrera = await obtenerCarreraPorSigla(sigla);
+            if (carrera) {
+                req.body.carreraId = carrera.id_carrera;
+            }
+            delete req.body.sigla_carrera;
+            delete req.body.siglaCarrera;
+        }
+        if (!req.body.password || req.body.password.trim() === "") {
+            delete req.body.password;
+        }
+        const { error } = integrityValidation.validate(req.body);
+        if (error) {
+            return handleErrorClient(res, 400, "Parámetros invalidos", error.message);
+        }
+        let result = updateValidation.validate(req.body);
+        if (result.error) {
+            return handleErrorClient(res, 400, "falto actualizar parametros", result.error.message);
+        }
+        const userUpdate = await getUserSer(Number(id));
+        if (!userUpdate) {
+            return handleErrorClient(res, 404, "Usuario no encontrado");
+        }
+        if (req.body.carreraId) {
+            const carreraExiste = await getCarreraSer(Number(req.body.carreraId));
+            if (!carreraExiste) {
+                return handleErrorClient(res, 404, "La carrera especificada no existe");
+            }
+            userUpdate.carreraId = Number(req.body.carreraId);
+        }
+        if (req.body.username)
+            userUpdate.username = req.body.username;
+        if (req.body.email)
+            userUpdate.email = req.body.email;
+        if (req.body.role)
+            userUpdate.role = req.body.role;
+        if (req.body.password && typeof req.body.password === "string" && req.body.password.trim() !== "") {
+            userUpdate.password = await encryptPassword(req.body.password.trim());
+        }
+        const updateUser = await patchUserSer(userUpdate);
+        if (!(updateUser.data)) {
+            return handleErrorClient(res, 400, updateUser.message);
+        }
+        return handleSuccess(res, 200, "Usuario actualizado con éxito", updateUser.data);
+    }
+    catch (error) {
+        return handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+export async function deleteUserById(req, res) {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return handleErrorClient(res, 400, "El id del usuario es obligatorio");
+        }
+        const result = await deleteUserSer(Number(id));
+        if (result && result.result && result.result.affected >= 1) {
+            return handleSuccess(res, 200, "Usuario elimnado exitosamnete");
+        }
+        if (result.message === USER_NO_ENCONTRADO) {
+            return handleSuccess(res, 404, result.message, result.result);
+        }
+        return handleErrorClient(res, 400, result.message, result.result);
+    }
+    catch (error) {
+        return handleErrorServer(res, 500, "Error al elimar el usuario", error.message);
+    }
+}
+export async function getProfile(req, res) {
+    try {
+        const userRepository = AppDataSource.getRepository(User);
+        const userEmail = req.user?.email; // Tipado gracias a tu archivo types/express.d.ts
+        const user = await userRepository.findOne({ where: { email: userEmail } });
+        if (!user) {
+            return res.status(404).json({ message: "Perfil no encontrado." });
+        }
+        const formattedUser = {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            rut: user.rut,
+            role: user.role
+        };
+        return res.status(200).json({ message: "Perfil encontrado: ", data: formattedUser });
+    }
+    catch (error) {
+        console.error("Error en user.controller -> getProfile(): ", error);
+        return res.status(500).json({ message: "Error interno del servidor" });
+    }
+}
+export async function getUserStats(req, res) {
+    try {
+        const userRepository = AppDataSource.getRepository(User);
+        const usuariosCreados = await userRepository.count();
+        const usuarios = await userRepository.count({ where: { role: "usuario" }, relations: { carreras: true } });
+        const admninistradores = await userRepository.count({ where: { role: "administrador" } });
+        return res.status(200).json({
+            usuariosCreados: Number(usuariosCreados || 0),
+            usuarios: Number(usuarios || 0),
+            admninistradores: Number(admninistradores || 0),
+        });
+    }
+    catch (error) {
+        console.error("Error en user.controller.ts -> getUserStats(): ", error);
+        return res.status(200).json({
+            usuariosCreados: 0,
+            usuarios: 0,
+            admninistradores: 0,
+        });
+    }
+}

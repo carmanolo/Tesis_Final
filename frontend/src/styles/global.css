@@ -1,8 +1,12 @@
 @import url(./oswald-font.css);
 @import "tailwindcss";
+
 @plugin "daisyui" {
   themes: ubb --default;
-};
+}
+
+;
+
 @plugin "daisyui/theme" {
   name: "ubb";
   default: true;
@@ -36,9 +40,61 @@
   --border: 1.5px;
   --depth: 1;
   --noise: 0;
-};
+}
+
+;
 @plugin '@tailwindcss/typography';
 
 * {
   font-family: Oswald, sans-serif;
+}
+
+.swal2-popup {
+  font-family: Oswald, sans-serif !important;
+  border-radius: 0.75rem !important;
+}
+
+.swal2-styled.swal2-confirm {
+  background-color: #2F4697 !important;
+  color: #FFFFFF !important;
+  border-radius: 0.5rem !important;
+  font-family: Oswald, sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 1rem !important;
+  box-shadow: none !important;
+  border: none !important;
+  transition: background-color 0.2s ease, transform 0.1s ease !important;
+}
+
+.swal2-styled.swal2-confirm:hover {
+  background-color: #233778 !important;
+}
+
+.swal2-styled.swal2-confirm:focus {
+  box-shadow: 0 0 0 3px rgba(47, 70, 151, 0.35) !important;
+}
+
+.swal2-styled.swal2-cancel {
+  background-color: #14375C !important;
+  color: #FFFFFF !important;
+  border-radius: 0.5rem !important;
+  font-family: Oswald, sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 1rem !important;
+  box-shadow: none !important;
+  border: none !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.swal2-styled.swal2-cancel:hover {
+  background-color: #0e2742 !important;
+}
+
+.swal2-styled.swal2-deny {
+  background-color: #E11113 !important;
+  color: #FFFFFF !important;
+  border-radius: 0.5rem !important;
+  font-family: Oswald, sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 1rem !important;
 }

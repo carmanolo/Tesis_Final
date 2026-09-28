@@ -112,16 +112,16 @@ export async function patchUserSer(user: Partial<any>): Promise<any> {
             }
         }
 
-        if (user.password && typeof user.password === "string" && user.password.trim() !== "") {
-            user.password = await encryptPassword(user.password);
-        }
-
         await userRepository.save(user as any);
 
         const savedUser = await userRepository.findOne({
             where: { id: user.id },
             relations: { carreras: true }
         });
+
+        if (savedUser && savedUser.password) {
+            delete savedUser.password;
+        }
 
         return { data: savedUser, message: "Usuario actualizado con éxito", error: null };
     } catch (error: any) {
