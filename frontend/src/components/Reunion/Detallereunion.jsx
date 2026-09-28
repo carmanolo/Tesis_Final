@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { formatearFechaDDMMAAAA, normalizarFechaISO } from "../../utils/calendar.utils.js";
 
 export const DetalleReunion = ({
     reunion,
@@ -12,11 +13,12 @@ export const DetalleReunion = ({
     const [editando, setEditando] = useState(false);
     const [fecha, setFecha] = useState("");
     const [descripcion, setDescripcion] = useState("");
+    const fileInputRef = useRef(null);
 
     // Sincroniza los campos de edición cada vez que cambia la reunión seleccionada
     useEffect(() => {
         if (reunion) {
-            setFecha(reunion.fecha_reunion || "");
+            setFecha(normalizarFechaISO(reunion.fecha_reunion));
             setDescripcion(reunion.descripcion || "");
         }
         setEditando(false);
@@ -36,9 +38,21 @@ export const DetalleReunion = ({
     };
 
     const handleCancelarEdicion = () => {
-        setFecha(reunion.fecha_reunion || "");
+        setFecha(normalizarFechaISO(reunion.fecha_reunion));
         setDescripcion(reunion.descripcion || "");
         setEditando(false);
+    };
+
+    const handleTriggerFileInput = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            onSubirActa(reunion, file);
+        }
+        e.target.value = "";
     };
 
     return (
@@ -72,7 +86,7 @@ export const DetalleReunion = ({
                                 onChange={(e) => setFecha(e.target.value)}
                             />
                         ) : (
-                            <p className="font-medium">{reunion.fecha_reunion}</p>
+                            <p className="font-medium">{formatearFechaDDMMAAAA(reunion.fecha_reunion)}</p>
                         )}
                     </div>
 
@@ -100,7 +114,7 @@ export const DetalleReunion = ({
                     {editando ? (
                         <>
                             <button className="btn btn-primary" onClick={handleGuardar}>
-                                💾 Guardar
+                                Guardar
                             </button>
                             <button className="btn btn-neutral" onClick={handleCancelarEdicion}>
                                 Cancelar
@@ -115,23 +129,30 @@ export const DetalleReunion = ({
                                 disabled={!tieneActa}
                                 title={tieneActa ? "Descargar acta" : "Aún no hay acta subida"}
                             >
-                                ⬇️ Descargar acta
+                                Descargar acta
                             </button>
 
                             {/* Solo miembros del CEE / admin */}
                             {puedeGestionarActas && (
                                 <>
-                                    <button className="btn btn-primary" onClick={() => onSubirActa(reunion)}>
-                                        📤 {tieneActa ? "Reemplazar acta" : "Subir acta"}
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.pdf,.doc,.docx"
+                                        onChange={handleFileChange}
+                                    />
+                                    <button className="btn btn-primary" onClick={handleTriggerFileInput}>
+                                        {tieneActa ? "Reemplazar acta" : "Subir acta"}
                                     </button>
                                     <button className="btn btn-primary" onClick={() => setEditando(true)}>
-                                        ✏️ Editar
+                                        Editar
                                     </button>
                                     <button
                                         className="btn btn-error"
                                         onClick={() => onEliminar(reunion.id_reunion)}
                                     >
-                                        🗑️ Eliminar
+                                        Eliminar
                                     </button>
                                 </>
                             )}

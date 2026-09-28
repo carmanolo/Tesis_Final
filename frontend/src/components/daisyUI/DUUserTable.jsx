@@ -41,7 +41,7 @@ const mostrarUsuarios = (data, handleEditUser, handleDeleteUser, carreraList) =>
                         </td>
                       <td>
                             <button className="btn btn-primary m-1" onClick={() => {handleEditUser(user?.id, user || {})}}><MdSettings /></button>
-                            <button className="btn btn-error m-1" onClick={() => {handleDeleteUser(user?.id)}}><MdDeleteForever /></button>
+                            <button className="btn btn-secondary m-1" onClick={() => {handleDeleteUser(user?.id)}}><MdDeleteForever /></button>
                       </td>    
                   </tr>
       )});

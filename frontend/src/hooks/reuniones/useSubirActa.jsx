@@ -8,50 +8,45 @@ import {
 } from "../../constants/reunion.constants.jsx";
 
 function extensionValida(nombreArchivo) {
-    const nombre = nombreArchivo.toLowerCase();
+    const nombre = (nombreArchivo || "").toLowerCase();
     return ACTA_EXTENSIONES_PERMITIDAS.some((ext) => nombre.endsWith(ext));
 }
 
-async function pedirArchivoActa(reunion) {
-    const { value: archivo } = await Swal.fire({
-        title: reunion?.ruta_archivo ? "Reemplazar acta" : "Subir acta",
-        text: `Reunión del ${reunion?.fecha_reunion ?? ""}: ${reunion?.descripcion || ""}`,
-        input: "file",
-        inputAttributes: {
-            accept: ".pdf,.doc,.docx",
-            "aria-label": "Selecciona el acta en PDF o Word",
-        },
-        showCancelButton: true,
-        confirmButtonText: "Subir",
-        cancelButtonText: "Cancelar",
-        theme: "light",
-        preConfirm: (file) => {
-            if (!file) {
-                Swal.showValidationMessage("Debes seleccionar un archivo");
-                return false;
-            }
-            if (!extensionValida(file.name)) {
-                Swal.showValidationMessage("Solo se permiten archivos PDF o Word (.pdf, .doc, .docx)");
-                return false;
-            }
-            if (file.size > ACTA_TAMANO_MAXIMO_BYTES) {
-                Swal.showValidationMessage(`El archivo no puede superar los ${ACTA_TAMANO_MAXIMO_MB}MB`);
-                return false;
-            }
-            return file;
-        },
-    });
-
-    return archivo;
-}
-
 export const useSubirActa = (fetchReuniones) => {
-    const handleSubirActa = async (reunion) => {
+    const handleSubirActa = async (reunion, archivo) => {
+        if (!archivo || !reunion) return;
+
+        if (!extensionValida(archivo.name)) {
+            Swal.fire({
+                icon: "error",
+                title: "Formato no válido",
+                text: "Solo se permiten archivos PDF o Word (.pdf, .doc, .docx)",
+            });
+            return;
+        }
+
+        if (archivo.size > ACTA_TAMANO_MAXIMO_BYTES) {
+            Swal.fire({
+                icon: "error",
+                title: "Archivo muy pesado",
+                text: `El archivo no puede superar los ${ACTA_TAMANO_MAXIMO_MB}MB`,
+            });
+            return;
+        }
+
+        // Feedback inmediato mientras se realiza la subida
+        Swal.fire({
+            title: "Subiendo acta...",
+            text: "Por favor espere un momento.",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+        });
+
         let response = null;
         try {
-            const archivo = await pedirArchivoActa(reunion);
-            if (!archivo) return;
-
             response = await subirActaService(reunion.id_reunion, archivo);
             if (typeof fetchReuniones === "function") {
                 await fetchReuniones();
@@ -60,6 +55,7 @@ export const useSubirActa = (fetchReuniones) => {
             console.error("Error al subir el acta:", error);
             response = error?.response || { status: 500, message: "Error desconocido" };
         }
+        Swal.close();
         fireDynamicSwal(response?.status, null, response?.data?.message || response?.message);
     };
 

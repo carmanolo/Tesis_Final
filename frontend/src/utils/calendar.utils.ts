@@ -66,3 +66,35 @@ export function esMismodia(fechaA: Date, fechaB: Date): boolean {
     fechaA.getDate() === fechaB.getDate()
   );
 }
+
+// Formatea una fecha al formato DD-MM-YYYY (ej: 19-09-2026)
+export function formatearFechaDDMMAAAA(fecha?: Date | string | null): string {
+  if (!fecha) return "";
+  const str = String(fecha).trim();
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const [, anio, mes, dia] = match;
+    return `${dia}-${mes}-${anio}`;
+  }
+  const d = new Date(fecha);
+  if (isNaN(d.getTime())) return str;
+  const dia = String(d.getUTCDate()).padStart(2, "0");
+  const mes = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const anio = d.getUTCFullYear();
+  return `${dia}-${mes}-${anio}`;
+}
+
+// Extrae la fecha en formato YYYY-MM-DD para inputs de tipo date
+export function normalizarFechaISO(fecha?: Date | string | null): string {
+  if (!fecha) return "";
+  const str = String(fecha).trim();
+  const match = str.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match) return match[1];
+  try {
+    const d = new Date(fecha);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().split("T")[0];
+  } catch {
+    return "";
+  }
+}

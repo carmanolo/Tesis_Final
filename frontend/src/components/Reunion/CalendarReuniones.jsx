@@ -58,7 +58,7 @@ export const CalendarioReuniones = ({ anio, mes, onCambiarMes, onIrHoy, reunione
                                         }`}
                                         title={reunion.descripcion}
                                     >
-                                        📋 {reunion.descripcion}
+                                        {reunion.descripcion}
                                     </button>
                                 ))}
                             </div>
