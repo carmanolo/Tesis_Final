@@ -9,8 +9,10 @@ export interface Actividad {
     procedencia: string;
     monto: number;
     fecha_recepcion?: Date | null;
+    creadorId?: number;
     creador?: IUser;
-    carreras?: Carrera[];
+    carreraId?: number;
+    carrera?: Carrera;
 }
 
 export const ActividadEntity = new EntitySchema<Actividad>({
@@ -42,6 +44,14 @@ export const ActividadEntity = new EntitySchema<Actividad>({
             type: "timestamp", 
             nullable: true 
         },
+        creadorId: {
+            type: "int",
+            nullable: false,
+        },
+        carreraId: {
+            type: "int",
+            nullable: false,
+        },
     },
     relations: {
         creador: {
@@ -52,17 +62,15 @@ export const ActividadEntity = new EntitySchema<Actividad>({
             nullable: false,
             onDelete: "RESTRICT",
         },
-        carreras: {
-            type: "many-to-many",
+        carrera: {
+            type: "many-to-one",
             target: "Carrera",
+            joinColumn: { name: "carreraId", referencedColumnName: "id_carrera" },
             inverseSide: "actividades",
-            joinTable: {
-                name: "actividades_carreras",
-                joinColumn: { name: "id_actividad", referencedColumnName: "id_actividad" },
-                inverseJoinColumn: { name: "id_carrera", referencedColumnName: "id_carrera" },
-            },
+            nullable: false,
+            onDelete: "CASCADE",
         },
     },
 });
 
-export default ActividadEntity;
+export default ActividadEntity;

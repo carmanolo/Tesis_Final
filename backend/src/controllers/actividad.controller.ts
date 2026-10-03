@@ -6,7 +6,10 @@ import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers
 
 export async function createActividad(req: Request, res: Response): Promise<any> {
   try {
-    const { id, carreraId, rol } = req.user as any;
+    const { id, carreraId: userCarreraId, rol, role } = (req.user as any) || {};
+    const userRole = rol || role;
+    const isAdmin = userRole === "admin" || userRole === "administrador";
+
     if (!req.body) return handleErrorClient(res, 400, "datos no proporcionados");
 
     const { error } = integrityValidation.validate(req.body);
@@ -15,16 +18,17 @@ export async function createActividad(req: Request, res: Response): Promise<any>
     const result = createValidation.validate(req.body);
     if (result.error) return handleErrorClient(res, 400, "faltan parametros", result.error.message);
 
-    const { nombre_actividad, fecha_actividad, procedencia, monto, carreras } = req.body;
+    const { nombre_actividad, fecha_actividad, procedencia, monto, carreraId, id_carrera } = req.body;
 
-    // Usuario normal: siempre su propia carrera. Admin: la que indique.
-    const carrerasIds = rol === "admin" ? carreras : [carreraId];
-    if (!carrerasIds?.length || carrerasIds.includes(null)) {
+    // Admin puede indicar la carrera o usar la suya; usuario normal usa la suya o la indicada en el body
+    const targetCarreraId = isAdmin ? (carreraId || id_carrera || userCarreraId) : (userCarreraId || carreraId || id_carrera);
+
+    if (!targetCarreraId) {
       return handleErrorClient(res, 400, "Debes indicar la carrera de la actividad");
     }
 
     const { data, error: errSer } = await createActividadSer(
-      id, nombre_actividad, fecha_actividad, procedencia, monto, carrerasIds
+      id, Number(targetCarreraId), nombre_actividad, fecha_actividad, procedencia, monto
     );
     if (errSer) return handleErrorClient(res, 400, errSer);
 
@@ -36,8 +40,11 @@ export async function createActividad(req: Request, res: Response): Promise<any>
 
 export async function getActividades(req: Request, res: Response): Promise<any> {
   try {
-    const { carreraId, rol } = req.user as any;
-    const actividades = await getActividadesSer(carreraId, rol);
+    const { carreraId, rol, role } = (req.user as any) || {};
+    const userRole = rol || role;
+    const queryCarreraId = req.query.carreraId ? Number(req.query.carreraId) : carreraId;
+
+    const actividades = await getActividadesSer(queryCarreraId, userRole);
 
     if (!actividades) return handleErrorServer(res, 500, "Error interno del servidor");
     return handleSuccess(res, 200, "Actividades obtenidas exitosamente", actividades);
@@ -48,14 +55,15 @@ export async function getActividades(req: Request, res: Response): Promise<any> 
 
 export async function getActividadById(req: Request, res: Response): Promise<any> {
   try {
-    const { carreraId, rol } = req.user as any;
+    const { carreraId, rol, role } = (req.user as any) || {};
+    const userRole = rol || role;
     const { id_actividad } = req.params;
 
     if (!id_actividad || isNaN(Number(id_actividad))) {
       return handleErrorClient(res, 400, "el id de la actividad es inválido");
     }
 
-    const actividad = await getActividadSer(Number(id_actividad), carreraId, rol);
+    const actividad = await getActividadSer(Number(id_actividad), carreraId, userRole);
     if (!actividad) return handleErrorClient(res, 404, "Actividad no encontrada");
 
     return handleSuccess(res, 200, "Actividad encontrada", actividad);
@@ -66,7 +74,8 @@ export async function getActividadById(req: Request, res: Response): Promise<any
 
 export async function patchActividadById(req: Request, res: Response): Promise<any> {
   try {
-    const { carreraId, rol } = req.user as any;
+    const { carreraId, rol, role } = (req.user as any) || {};
+    const userRole = rol || role;
     if (!req.body) return handleErrorClient(res, 400, "datos no proporcionados");
 
     const { id_actividad } = req.params;
@@ -79,10 +88,16 @@ export async function patchActividadById(req: Request, res: Response): Promise<a
     const result = updateValidation.validate(req.body);
     if (result.error) return handleErrorClient(res, 400, "faltó actualizar parametros", result.error.message);
 
-    const actividad = await getActividadSer(Number(id_actividad), carreraId, rol);
+    const actividad = await getActividadSer(Number(id_actividad), carreraId, userRole);
     if (!actividad) return handleErrorClient(res, 404, "Actividad no encontrada");
 
-    Object.assign(actividad, req.body);
+    const { carreraId: newCarreraId, id_carrera: newIdCarrera, ...restData } = req.body;
+    Object.assign(actividad, restData);
+
+    if (newCarreraId || newIdCarrera) {
+      actividad.carreraId = Number(newCarreraId || newIdCarrera);
+      actividad.carrera = { id_carrera: actividad.carreraId };
+    }
 
     const actualizada = await patchActividadSer(actividad);
     if (!actualizada.data) return handleErrorClient(res, 400, actualizada.message);
@@ -95,15 +110,16 @@ export async function patchActividadById(req: Request, res: Response): Promise<a
 
 export async function deleteActividadById(req: Request, res: Response): Promise<any> {
   try {
-    const { carreraId, rol } = req.user as any;
+    const { carreraId, rol, role } = (req.user as any) || {};
+    const userRole = rol || role;
     const { id_actividad } = req.params;
 
     if (!id_actividad || isNaN(Number(id_actividad))) {
       return handleErrorClient(res, 400, "El id de la actividad es inválido");
     }
 
-    // Primero verifica que la pueda ver
-    const actividad = await getActividadSer(Number(id_actividad), carreraId, rol);
+    // Primero verifica que la pueda ver / pertenezca a su carrera
+    const actividad = await getActividadSer(Number(id_actividad), carreraId, userRole);
     if (!actividad) return handleErrorClient(res, 404, "Actividad no encontrada");
 
     const result = await deleteActividadSer(Number(id_actividad));

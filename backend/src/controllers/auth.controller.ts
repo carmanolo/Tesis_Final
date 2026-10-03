@@ -73,6 +73,8 @@ export async function login(req: Request, res: Response): Promise<any> {
         .json({ message: "La contraseña ingresada no es correcta" });
 
     const payload = {
+      id: userFound.id,
+      carreraId: userFound.carreraId,
       username: userFound.username,
       email: userFound.email,
       role: userFound?.role || userFound?.rol,
