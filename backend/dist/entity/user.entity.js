@@ -44,12 +44,14 @@ export const UserEntity = new EntitySchema({
         carreras: {
             type: "many-to-one",
             target: "Carrera",
-            joinColumn: {
-                name: "carreraId",
-                referencedColumnName: "id_carrera",
-            },
-            onDelete: "CASCADE",
+            joinColumn: { name: "carreraId", referencedColumnName: "id_carrera" },
+            onDelete: "SET NULL",
             inverseSide: "users",
+        },
+        actividades: {
+            type: "one-to-many",
+            target: "Actividad",
+            inverseSide: "creador",
         },
     }
 });

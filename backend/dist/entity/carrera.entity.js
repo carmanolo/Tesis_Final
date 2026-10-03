@@ -25,6 +25,11 @@ export const CarreraEntity = new EntitySchema({
             target: "User",
             inverseSide: "carreras",
         },
+        actividades: {
+            type: "many-to-many",
+            target: "Actividad",
+            inverseSide: "carreras",
+        },
     }
 });
 export default CarreraEntity;

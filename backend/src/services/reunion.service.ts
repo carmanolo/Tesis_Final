@@ -1,6 +1,7 @@
 import fs from "fs";
 import { AppDataSource } from "../config/configDb.js";
 import { ReunionEntity, Reunion } from "../entity/reunion.entity.js";
+import { crearEventoReunion, actualizarEventoReunion, eliminarEventoReunion } from "./googleCalendar.service.js";
 
 export async function createReunionSer(
     fecha_reunion: Date | string,
@@ -18,6 +19,12 @@ export async function createReunionSer(
             descripcion
         });
         await reunionRepository.save(newReunion);
+
+        const eventId = await crearEventoReunion(fecha_reunion, descripcion /*, ["correo@ejemplo.com"] */);
+        if (eventId) {
+        (newReunion as any).google_event_id = eventId;
+            await reunionRepository.save(newReunion);
+        }
 
         return newReunion;
     } catch (error) {
@@ -61,6 +68,14 @@ export async function patchReunionSer(reunion: Partial<any>): Promise<any> {
 
         const savedReunion = await reunionRepository.save(reunion as any);
 
+        if (savedReunion.google_event_id) {
+            await actualizarEventoReunion(
+            savedReunion.google_event_id,
+            savedReunion.fecha_reunion,
+            savedReunion.descripcion
+        );
+}
+
         return { data: savedReunion, message: "Reunión actualizada con éxito", error: null };
     } catch (error) {
         console.error("Error al actualizar reunión", error);
@@ -80,6 +95,11 @@ export async function deleteReunionSer(id_reunion: number): Promise<any> {
         // Si tiene un acta asociada, se elimina también el archivo físico
         if (reunion.ruta_archivo && fs.existsSync(reunion.ruta_archivo)) {
             fs.unlinkSync(reunion.ruta_archivo);
+        }
+
+        //eliminar recordatorio asociado
+        if (reunion.google_event_id) {
+            await eliminarEventoReunion(reunion.google_event_id);
         }
 
         return {

@@ -35,7 +35,11 @@ export const ReunionEntity = new EntitySchema({
         fecha_subida: {
             type: "timestamp",
             nullable: true,
-        }
+        },
+        google_event_id: {
+            type: String,
+            nullable: true,
+        },
     }
 });
 export default ReunionEntity;
