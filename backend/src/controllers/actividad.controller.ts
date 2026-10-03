@@ -3,69 +3,62 @@ import { getActividadesSer, getActividadSer, createActividadSer, patchActividadS
 import { createValidation, integrityValidation, updateValidation } from "../validations/actividad.validations.js";
 import { idValidation } from "../validations/modules/id.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
-import { ACTIVIDAD_NO_ENCONTRADA } from "../constants/actividad.constants.js";
-import { SHOW_ERRORS } from "../constants/ajustes.constants.js";
 
 export async function createActividad(req: Request, res: Response): Promise<any> {
   try {
-    if (!req.body) {
-      return handleErrorClient(res, 400, "datos no proporcionados");
-    }
-
-    const { nombre_actividad, fecha_actividad, procedencia, monto } = req.body;
+    const { id, carreraId, rol } = req.user as any;
+    if (!req.body) return handleErrorClient(res, 400, "datos no proporcionados");
 
     const { error } = integrityValidation.validate(req.body);
-    if (error) {
-      return handleErrorClient(res, 400, "parametros invalidos", error.message);
-    }
+    if (error) return handleErrorClient(res, 400, "parametros invalidos", error.message);
 
     const result = createValidation.validate(req.body);
-    if (result.error) {
-      return handleErrorClient(res, 400, "faltan parametros", result.error.message);
+    if (result.error) return handleErrorClient(res, 400, "faltan parametros", result.error.message);
+
+    const { nombre_actividad, fecha_actividad, procedencia, monto, carreras } = req.body;
+
+    // Usuario normal: siempre su propia carrera. Admin: la que indique.
+    const carrerasIds = rol === "admin" ? carreras : [carreraId];
+    if (!carrerasIds?.length || carrerasIds.includes(null)) {
+      return handleErrorClient(res, 400, "Debes indicar la carrera de la actividad");
     }
 
-    const newActividad = await createActividadSer(nombre_actividad, fecha_actividad, procedencia, monto);
-    if (newActividad) {
-      return handleSuccess(res, 201, "Actividad registrada exitosamente", newActividad.data || newActividad);
-    } else {
-      return handleErrorServer(res, 500, "error al registrar la Actividad");
-    }
+    const { data, error: errSer } = await createActividadSer(
+      id, nombre_actividad, fecha_actividad, procedencia, monto, carrerasIds
+    );
+    if (errSer) return handleErrorClient(res, 400, errSer);
+
+    return handleSuccess(res, 201, "Actividad registrada exitosamente", data);
   } catch (error: any) {
-    console.error("error en registro de Actividad");
     return handleErrorServer(res, 500, "error interno del servidor", error.message);
   }
 }
 
 export async function getActividades(req: Request, res: Response): Promise<any> {
   try {
-    const actividadData = await getActividadesSer();
+    const { carreraId, rol } = req.user as any;
+    const actividades = await getActividadesSer(carreraId, rol);
 
-    if (!actividadData) {
-      return handleErrorClient(res, 400, "Actividades no encontradas");
-    }
-
-    return handleSuccess(res, 200, "Actividades obtenidas exitosamente", actividadData[0] || actividadData);
+    if (!actividades) return handleErrorServer(res, 500, "Error interno del servidor");
+    return handleSuccess(res, 200, "Actividades obtenidas exitosamente", actividades);
   } catch (error: any) {
-    console.error("Error en actividad.controller.ts -> getActividades(): ", error);
-    return res.status(500).json({ message: "Error interno del servidor." });
+    return handleErrorServer(res, 500, "Error interno del servidor", error.message);
   }
 }
 
 export async function getActividadById(req: Request, res: Response): Promise<any> {
   try {
+    const { carreraId, rol } = req.user as any;
     const { id_actividad } = req.params;
 
     if (!id_actividad || isNaN(Number(id_actividad))) {
       return handleErrorClient(res, 400, "el id de la actividad es inválido");
     }
 
-    const reunion = await getActividadSer(Number(id_actividad));
+    const actividad = await getActividadSer(Number(id_actividad), carreraId, rol);
+    if (!actividad) return handleErrorClient(res, 404, "Actividad no encontrada");
 
-    if (!reunion) {
-      return handleErrorClient(res, 404, "Actividad no encontrada");
-    }
-
-    return handleSuccess(res, 200, "Actividad encontrada", reunion);
+    return handleSuccess(res, 200, "Actividad encontrada", actividad);
   } catch (error: any) {
     return handleErrorServer(res, 500, "Error interno del servidor", error.message);
   }
@@ -73,46 +66,28 @@ export async function getActividadById(req: Request, res: Response): Promise<any
 
 export async function patchActividadById(req: Request, res: Response): Promise<any> {
   try {
-    if (!req.params || !req.body) {
-      return handleErrorClient(res, 400, "datos no proporcionados");
-    }
-    const { id_actividad } = req.params;
-    if (!id_actividad) {
-      return handleErrorClient(res, 400, "el id de la actividad es obligatorio");
-    }
+    const { carreraId, rol } = req.user as any;
+    if (!req.body) return handleErrorClient(res, 400, "datos no proporcionados");
 
+    const { id_actividad } = req.params;
     const validateId = idValidation.validate({ id: id_actividad });
-    if (validateId.error) {
-      if (SHOW_ERRORS) {
-        console.error(validateId?.error?.cause || JSON.stringify(validateId?.error));
-      }
-      return handleErrorClient(res, 400, validateId?.error?.message || "Error desconocido");
-    }
+    if (validateId.error) return handleErrorClient(res, 400, validateId.error.message);
 
     const { error } = integrityValidation.validate(req.body);
-    if (error) {
-      return handleErrorClient(res, 400, "Parámetros invalidos", error.message);
-    }
+    if (error) return handleErrorClient(res, 400, "Parámetros invalidos", error.message);
 
     const result = updateValidation.validate(req.body);
-    if (result.error) {
-      return handleErrorClient(res, 400, "faltó actualizar parametros", result.error.message);
-    }
+    if (result.error) return handleErrorClient(res, 400, "faltó actualizar parametros", result.error.message);
 
-    const actividadUpdate = await getActividadSer(Number(id_actividad));
+    const actividad = await getActividadSer(Number(id_actividad), carreraId, rol);
+    if (!actividad) return handleErrorClient(res, 404, "Actividad no encontrada");
 
-    if (!actividadUpdate) {
-      return handleErrorClient(res, 404, "Actividad no encontrada");
-    }
+    Object.assign(actividad, req.body);
 
-    Object.assign(actividadUpdate, req.body);
+    const actualizada = await patchActividadSer(actividad);
+    if (!actualizada.data) return handleErrorClient(res, 400, actualizada.message);
 
-    const updateReunion = await patchActividadSer(actividadUpdate);
-    if (!updateReunion.data) {
-      return handleErrorClient(res, 400, updateReunion.message);
-    }
-
-    return handleSuccess(res, 200, "Actividad actualizada con éxito", updateReunion.data);
+    return handleSuccess(res, 200, actualizada.message, actualizada.data);
   } catch (error: any) {
     return handleErrorServer(res, 500, "Error interno del servidor", error.message);
   }
@@ -120,22 +95,23 @@ export async function patchActividadById(req: Request, res: Response): Promise<a
 
 export async function deleteActividadById(req: Request, res: Response): Promise<any> {
   try {
+    const { carreraId, rol } = req.user as any;
     const { id_actividad } = req.params;
-    if (!id_actividad) {
-      return handleErrorClient(res, 400, "El id de la actividad es obligatorio");
+
+    if (!id_actividad || isNaN(Number(id_actividad))) {
+      return handleErrorClient(res, 400, "El id de la actividad es inválido");
     }
+
+    // Primero verifica que la pueda ver
+    const actividad = await getActividadSer(Number(id_actividad), carreraId, rol);
+    if (!actividad) return handleErrorClient(res, 404, "Actividad no encontrada");
 
     const result = await deleteActividadSer(Number(id_actividad));
-
-    if (result && result.result && result.result.affected >= 1) {
-      return handleSuccess(res, 200, "Actividad eliminada exitosamente");
+    if (!result.result || result.result.affected < 1) {
+      return handleErrorClient(res, 400, result.message);
     }
 
-    if (result.message === ACTIVIDAD_NO_ENCONTRADA) {
-      return handleSuccess(res, 404, result.message, result.result);
-    }
-
-    return handleErrorClient(res, 400, result.message, result.result);
+    return handleSuccess(res, 200, result.message);
   } catch (error: any) {
     return handleErrorServer(res, 500, "Error al eliminar la actividad", error.message);
   }

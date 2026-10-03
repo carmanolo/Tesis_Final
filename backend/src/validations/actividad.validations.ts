@@ -42,7 +42,7 @@ export const integrityValidation = Joi.object({
     monto: Joi.number().integer().messages({
         "number.base": ERROR_CANTIDAD_INVALIDA,
     }),
-
+    carreras: Joi.array().items(Joi.number().integer().positive()).min(1),
 
 }).unknown(false).messages({
     "any.unknown": CAMPOS_ADICIONALES,
@@ -61,7 +61,8 @@ export const createValidation = Joi.object({
     }),
     monto: Joi.any().required().messages({
         "any.required":MONTO_OBLIGATORIA
-    })
+    }),
+    carreras: Joi.array().items(Joi.number().integer().positive()).min(1),
 
 }).min(1).unknown(false)
   .messages({
@@ -74,7 +75,8 @@ export const updateValidation = Joi.object({
     nombre_actividad: Joi.any(),
     fecha_actividad: Joi.any(),
     procedencia: Joi.any(),
-    monto: Joi.any()
+    monto: Joi.any(),
+    carreras: Joi.any(),
 
 }).min(1).unknown(false).messages({
     "object.min": "Debe proporcionar al menos un campo para actualizar",

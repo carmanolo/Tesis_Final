@@ -1,14 +1,16 @@
 import { EntitySchema } from "typeorm";
+import { Actividad } from "./actividad.entity.js";
 
 
 export interface IUser {
     id: number;
     username: string;
     email: string;
-    password?: string; // Opcional por seguridad al retornar datos
+    password?: string;
     role: string;
     carreraId: number;
     carreras?: any;
+    actividades?: Actividad[];      // NUEVO
     createdAt: Date;
     updatedAt: Date;
 }
@@ -44,6 +46,7 @@ export const UserEntity = new EntitySchema<IUser>({
             type: "int",
             nullable: true,
         },
+        
         createdAt: {
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
@@ -55,15 +58,17 @@ export const UserEntity = new EntitySchema<IUser>({
         },
     },
     relations: {
-        carreras: {
+       carreras: {
             type: "many-to-one",
-            target: "Carrera", 
-            joinColumn: {
-                name: "carreraId", 
-                referencedColumnName: "id_carrera", 
-            },
-            onDelete: "CASCADE", 
+            target: "Carrera",
+            joinColumn: { name: "carreraId", referencedColumnName: "id_carrera" },
+            onDelete: "SET NULL",
             inverseSide: "users",
+        },
+        actividades: {              // NUEVO
+            type: "one-to-many",
+            target: "Actividad",
+            inverseSide: "creador",
         },
     }
 
