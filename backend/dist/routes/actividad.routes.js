@@ -8,5 +8,5 @@ router.get("/", authorizeRoles("administrador", "presidente cee", "secretario ce
 router.get("/:id_actividad", authorizeRoles("administrador", "presidente cee", "secretario cee", "tesorero cee", "vocal cee"), getActividadById);
 router.post("/crear/", authorizeRoles("administrador", "tesorero cee"), createActividad);
 router.patch("/editar/:id_actividad", authorizeRoles("administrador", "presidente cee", "secretario cee", "tesorero cee", "vocal cee"), patchActividadById);
-router.delete("/eliminar/:id_carrera", authorizeRoles("administrador", "presidente cee", "secretario cee", "tesorero cee", "vocal cee"), deleteActividadById);
+router.delete("/eliminar/:id_actividad", authorizeRoles("administrador", "presidente cee", "secretario cee", "tesorero cee", "vocal cee"), deleteActividadById);
 export default router;

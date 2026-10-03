@@ -36,7 +36,14 @@ export const integrityValidation = Joi.object({
     monto: Joi.number().integer().messages({
         "number.base": ERROR_CANTIDAD_INVALIDA,
     }),
-    carreras: Joi.array().items(Joi.number().integer().positive()).min(1),
+    carreraId: Joi.number().integer().positive().messages({
+        "number.base": "El id de la carrera debe ser un número",
+        "number.positive": "El id de la carrera debe ser un número positivo",
+    }),
+    id_carrera: Joi.number().integer().positive().messages({
+        "number.base": "El id de la carrera debe ser un número",
+        "number.positive": "El id de la carrera debe ser un número positivo",
+    }),
 }).unknown(false).messages({
     "any.unknown": CAMPOS_ADICIONALES,
     "object.unknown": CAMPOS_ADICIONALES,
@@ -54,7 +61,8 @@ export const createValidation = Joi.object({
     monto: Joi.any().required().messages({
         "any.required": MONTO_OBLIGATORIA
     }),
-    carreras: Joi.array().items(Joi.number().integer().positive()).min(1),
+    carreraId: Joi.any(),
+    id_carrera: Joi.any(),
 }).min(1).unknown(false)
     .messages({
     "object.min": "Debe proporcionar al menos un campo",
@@ -66,7 +74,8 @@ export const updateValidation = Joi.object({
     fecha_actividad: Joi.any(),
     procedencia: Joi.any(),
     monto: Joi.any(),
-    carreras: Joi.any(),
+    carreraId: Joi.any(),
+    id_carrera: Joi.any(),
 }).min(1).unknown(false).messages({
     "object.min": "Debe proporcionar al menos un campo para actualizar",
     "any.min": "Debe proporcionar al menos un campo para actualizar",

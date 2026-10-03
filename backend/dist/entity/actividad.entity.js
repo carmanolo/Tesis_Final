@@ -28,6 +28,14 @@ export const ActividadEntity = new EntitySchema({
             type: "timestamp",
             nullable: true
         },
+        creadorId: {
+            type: "int",
+            nullable: false,
+        },
+        carreraId: {
+            type: "int",
+            nullable: false,
+        },
     },
     relations: {
         creador: {
@@ -38,15 +46,13 @@ export const ActividadEntity = new EntitySchema({
             nullable: false,
             onDelete: "RESTRICT",
         },
-        carreras: {
-            type: "many-to-many",
+        carrera: {
+            type: "many-to-one",
             target: "Carrera",
+            joinColumn: { name: "carreraId", referencedColumnName: "id_carrera" },
             inverseSide: "actividades",
-            joinTable: {
-                name: "actividades_carreras",
-                joinColumn: { name: "id_actividad", referencedColumnName: "id_actividad" },
-                inverseJoinColumn: { name: "id_carrera", referencedColumnName: "id_carrera" },
-            },
+            nullable: false,
+            onDelete: "CASCADE",
         },
     },
 });

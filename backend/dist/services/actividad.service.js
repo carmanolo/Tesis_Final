@@ -1,48 +1,67 @@
-import { In } from "typeorm";
 import { AppDataSource } from "../config/configDb.js";
 import ActividadEntity from "../entity/actividad.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
 const repo = () => AppDataSource.getRepository(ActividadEntity);
-// ¿Puede este usuario ver esta actividad?
-const puedeVer = (actividad, carreraId, role) => role === "admin" || actividad.carreras?.some((c) => c.id_carrera === carreraId);
-export async function createActividadSer(creadorId, nombre_actividad, fecha_actividad, procedencia, monto, carrerasIds) {
+const isAdminRole = (role) => {
+    const r = role?.toLowerCase();
+    return r === "admin" || r === "administrador";
+};
+export async function createActividadSer(creadorId, carreraId, nombre_actividad, fecha_actividad, procedencia, monto) {
     try {
-        const carreras = await AppDataSource.getRepository(CarreraEntity)
-            .findBy({ id_carrera: In(carrerasIds) });
-        if (carreras.length !== carrerasIds.length) {
-            return { data: null, error: "Alguna de las carreras no existe" };
+        const carreraRepo = AppDataSource.getRepository(CarreraEntity);
+        const carrera = await carreraRepo.findOneBy({ id_carrera: carreraId });
+        if (!carrera) {
+            return { data: null, error: "La carrera especificada no existe" };
         }
         const nueva = repo().create({
-            nombre_actividad, fecha_actividad, procedencia, monto,
+            nombre_actividad,
+            fecha_actividad,
+            procedencia,
+            monto,
+            creadorId,
+            carreraId,
             creador: { id: creadorId },
-            carreras,
+            carrera: { id_carrera: carreraId },
         });
-        return { data: await repo().save(nueva), error: null };
+        const saved = await repo().save(nueva);
+        return { data: saved, error: null };
     }
     catch (error) {
         console.error(error);
         return { data: null, error: "Error interno al crear la actividad" };
     }
 }
-// Solo devuelve las actividades que incluyen la carrera del usuario
+// Devuelve las actividades de la carrera o todas si es administrador
 export async function getActividadesSer(carreraId, role) {
     try {
-        const actividades = await repo().find({ relations: { carreras: true } });
-        return actividades.filter((a) => puedeVer(a, carreraId, role));
+        const whereCondition = {};
+        if (!isAdminRole(role) || carreraId) {
+            whereCondition.carreraId = carreraId;
+        }
+        const actividades = await repo().find({
+            where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
+            relations: { carrera: true, creador: true },
+            order: { fecha_actividad: "DESC" },
+        });
+        return actividades;
     }
     catch (error) {
         console.error("error al obtener actividades: ", error);
         return null;
     }
 }
-// Si existe pero no es de su carrera, devuelve null (igual que si no existiera)
+// Devuelve la actividad si pertenece a la carrera del usuario o si es administrador
 export async function getActividadSer(id_actividad, carreraId, role) {
     try {
+        const whereCondition = { id_actividad };
+        if (!isAdminRole(role)) {
+            whereCondition.carreraId = carreraId;
+        }
         const actividad = await repo().findOne({
-            where: { id_actividad },
-            relations: { carreras: true },
+            where: whereCondition,
+            relations: { carrera: true, creador: true },
         });
-        return actividad && puedeVer(actividad, carreraId, role) ? actividad : null;
+        return actividad;
     }
     catch (error) {
         console.error("Error al obtener la actividad", error);
