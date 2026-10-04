@@ -34,7 +34,7 @@ jobs:
       - name: Detener servidor antiguo
         run: |
           source ~/.nvm/nvm.sh
-          pm2 stop all
+          pm2 del all
 
       - name: Reiniciar Backend con PM2
         run: |
