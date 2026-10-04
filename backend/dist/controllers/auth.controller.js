@@ -61,6 +61,8 @@ export async function login(req, res) {
                 .status(401)
                 .json({ message: "La contraseña ingresada no es correcta" });
         const payload = {
+            id: userFound.id,
+            carreraId: userFound.carreraId,
             username: userFound.username,
             email: userFound.email,
             role: userFound?.role || userFound?.rol,

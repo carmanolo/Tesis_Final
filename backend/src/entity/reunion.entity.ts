@@ -4,6 +4,8 @@ export interface Reunion {
     id_reunion: number,
     fecha_reunion: Date,
     descripcion: string,
+    google_event_id?: string | null,
+
     // Metadata del acta (PDF/Word) asociada a la reunión
     nombre_archivo?: string | null,
     nombre_original?: string | null,
@@ -48,7 +50,11 @@ export const ReunionEntity = new EntitySchema<Reunion>({
         fecha_subida: {
             type: "timestamp",
             nullable: true,
-        }
+        },
+        google_event_id: {
+            type: String,
+            nullable: true,
+        },
     }
 });
 

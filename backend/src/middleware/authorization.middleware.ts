@@ -30,6 +30,8 @@ export function authorizeRoles(...rolesPermitidos: string[]): RequestHandler {
             }
 
             req.user.rol = rolActual;
+            req.user.id = userFound.id;                 
+            req.user.carreraId = userFound.carreraId;   
             next();
         } catch (error: any) {
             return handleErrorServer(res, 500, "Error en verificación de rol", error.message);
