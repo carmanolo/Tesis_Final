@@ -1,12 +1,12 @@
 import { AppDataSource } from "../config/configDb.js";
-import AporteEntity from "../entity/Aporte.entity.js";
+import AporteEntity from "../entity/aporte.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
 const repo = () => AppDataSource.getRepository(AporteEntity);
 const isAdminRole = (role) => {
     const r = role?.toLowerCase();
     return r === "admin" || r === "administrador";
 };
-export async function createAporteSer(creadorId, carreraId, nombre_Aporte, fecha_Aporte, procedencia, monto) {
+export async function createAporteSer(creadorId, carreraId, descripcion, fecha_recepcion, procedencia, monto) {
     try {
         const carreraRepo = AppDataSource.getRepository(CarreraEntity);
         const carrera = await carreraRepo.findOneBy({ id_carrera: carreraId });
@@ -14,8 +14,8 @@ export async function createAporteSer(creadorId, carreraId, nombre_Aporte, fecha
             return { data: null, error: "La carrera especificada no existe" };
         }
         const nueva = repo().create({
-            nombre_Aporte,
-            fecha_Aporte,
+            descripcion,
+            fecha_recepcion,
             procedencia,
             monto,
             creadorId,
@@ -28,22 +28,22 @@ export async function createAporteSer(creadorId, carreraId, nombre_Aporte, fecha
     }
     catch (error) {
         console.error(error);
-        return { data: null, error: "Error interno al crear la Aporte" };
+        return { data: null, error: "Error interno al crear el Aporte" };
     }
 }
-// Devuelve las Aportees de la carrera o todas si es administrador
-export async function getAporteesSer(carreraId, role) {
+// Devuelve las Aportes de la carrera o todas si es administrador
+export async function getAportesSer(carreraId, role) {
     try {
         const whereCondition = {};
         if (!isAdminRole(role) || carreraId) {
             whereCondition.carreraId = carreraId;
         }
-        const Aportees = await repo().find({
+        const Aportes = await repo().find({
             where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
             relations: { carrera: true, creador: true },
             order: { fecha_Aporte: "DESC" },
         });
-        return Aportees;
+        return Aportes;
     }
     catch (error) {
         console.error("error al obtener Aportees: ", error);
@@ -51,9 +51,9 @@ export async function getAporteesSer(carreraId, role) {
     }
 }
 // Devuelve la Aporte si pertenece a la carrera del usuario o si es administrador
-export async function getAporteSer(id_Aporte, carreraId, role) {
+export async function getAporteSer(id_aporte, carreraId, role) {
     try {
-        const whereCondition = { id_Aporte };
+        const whereCondition = { id_aporte };
         if (!isAdminRole(role)) {
             whereCondition.carreraId = carreraId;
         }
@@ -64,27 +64,27 @@ export async function getAporteSer(id_Aporte, carreraId, role) {
         return Aporte;
     }
     catch (error) {
-        console.error("Error al obtener la Aporte", error);
+        console.error("Error al obtener el Aporte", error);
         throw error;
     }
 }
-export async function patchAporteSer(Aporte) {
+export async function patchAporteSer(aporte) {
     try {
-        const saved = await repo().save(Aporte);
-        return { data: saved, message: "Aporte actualizada con éxito" };
+        const saved = await repo().save(aporte);
+        return { data: saved, message: "Aporte actualizado con éxito" };
     }
     catch (error) {
         console.error("Error al actualizar Aporte", error);
         return { data: null, message: "Error interno del servidor" };
     }
 }
-export async function deleteAporteSer(id_Aporte) {
+export async function deleteAporteSer(id_aporte) {
     try {
-        const result = await repo().delete({ id_Aporte });
-        return { result, message: "Aporte eliminada exitosamente" };
+        const result = await repo().delete({ id_aporte });
+        return { result, message: "Aporte eliminado exitosamente" };
     }
     catch (error) {
         console.error(error);
-        return { result: null, message: "Error al eliminar la Aporte" };
+        return { result: null, message: "Error al eliminar el aporte" };
     }
 }

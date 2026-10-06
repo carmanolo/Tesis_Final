@@ -4,16 +4,16 @@ import { DATABASE, DB_USERNAME, PASSWORD, DB_HOST, DB_PORT } from "./configEnv.j
 import UserEntity from "../entity/user.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
 import ReunionEntity from "../entity/reunion.entity.js";
-import ActividadEntity from "../entity/actividad.entity.js";
+import AporteEntity from "../entity/aporte.entity.js";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
     host: DB_HOST,
-    port: Number(DB_PORT), // ⚠️ Importante: TypeORM requiere que el puerto sea un número
+    port: Number(DB_PORT), // Importante: TypeORM requiere que el puerto sea un número
     username: DB_USERNAME,
     password: PASSWORD,
     database: DATABASE,
-    entities: [UserEntity, CarreraEntity, ReunionEntity, ActividadEntity],
+    entities: [UserEntity, CarreraEntity, ReunionEntity, AporteEntity],
     synchronize: true,
     logging: false,
 });

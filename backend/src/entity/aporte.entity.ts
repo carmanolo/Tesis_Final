@@ -2,10 +2,10 @@ import { EntitySchema } from "typeorm";
 import type { IUser } from "./user.entity.js";
 import type { Carrera } from "./carrera.entity.js";
 
-export interface Actividad {
-    id_actividad: number;
-    nombre_actividad: string;
-    fecha_actividad: Date;
+export interface Aporte {
+    id_aporte: number;
+    nombre_Aporte: string;
+    fecha_Aporte: Date;
     procedencia: string;
     monto: number;
     fecha_recepcion?: Date | null;
@@ -15,20 +15,20 @@ export interface Actividad {
     carrera?: Carrera;
 }
 
-export const ActividadEntity = new EntitySchema<Actividad>({
-    name: "Actividad",
-    tableName: "actividades",
+export const AporteEntity = new EntitySchema<Aporte>({
+    name: "Aporte",
+    tableName: "Aportes",
     columns: {
-        id_actividad: { 
+        id_aporte: { 
             type: Number, 
             primary: true, 
             generated: true 
         },
-        nombre_actividad: { 
+        nombre_Aporte: { 
             type: String, 
             nullable: false 
         },
-        fecha_actividad: { 
+        fecha_Aporte: { 
             type: "date", 
             nullable: false 
         },
@@ -58,7 +58,7 @@ export const ActividadEntity = new EntitySchema<Actividad>({
             type: "many-to-one",
             target: "User",
             joinColumn: { name: "creadorId", referencedColumnName: "id" },
-            inverseSide: "actividades",
+            inverseSide: "Aportees",
             nullable: false,
             onDelete: "RESTRICT",
         },
@@ -66,11 +66,11 @@ export const ActividadEntity = new EntitySchema<Actividad>({
             type: "many-to-one",
             target: "Carrera",
             joinColumn: { name: "carreraId", referencedColumnName: "id_carrera" },
-            inverseSide: "actividades",
+            inverseSide: "Aportees",
             nullable: false,
             onDelete: "CASCADE",
         },
     },
 });
 
-export default ActividadEntity;
+export default AporteEntity;

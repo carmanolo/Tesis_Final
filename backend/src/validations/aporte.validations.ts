@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { idValidationFunction } from "./modules/id.validation.js";
-import { MIN_NOMBRE_ACTIVIDAD, MAX_NOMBRE_ACTIVIDAD, NOMBRE_OBLIGATORIO, ACTIVIDAD_OBLIGATORIA, PROCEDENCIA_OBLIGATORIA, MONTO_OBLIGATORIA, MONTO_MINIMO, CAMPOS_ADICIONALES, ERROR_CANTIDAD_INVALIDA } from "../constants/actividad.constants.js";
+import { MIN_NOMBRE_APORTE, MAX_NOMBRE_APORTE, NOMBRE_OBLIGATORIO, APORTE_OBLIGATORIO, PROCEDENCIA_OBLIGATORIA, MONTO_OBLIGATORIA, MONTO_MINIMO, CAMPOS_ADICIONALES, ERROR_CANTIDAD_INVALIDA } from "../constants/aporte.constants.js";
 
 function hoyEnChile(): string {
     return new Intl.DateTimeFormat("en-CA", {
@@ -22,22 +22,22 @@ export function fechaNoPasadaValidation(value: any, helpers: Joi.CustomHelpers) 
 }
 
 export const integrityValidation = Joi.object({
-    id_actividad: Joi.any().custom(idValidationFunction),
+    id_aporte: Joi.any().custom(idValidationFunction),
 
-    nombre_actividad: Joi.string().min(MIN_NOMBRE_ACTIVIDAD).max(MAX_NOMBRE_ACTIVIDAD).messages({
-        "string.base": "El nombre de la actividad debe ser un string",
-        "string.empty": "El nombre de la actividad no puede ser vacía",
-        "string.min": `El nombre de la actividad debe tener al menos ${MIN_NOMBRE_ACTIVIDAD} caracteres`,
-        "string.max": `El nombre de la actividad  no puede tener más de ${MAX_NOMBRE_ACTIVIDAD} caracteres`,
+    descripcion_aporte: Joi.string().min(MIN_NOMBRE_APORTE).max(MAX_NOMBRE_APORTE).messages({
+        "string.base": "El nombre de la Aporte debe ser un string",
+        "string.empty": "El nombre de la Aporte no puede ser vacía",
+        "string.min": `El nombre de la Aporte debe tener al menos ${MIN_NOMBRE_APORTE} caracteres`,
+        "string.max": `El nombre de la Aporte  no puede tener más de ${MAX_NOMBRE_APORTE} caracteres`,
     }),
 
-    fecha_actividad: Joi.date().custom(fechaNoPasadaValidation).messages({
-        "date.base": "La fecha de la actividad debe ser una fecha válida",
-        "date.min": "La fecha de la actividad no puede ser anterior a hoy",
+    fecha_aporte: Joi.date().custom(fechaNoPasadaValidation).messages({
+        "date.base": "La fecha del Aporte debe ser una fecha válida",
+        "date.min": "La fecha del Aporte no puede ser anterior a hoy",
     }),
     procedencia: Joi.string().messages({
-        "string.base": "El nombre de la actividad debe ser un string",
-        "string.empty": "El nombre de la actividad no puede ser vacía", 
+        "string.base": "El nombre de la Aporte debe ser un string",
+        "string.empty": "El nombre de la Aporte no puede ser vacía", 
     }),
     monto: Joi.number().integer().messages({
         "number.base": ERROR_CANTIDAD_INVALIDA,
@@ -57,11 +57,11 @@ export const integrityValidation = Joi.object({
 });
 
 export const createValidation = Joi.object({
-    nombre_actividad: Joi.any().required().messages({
+    descripcion_aporte: Joi.any().required().messages({
         "any.required": NOMBRE_OBLIGATORIO,
     }),
-    fecha_actividad: Joi.any().required().messages({
-        "any.required": ACTIVIDAD_OBLIGATORIA,
+    fecha_aporte: Joi.any().required().messages({
+        "any.required": APORTE_OBLIGATORIO,
     }),
     procedencia: Joi.any().required().messages({
         "any.required": PROCEDENCIA_OBLIGATORIA,
@@ -80,8 +80,8 @@ export const createValidation = Joi.object({
   });
 
 export const updateValidation = Joi.object({
-    nombre_actividad: Joi.any(),
-    fecha_actividad: Joi.any(),
+    descripcion_aporte: Joi.any(),
+    fecha_aporte: Joi.any(),
     procedencia: Joi.any(),
     monto: Joi.any(),
     carreraId: Joi.any(),

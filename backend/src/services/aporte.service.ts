@@ -1,19 +1,19 @@
 import { AppDataSource } from "../config/configDb.js";
-import ActividadEntity from "../entity/actividad.entity.js";
+import AporteEntity from "../entity/aporte.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
 
-const repo = () => AppDataSource.getRepository(ActividadEntity as any);
+const repo = () => AppDataSource.getRepository(AporteEntity as any);
 
 const isAdminRole = (role?: string) => {
     const r = role?.toLowerCase();
     return r === "admin" || r === "administrador";
 };
 
-export async function createActividadSer(
+export async function createAporteSer(
     creadorId: number,
     carreraId: number,
-    nombre_actividad: string,
-    fecha_actividad: Date,
+    descripcion: string,
+    fecha_recepcion: Date,
     procedencia: string,
     monto: number
 ): Promise<{ data: any | null; error: string | null }> {
@@ -26,8 +26,8 @@ export async function createActividadSer(
         }
 
         const nueva = repo().create({
-            nombre_actividad,
-            fecha_actividad,
+            descripcion,
+            fecha_recepcion,
             procedencia,
             monto,
             creadorId,
@@ -40,65 +40,65 @@ export async function createActividadSer(
         return { data: saved, error: null };
     } catch (error) {
         console.error(error);
-        return { data: null, error: "Error interno al crear la actividad" };
+        return { data: null, error: "Error interno al crear el Aporte" };
     }
 }
 
-// Devuelve las actividades de la carrera o todas si es administrador
-export async function getActividadesSer(carreraId?: number, role?: string): Promise<any[] | null> {
+// Devuelve las Aportes de la carrera o todas si es administrador
+export async function getAportesSer(carreraId?: number, role?: string): Promise<any[] | null> {
     try {
         const whereCondition: any = {};
         if (!isAdminRole(role) || carreraId) {
             whereCondition.carreraId = carreraId;
         }
 
-        const actividades = await repo().find({
+        const Aportes = await repo().find({
             where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
             relations: { carrera: true, creador: true },
-            order: { fecha_actividad: "DESC" },
+            order: { fecha_Aporte: "DESC" },
         });
-        return actividades;
+        return Aportes;
     } catch (error) {
-        console.error("error al obtener actividades: ", error);
+        console.error("error al obtener Aportees: ", error);
         return null;
     }
 }
 
-// Devuelve la actividad si pertenece a la carrera del usuario o si es administrador
-export async function getActividadSer(id_actividad: number, carreraId?: number, role?: string): Promise<any | null> {
+// Devuelve la Aporte si pertenece a la carrera del usuario o si es administrador
+export async function getAporteSer(id_aporte: number, carreraId?: number, role?: string): Promise<any | null> {
     try {
-        const whereCondition: any = { id_actividad };
+        const whereCondition: any = { id_aporte };
         if (!isAdminRole(role)) {
             whereCondition.carreraId = carreraId;
         }
 
-        const actividad = await repo().findOne({
+        const Aporte = await repo().findOne({
             where: whereCondition,
             relations: { carrera: true, creador: true },
         });
-        return actividad;
+        return Aporte;
     } catch (error) {
-        console.error("Error al obtener la actividad", error);
+        console.error("Error al obtener el Aporte", error);
         throw error;
     }
 }
 
-export async function patchActividadSer(actividad: any): Promise<any> {
+export async function patchAporteSer(aporte: any): Promise<any> {
     try {
-        const saved = await repo().save(actividad);
-        return { data: saved, message: "Actividad actualizada con éxito" };
+        const saved = await repo().save(aporte);
+        return { data: saved, message: "Aporte actualizado con éxito" };
     } catch (error) {
-        console.error("Error al actualizar actividad", error);
+        console.error("Error al actualizar Aporte", error);
         return { data: null, message: "Error interno del servidor" };
     }
 }
 
-export async function deleteActividadSer(id_actividad: number): Promise<any> {
+export async function deleteAporteSer(id_aporte: number): Promise<any> {
     try {
-        const result = await repo().delete({ id_actividad });
-        return { result, message: "Actividad eliminada exitosamente" };
+        const result = await repo().delete({ id_aporte });
+        return { result, message: "Aporte eliminado exitosamente" };
     } catch (error) {
         console.error(error);
-        return { result: null, message: "Error al eliminar la actividad" };
+        return { result: null, message: "Error al eliminar el aporte" };
     }
 }

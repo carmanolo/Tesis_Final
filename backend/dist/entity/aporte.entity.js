@@ -3,7 +3,7 @@ export const AporteEntity = new EntitySchema({
     name: "Aporte",
     tableName: "Aportees",
     columns: {
-        id_Aporte: {
+        id_aporte: {
             type: Number,
             primary: true,
             generated: true

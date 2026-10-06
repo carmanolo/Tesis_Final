@@ -1,5 +1,5 @@
 import { EntitySchema } from "typeorm";
-import { Actividad } from "./actividad.entity.js";
+import { Aporte } from "./aporte.entity.js";
 
 
 export interface IUser {
@@ -10,7 +10,7 @@ export interface IUser {
     role: string;
     carreraId: number;
     carreras?: any;
-    actividades?: Actividad[];      // NUEVO
+    Aportes?: Aporte[];      // NUEVO
     createdAt: Date;
     updatedAt: Date;
 }
@@ -65,9 +65,9 @@ export const UserEntity = new EntitySchema<IUser>({
             onDelete: "SET NULL",
             inverseSide: "users",
         },
-        actividades: {              // NUEVO
+        Aportes: {              
             type: "one-to-many",
-            target: "Actividad",
+            target: "Aporte",
             inverseSide: "creador",
         },
     }
