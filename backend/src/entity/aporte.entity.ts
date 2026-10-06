@@ -4,8 +4,8 @@ import type { Carrera } from "./carrera.entity.js";
 
 export interface Aporte {
     id_aporte: number;
-    nombre_Aporte: string;
-    fecha_Aporte: Date;
+    descripcion_aporte: string;
+    fecha_aporte: Date;
     procedencia: string;
     monto: number;
     fecha_recepcion?: Date | null;
@@ -24,11 +24,11 @@ export const AporteEntity = new EntitySchema<Aporte>({
             primary: true, 
             generated: true 
         },
-        nombre_Aporte: { 
+        descripcion_aporte: { 
             type: String, 
             nullable: false 
         },
-        fecha_Aporte: { 
+        fecha_aporte: { 
             type: "date", 
             nullable: false 
         },
@@ -58,7 +58,7 @@ export const AporteEntity = new EntitySchema<Aporte>({
             type: "many-to-one",
             target: "User",
             joinColumn: { name: "creadorId", referencedColumnName: "id" },
-            inverseSide: "Aportees",
+            inverseSide: "Aportes",
             nullable: false,
             onDelete: "RESTRICT",
         },
@@ -66,7 +66,7 @@ export const AporteEntity = new EntitySchema<Aporte>({
             type: "many-to-one",
             target: "Carrera",
             joinColumn: { name: "carreraId", referencedColumnName: "id_carrera" },
-            inverseSide: "Aportees",
+            inverseSide: "Aportes",
             nullable: false,
             onDelete: "CASCADE",
         },

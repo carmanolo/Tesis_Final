@@ -6,7 +6,7 @@ const isAdminRole = (role) => {
     const r = role?.toLowerCase();
     return r === "admin" || r === "administrador";
 };
-export async function createAporteSer(creadorId, carreraId, descripcion, fecha_recepcion, procedencia, monto) {
+export async function createAporteSer(descripcion_aporte, fecha_aporte, procedencia, monto, creadorId, carreraId) {
     try {
         const carreraRepo = AppDataSource.getRepository(CarreraEntity);
         const carrera = await carreraRepo.findOneBy({ id_carrera: carreraId });
@@ -14,8 +14,8 @@ export async function createAporteSer(creadorId, carreraId, descripcion, fecha_r
             return { data: null, error: "La carrera especificada no existe" };
         }
         const nueva = repo().create({
-            descripcion,
-            fecha_recepcion,
+            descripcion_aporte,
+            fecha_aporte,
             procedencia,
             monto,
             creadorId,
@@ -41,7 +41,7 @@ export async function getAportesSer(carreraId, role) {
         const Aportes = await repo().find({
             where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
             relations: { carrera: true, creador: true },
-            order: { fecha_Aporte: "DESC" },
+            order: { fecha_aporte: "DESC" },
         });
         return Aportes;
     }

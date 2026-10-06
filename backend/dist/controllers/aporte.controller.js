@@ -15,13 +15,13 @@ export async function createAporte(req, res) {
         const result = createValidation.validate(req.body);
         if (result.error)
             return handleErrorClient(res, 400, "faltan parametros", result.error.message);
-        const { decripcion_aporte, fecha_aporte, procedencia, monto, carreraId, id_carrera } = req.body;
+        const { descripcion_aporte, fecha_aporte, procedencia, monto, carreraId, id_carrera } = req.body;
         // Admin puede indicar la carrera o usar la suya; usuario normal usa la suya o la indicada en el body
         const targetCarreraId = isAdmin ? (carreraId || id_carrera || userCarreraId) : (userCarreraId || carreraId || id_carrera);
         if (!targetCarreraId) {
             return handleErrorClient(res, 400, "Debes indicar la carrera de la Aporte");
         }
-        const { data, error: errSer } = await createAporteSer(id, Number(targetCarreraId), decripcion_aporte, fecha_aporte, procedencia, monto);
+        const { data, error: errSer } = await createAporteSer(descripcion_aporte, fecha_aporte, procedencia, monto, id, Number(targetCarreraId));
         if (errSer)
             return handleErrorClient(res, 400, errSer);
         return handleSuccess(res, 201, "Aporte registrado exitosamente", data);

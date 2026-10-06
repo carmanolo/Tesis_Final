@@ -10,12 +10,12 @@ const isAdminRole = (role?: string) => {
 };
 
 export async function createAporteSer(
+    descripcion_aporte: string,
+    fecha_aporte: Date,
+    procedencia: string,
+    monto: number,
     creadorId: number,
     carreraId: number,
-    descripcion: string,
-    fecha_recepcion: Date,
-    procedencia: string,
-    monto: number
 ): Promise<{ data: any | null; error: string | null }> {
     try {
         const carreraRepo = AppDataSource.getRepository(CarreraEntity as any);
@@ -26,8 +26,8 @@ export async function createAporteSer(
         }
 
         const nueva = repo().create({
-            descripcion,
-            fecha_recepcion,
+            descripcion_aporte,
+            fecha_aporte,
             procedencia,
             monto,
             creadorId,
@@ -55,7 +55,7 @@ export async function getAportesSer(carreraId?: number, role?: string): Promise<
         const Aportes = await repo().find({
             where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
             relations: { carrera: true, creador: true },
-            order: { fecha_Aporte: "DESC" },
+            order: { fecha_aporte: "DESC" },
         });
         return Aportes;
     } catch (error) {

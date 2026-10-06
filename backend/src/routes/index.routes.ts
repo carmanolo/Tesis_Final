@@ -11,6 +11,6 @@ router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
 router.use("/carreras", carreraRoutes);
 router.use("/reuniones", reunionRoutes);
-router.use("/Aportees", AporteRoutes);
+router.use("/aportes", AporteRoutes);
 
 export default router;
