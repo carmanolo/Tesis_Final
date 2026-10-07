@@ -2,11 +2,12 @@ import { getAportesSer, getAporteSer, createAporteSer, patchAporteSer, deleteApo
 import { createValidation, integrityValidation, updateValidation } from "../validations/aporte.validations.js";
 import { idValidation } from "../validations/modules/id.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
+import { AppDataSource } from "../config/configDb.js";
+import UserEntity from "../entity/user.entity.js";
+import CarreraEntity from "../entity/carrera.entity.js";
 export async function createAporte(req, res) {
     try {
-        const { id, carreraId: userCarreraId, rol, role } = req.user || {};
-        const userRole = rol || role;
-        const isAdmin = userRole === "admin" || userRole === "administrador";
+        const { id, carreraId: userCarreraId } = req.user || {};
         if (!req.body)
             return handleErrorClient(res, 400, "datos no proporcionados");
         const { error } = integrityValidation.validate(req.body);
@@ -16,10 +17,25 @@ export async function createAporte(req, res) {
         if (result.error)
             return handleErrorClient(res, 400, "faltan parametros", result.error.message);
         const { descripcion_aporte, fecha_aporte, procedencia, monto, carreraId, id_carrera } = req.body;
-        // Admin puede indicar la carrera o usar la suya; usuario normal usa la suya o la indicada en el body
-        const targetCarreraId = isAdmin ? (carreraId || id_carrera || userCarreraId) : (userCarreraId || carreraId || id_carrera);
+        // Asociar internamente la carrera del usuario creador
+        let targetCarreraId = userCarreraId || carreraId || id_carrera;
+        if (!targetCarreraId && id) {
+            const userRepo = AppDataSource.getRepository(UserEntity);
+            const user = await userRepo.findOne({ where: { id } });
+            if (user?.carreraId) {
+                targetCarreraId = user.carreraId;
+            }
+        }
+        // Si aún no tiene carrera (ej. administrador sin carrera asignada), tomar la primera carrera registrada
         if (!targetCarreraId) {
-            return handleErrorClient(res, 400, "Debes indicar la carrera de la Aporte");
+            const carreraRepo = AppDataSource.getRepository(CarreraEntity);
+            const primerCarrera = await carreraRepo.findOne({ where: {} });
+            if (primerCarrera) {
+                targetCarreraId = primerCarrera.id_carrera;
+            }
+        }
+        if (!targetCarreraId) {
+            return handleErrorClient(res, 400, "No se encontró ninguna carrera disponible para asociar al aporte");
         }
         const { data, error: errSer } = await createAporteSer(descripcion_aporte, fecha_aporte, procedencia, monto, id, Number(targetCarreraId));
         if (errSer)
