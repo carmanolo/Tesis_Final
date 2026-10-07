@@ -8,7 +8,7 @@ const formatoCLP = new Intl.NumberFormat("es-CL", {
     maximumFractionDigits: 0,
 });
 
-const hoyISO = () => new Date().toLocaleDateString("en-CA"); // AAAA-MM-DD en hora local
+const hoyISO = () => new Date().toLocaleDateString("en-CA"); 
 
 const valoresIniciales = (aporte) => ({
     descripcion_aporte: aporte?.descripcion_aporte || "",

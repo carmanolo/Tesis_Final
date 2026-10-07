@@ -21,7 +21,7 @@ const formatoCompacto = new Intl.NumberFormat("es-CL", { notation: "compact" });
 
 const aMonto = (valor) => Number(valor) || 0;
 
-// Suma los montos por texto (ignora mayúsculas y espacios extra) y ordena de mayor a menor
+// Suma los montos por texto y ordena de mayor a menor
 const agruparPorTexto = (aportes, campo) => {
     const grupos = new Map();
     aportes.forEach((aporte) => {
@@ -42,7 +42,7 @@ const agruparPorTexto = (aportes, campo) => {
 const agruparPorMes = (aportes) => {
     const grupos = new Map();
     aportes.forEach((aporte) => {
-        const iso = normalizarFechaISO(aporte.fecha_aporte); // AAAA-MM-DD
+        const iso = normalizarFechaISO(aporte.fecha_aporte); 
         if (!iso) return;
         const [anio, mes] = iso.split("-");
         const clave = `${anio}-${mes}`;
