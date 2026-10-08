@@ -10,7 +10,7 @@ import { getUserRole } from "../services/user.service.js";
 import { DUPageBrowser } from "../components/daisyUI/DUPageBrowser.jsx";
 import { PERMISOS } from "../constants/user.constants.jsx";
 
-const Clase = () => {
+const Carrera = () => {
 
     const userRole = getUserRole();
     console.log("userRole:", userRole);
@@ -69,4 +69,4 @@ const Clase = () => {
     );
 };
 
-export default Clase;
+export default Carrera;
