@@ -10,3 +10,4 @@ export const NOMBRE_OBLIGATORIO = "EL NOMBRE DE A QUIEN SE PRESTO EL MATERIAL es
 export const STOCK_OBLIGATORIO = "El STOCK del material es obligatorio";
 export const CAMPOS_ADICIONALES = "Se enviaron campos adicionales no permitidos";
 export const ERROR_CANTIDAD_INVALIDA = "El formato de la cantidad es incorrecto, debe ser un número";
+export const ESTADOS_PRESTAMO = ["pendiente", "devuelto", "prestado"] as const;
