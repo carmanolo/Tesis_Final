@@ -94,7 +94,7 @@ export async function patchMaterialSer(material: Partial<any>): Promise<any> {
     }
 }
 
-export async function deleteReunionSer(id_material: number): Promise<any> {
+export async function deleteMaterialSer(id_material: number): Promise<any> {
     try {
         const materialRepository = AppDataSource.getRepository(MaterialEntity as any);
         const material: any = await materialRepository.findOne({ where: { id_material } });
