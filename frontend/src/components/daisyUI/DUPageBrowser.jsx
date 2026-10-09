@@ -1,4 +1,4 @@
-export const DUPageBrowser = ({currentPageNumber, setCurrentPageNumber, pageAmount}) => {
+export const DUPageBrowser = ({currentPageNumber, setCurrentPageNumber, pageAmount, className = ""}) => {
     const NumberParser = (number) => {
         if (isNaN(number)) {
             return 1;
@@ -13,9 +13,8 @@ export const DUPageBrowser = ({currentPageNumber, setCurrentPageNumber, pageAmou
         return a;
     }
 
-
     return (
-        <div className="join m-3 mt-0">
+        <div className={`join my-4 ${className}`}>
             <button className="join-item btn" onClick={() => setCurrentPageNumber(pageNumberDecreaser(currentPageNumber, pageAmount))}>«</button>
             <button className="join-item btn">Página {NumberParser(currentPageNumber)}</button>
             <button className="join-item btn" onClick={() => setCurrentPageNumber(Math.abs(Math.ceil(currentPageNumber % (pageAmount)) + 1))}>»</button>
