@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { createActividad, patchActividadById, getActividadById, getActividades, deleteActividadById } from "../controllers/actividad.controller.js";
+import { createAporte, patchAporteById, getAporteById, getAportees, deleteAporteById } from "../controllers/Aporte.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { authorizeRoles } from "../middleware/authorization.middleware.js";
 const router = Router();
 router.use(authenticateJwt);
-router.get("/", authorizeRoles("administrador", "presidente cee", "secretario cee", "tesorero cee", "vocal cee"), getActividades);
-router.get("/:id_actividad", authorizeRoles("administrador", "presidente cee", "secretario cee", "tesorero cee", "vocal cee"), getActividadById);
-router.post("/crear/", authorizeRoles("administrador", "tesorero cee"), createActividad);
-router.patch("/editar/:id_actividad", authorizeRoles("administrador", "presidente cee", "secretario cee", "tesorero cee", "vocal cee"), patchActividadById);
-router.delete("/eliminar/:id_actividad", authorizeRoles("administrador", "presidente cee", "secretario cee", "tesorero cee", "vocal cee"), deleteActividadById);
+router.get("/", authorizeRoles("administrador", "presidente cee", "secretario cee", "tesorero cee", "vocal cee"), getAportees);
+router.get("/:id_Aporte", authorizeRoles("administrador", "presidente cee", "secretario cee", "tesorero cee", "vocal cee"), getAporteById);
+router.post("/crear/", authorizeRoles("administrador", "tesorero cee"), createAporte);
+router.patch("/editar/:id_Aporte", authorizeRoles("administrador", "presidente cee", "secretario cee", "tesorero cee", "vocal cee"), patchAporteById);
+router.delete("/eliminar/:id_Aporte", authorizeRoles("administrador", "presidente cee", "secretario cee", "tesorero cee", "vocal cee"), deleteAporteById);
 export default router;

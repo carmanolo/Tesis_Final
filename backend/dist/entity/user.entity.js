@@ -48,9 +48,9 @@ export const UserEntity = new EntitySchema({
             onDelete: "SET NULL",
             inverseSide: "users",
         },
-        actividades: {
+        Aportes: {
             type: "one-to-many",
-            target: "Actividad",
+            target: "Aporte",
             inverseSide: "creador",
         },
     }

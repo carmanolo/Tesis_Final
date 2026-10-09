@@ -1,12 +1,12 @@
 import { AppDataSource } from "../config/configDb.js";
-import ActividadEntity from "../entity/actividad.entity.js";
+import AporteEntity from "../entity/Aporte.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
-const repo = () => AppDataSource.getRepository(ActividadEntity);
+const repo = () => AppDataSource.getRepository(AporteEntity);
 const isAdminRole = (role) => {
     const r = role?.toLowerCase();
     return r === "admin" || r === "administrador";
 };
-export async function createActividadSer(creadorId, carreraId, nombre_actividad, fecha_actividad, procedencia, monto) {
+export async function createAporteSer(creadorId, carreraId, nombre_Aporte, fecha_Aporte, procedencia, monto) {
     try {
         const carreraRepo = AppDataSource.getRepository(CarreraEntity);
         const carrera = await carreraRepo.findOneBy({ id_carrera: carreraId });
@@ -14,8 +14,8 @@ export async function createActividadSer(creadorId, carreraId, nombre_actividad,
             return { data: null, error: "La carrera especificada no existe" };
         }
         const nueva = repo().create({
-            nombre_actividad,
-            fecha_actividad,
+            nombre_Aporte,
+            fecha_Aporte,
             procedencia,
             monto,
             creadorId,
@@ -28,63 +28,63 @@ export async function createActividadSer(creadorId, carreraId, nombre_actividad,
     }
     catch (error) {
         console.error(error);
-        return { data: null, error: "Error interno al crear la actividad" };
+        return { data: null, error: "Error interno al crear la Aporte" };
     }
 }
-// Devuelve las actividades de la carrera o todas si es administrador
-export async function getActividadesSer(carreraId, role) {
+// Devuelve las Aportees de la carrera o todas si es administrador
+export async function getAporteesSer(carreraId, role) {
     try {
         const whereCondition = {};
         if (!isAdminRole(role) || carreraId) {
             whereCondition.carreraId = carreraId;
         }
-        const actividades = await repo().find({
+        const Aportees = await repo().find({
             where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
             relations: { carrera: true, creador: true },
-            order: { fecha_actividad: "DESC" },
+            order: { fecha_Aporte: "DESC" },
         });
-        return actividades;
+        return Aportees;
     }
     catch (error) {
-        console.error("error al obtener actividades: ", error);
+        console.error("error al obtener Aportees: ", error);
         return null;
     }
 }
-// Devuelve la actividad si pertenece a la carrera del usuario o si es administrador
-export async function getActividadSer(id_actividad, carreraId, role) {
+// Devuelve la Aporte si pertenece a la carrera del usuario o si es administrador
+export async function getAporteSer(id_Aporte, carreraId, role) {
     try {
-        const whereCondition = { id_actividad };
+        const whereCondition = { id_Aporte };
         if (!isAdminRole(role)) {
             whereCondition.carreraId = carreraId;
         }
-        const actividad = await repo().findOne({
+        const Aporte = await repo().findOne({
             where: whereCondition,
             relations: { carrera: true, creador: true },
         });
-        return actividad;
+        return Aporte;
     }
     catch (error) {
-        console.error("Error al obtener la actividad", error);
+        console.error("Error al obtener la Aporte", error);
         throw error;
     }
 }
-export async function patchActividadSer(actividad) {
+export async function patchAporteSer(Aporte) {
     try {
-        const saved = await repo().save(actividad);
-        return { data: saved, message: "Actividad actualizada con éxito" };
+        const saved = await repo().save(Aporte);
+        return { data: saved, message: "Aporte actualizada con éxito" };
     }
     catch (error) {
-        console.error("Error al actualizar actividad", error);
+        console.error("Error al actualizar Aporte", error);
         return { data: null, message: "Error interno del servidor" };
     }
 }
-export async function deleteActividadSer(id_actividad) {
+export async function deleteAporteSer(id_Aporte) {
     try {
-        const result = await repo().delete({ id_actividad });
-        return { result, message: "Actividad eliminada exitosamente" };
+        const result = await repo().delete({ id_Aporte });
+        return { result, message: "Aporte eliminada exitosamente" };
     }
     catch (error) {
         console.error(error);
-        return { result: null, message: "Error al eliminar la actividad" };
+        return { result: null, message: "Error al eliminar la Aporte" };
     }
 }

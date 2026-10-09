@@ -10,6 +10,8 @@ import {
   FaGraduationCap,
   FaCalendarAlt,
   FaUserCircle,
+  FaMoneyBillWave,
+  FaClipboardCheck
 } from "react-icons/fa";
 import { DUSidebarItem } from "./DUSidebarItem";
 import marcaUbb from "../../assets/escudo-color-gradiente.svg";
@@ -56,6 +58,18 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       label: "Reuniones",
       destination: "/reuniones",
       iconColor: "text-[#16a34a]",
+    },
+    {
+      icon: FaMoneyBillWave,
+      label: "Aportes",
+      destination: "/aportes",
+      iconColor: "text-[#16a34a]",
+    },
+    {
+      icon: FaClipboardCheck,
+      label: "Materiales",
+      destination: "/materiales",
+      iconColor: "text-[#000000]"
     },
     {
       icon: FaUserCircle,

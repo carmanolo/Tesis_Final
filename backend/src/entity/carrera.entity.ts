@@ -1,13 +1,15 @@
 import { EntitySchema } from "typeorm";
 import { IUser } from "./user.entity.js";
-import { Actividad } from "./actividad.entity.js";
+import { Aporte } from "./aporte.entity.js";
+import { Material } from "./material.entity.js";
 
 export interface Carrera {
     id_carrera: number,
     nombre_carrera: string,
     sigla: String,
     users?: IUser[];
-    actividades?: Actividad[]; 
+    Aportes?: Aporte[]; 
+    materiales?: Material[];
     //malla curricular
 }
 
@@ -38,9 +40,14 @@ export const CarreraEntity = new EntitySchema<Carrera>({
             target: "User", 
             inverseSide: "carreras", 
         },
-        actividades: {
+        Aportes: {
             type: "one-to-many",
-            target: "Actividad",
+            target: "Aporte",
+            inverseSide: "carrera",
+        },
+        materiales: {
+            type: "one-to-many",
+            target: "Material",
             inverseSide: "carrera",
         },
     }

@@ -1,18 +1,18 @@
 import { EntitySchema } from "typeorm";
-export const ActividadEntity = new EntitySchema({
-    name: "Actividad",
-    tableName: "actividades",
+export const AporteEntity = new EntitySchema({
+    name: "Aporte",
+    tableName: "Aportees",
     columns: {
-        id_actividad: {
+        id_Aporte: {
             type: Number,
             primary: true,
             generated: true
         },
-        nombre_actividad: {
+        nombre_Aporte: {
             type: String,
             nullable: false
         },
-        fecha_actividad: {
+        fecha_Aporte: {
             type: "date",
             nullable: false
         },
@@ -42,7 +42,7 @@ export const ActividadEntity = new EntitySchema({
             type: "many-to-one",
             target: "User",
             joinColumn: { name: "creadorId", referencedColumnName: "id" },
-            inverseSide: "actividades",
+            inverseSide: "Aportees",
             nullable: false,
             onDelete: "RESTRICT",
         },
@@ -50,10 +50,10 @@ export const ActividadEntity = new EntitySchema({
             type: "many-to-one",
             target: "Carrera",
             joinColumn: { name: "carreraId", referencedColumnName: "id_carrera" },
-            inverseSide: "actividades",
+            inverseSide: "Aportees",
             nullable: false,
             onDelete: "CASCADE",
         },
     },
 });
-export default ActividadEntity;
+export default AporteEntity;

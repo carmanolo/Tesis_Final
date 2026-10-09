@@ -13,7 +13,7 @@ export async function createReunionSer(fecha_reunion, descripcion) {
             descripcion
         });
         await reunionRepository.save(newReunion);
-        const eventId = await crearEventoReunion(fecha_reunion, descripcion /*, ["correo@ejemplo.com"] */);
+        const eventId = await crearEventoReunion(fecha_reunion, descripcion);
         if (eventId) {
             newReunion.google_event_id = eventId;
             await reunionRepository.save(newReunion);
