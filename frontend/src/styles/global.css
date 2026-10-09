@@ -98,3 +98,77 @@
   font-weight: 500 !important;
   font-size: 1rem !important;
 }
+
+/* SweetAlert Custom Form Styles */
+.swal-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  text-align: left;
+  padding: 0.5rem 0.25rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.swal-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.swal-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .swal-form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.swal-form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #14375C;
+  letter-spacing: 0.025em;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.swal-form-input,
+.swal-form-select {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0.55rem 0.85rem !important;
+  font-size: 0.95rem !important;
+  color: #14375C !important;
+  background-color: #FFFFFF !important;
+  border: 1.5px solid #DDECFA !important;
+  border-radius: 0.5rem !important;
+  outline: none !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  height: 2.65rem !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.swal-form-input:focus,
+.swal-form-select:focus {
+  border-color: #2F4697 !important;
+  box-shadow: 0 0 0 3px rgba(47, 70, 151, 0.18) !important;
+}
+
+.swal-form-input::placeholder {
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.swal-form-hint {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+  line-height: 1.2;
+}

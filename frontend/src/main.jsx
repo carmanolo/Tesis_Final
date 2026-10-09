@@ -10,6 +10,7 @@ import Carreras from "@pages/Carreras"
 import Profile from "@pages/Profile"
 import Reuniones from "@pages/Reuniones"
 import Aportes from "@pages/Aportes"
+import Materiales from "@pages/Materiales"
 import ProtectedRoute from "@components/ProtectedRoute"
 import "@styles/global.css";
 
@@ -49,6 +50,12 @@ const router = createBrowserRouter([
         path: "/aportes",
         element: (
             <Aportes />
+        ),
+      },
+      {
+        path: "/materiales",
+        element: (
+            <Materiales />
         ),
       },
       {

@@ -1,19 +1,7 @@
 import Joi from "joi";
 import { idValidationFunction } from "./modules/id.validation.js";
-import {
-    MIN_NOMBRE_MATERIAL,
-    MAX_NOMBRE_MATERIAL,
-    STOCK_MINIMO,
-    STOCK_OBLIGATORIO,
-    NOMBREMATERIAL_OBLIGATORIO,
-    NOMBRE_OBLIGATORIO,
-    FECHA_OBLIGATORIA,
-    CAMPOS_ADICIONALES,
-    ERROR_CANTIDAD_INVALIDA,
-    ESTADOS_PRESTAMO
-} from "../constants/material.constants.js";  
-
-function hoyEnChile(): string {
+import { MIN_NOMBRE_MATERIAL, MAX_NOMBRE_MATERIAL, STOCK_MINIMO, STOCK_OBLIGATORIO, NOMBREMATERIAL_OBLIGATORIO, CAMPOS_ADICIONALES, ERROR_CANTIDAD_INVALIDA, ESTADOS_PRESTAMO } from "../constants/material.constants.js";
+function hoyEnChile() {
     return new Intl.DateTimeFormat("en-CA", {
         timeZone: "America/Santiago",
         year: "numeric",
@@ -21,33 +9,28 @@ function hoyEnChile(): string {
         day: "2-digit",
     }).format(new Date());
 }
-
-export function fechaNoPasadaValidation(value: any, helpers: Joi.CustomHelpers) {
+export function fechaNoPasadaValidation(value, helpers) {
     const original = String(helpers.original ?? value);
     const fechaStr = original.slice(0, 10);
-
     if (fechaStr < hoyEnChile()) {
         return helpers.error("date.min");
     }
     return value;
 }
-
 export const integrityValidation = Joi.object({
     id_material: Joi.any().custom(idValidationFunction),
-
     nombre_material: Joi.string().min(MIN_NOMBRE_MATERIAL).max(MAX_NOMBRE_MATERIAL).messages({
         "string.base": "El nombre del material debe ser un string",
         "string.empty": "El nombre del material no puede ser vacío",
         "string.min": `El nombre del material debe tener al menos ${MIN_NOMBRE_MATERIAL} caracteres`,
         "string.max": `El nombre del material no puede tener más de ${MAX_NOMBRE_MATERIAL} caracteres`,
     }),
-
     fecha_prestamo: Joi.date().allow(null, "").messages({
         "date.base": "La fecha del material debe ser una fecha válida",
     }),
     nombre_prestamo: Joi.string().allow("", null).messages({
         "string.base": "El nombre de quien pidió el material debe ser un string",
-        "string.empty": "El nombre de quien pidió el material no puede ser vacío", 
+        "string.empty": "El nombre de quien pidió el material no puede ser vacío",
     }),
     prestatario: Joi.string().allow("", null).messages({
         "string.base": "El nombre del prestatario debe ser un string",
@@ -79,7 +62,6 @@ export const integrityValidation = Joi.object({
     "any.unknown": CAMPOS_ADICIONALES,
     "object.unknown": CAMPOS_ADICIONALES,
 });
-
 export const createValidation = Joi.object({
     nombre_material: Joi.any().required().messages({
         "any.required": NOMBREMATERIAL_OBLIGATORIO,
@@ -100,7 +82,6 @@ export const createValidation = Joi.object({
     "any.unknown": CAMPOS_ADICIONALES,
     "object.unknown": CAMPOS_ADICIONALES,
 });
-
 export const updateValidation = Joi.object({
     nombre_material: Joi.any(),
     fecha_prestamo: Joi.any(),

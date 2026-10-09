@@ -30,6 +30,11 @@ export const CarreraEntity = new EntitySchema({
             target: "Aporte",
             inverseSide: "carrera",
         },
+        materiales: {
+            type: "one-to-many",
+            target: "Material",
+            inverseSide: "carrera",
+        },
     }
 });
 export default CarreraEntity;

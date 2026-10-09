@@ -4,10 +4,10 @@ import type { Carrera } from "./carrera.entity.js";
 export interface Material {
     id_material: number;
     nombre_material: string;
-    fecha_prestamo: Date;
-    nombre_prestamo: string;
+    fecha_prestamo?: Date | null;
+    nombre_prestamo?: string | null;
     stock: number;
-    estado_prestamo: "pendiente" | "devuelto" | "prestado";
+    estado_prestamo: "pendiente" | "devuelto" | "prestado" | string;
     tne_entregada: boolean;
     carreraId?: number;
     carrera?: Carrera;
@@ -28,11 +28,11 @@ export const MaterialEntity = new EntitySchema<Material>({
         },
         fecha_prestamo: { 
             type: "date", 
-            nullable: false 
+            nullable: true 
         },
         nombre_prestamo: { 
             type: String, 
-            nullable: false 
+            nullable: true 
         },
         stock: { 
             type: Number, 

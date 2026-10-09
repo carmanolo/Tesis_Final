@@ -15,8 +15,8 @@ async function confirmDeleteMaterial() {
 
 async function confirmAlert() {
   await Swal.fire({
-    title: "Material eliminada",
-    text: "El material ha sido eliminada correctamente",
+    title: "Material eliminado",
+    text: "El material ha sido eliminado correctamente",
     icon: "success",
     confirmButtonText: "Aceptar",
   });
@@ -43,7 +43,7 @@ export const useDeleteMateriales = (fetchMaterials) => {
         }
       }
     } catch (error) {
-      console.error("Error al eliminar usuario:", error);
+      console.error("Error al eliminar material:", error);
       confirmError();
     }
   };
