@@ -80,7 +80,7 @@ const Material = () => {
                 )}
             </div>
 
-            <div className="Clase2-page">
+            <div className="Clase2-page mb-6">
                 <DUMaterialList
                     data={currentPageContent}
                     handleEditMateriales={handleEditMateriales}
@@ -89,11 +89,15 @@ const Material = () => {
                 />
             </div>
 
-            <DUPageBrowser
-                setCurrentPageNumber={setCurrentPage}
-                currentPageNumber={currentPage}
-                pageAmount={pageAmount}
-            />
+            {pageAmount > 0 && (
+                <div className="flex justify-start mt-6 mb-4">
+                    <DUPageBrowser
+                        setCurrentPageNumber={setCurrentPage}
+                        currentPageNumber={currentPage}
+                        pageAmount={pageAmount}
+                    />
+                </div>
+            )}
         </div>
     );
 };
