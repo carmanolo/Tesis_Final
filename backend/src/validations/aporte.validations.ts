@@ -36,11 +36,13 @@ export const integrityValidation = Joi.object({
         "date.min": "La fecha del Aporte no puede ser anterior a hoy",
     }),
     procedencia: Joi.string().messages({
-        "string.base": "El nombre de la Aporte debe ser un string",
-        "string.empty": "El nombre de la Aporte no puede ser vacía", 
+        "string.base": "La procedencia debe ser un string",
+        "string.empty": "La procedencia no puede ser vacía", 
     }),
-    monto: Joi.number().integer().messages({
+    monto: Joi.number().integer().min(MONTO_MINIMO).messages({
         "number.base": ERROR_CANTIDAD_INVALIDA,
+        "number.integer": ERROR_CANTIDAD_INVALIDA,
+        "number.min": `El monto del aporte debe ser al menos ${MONTO_MINIMO}`,
     }),
     carreraId: Joi.number().integer().positive().messages({
         "number.base": "El id de la carrera debe ser un número",

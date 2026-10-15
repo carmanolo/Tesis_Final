@@ -1,4 +1,4 @@
-export const MIN_NOMBRE_APORTE  = 5;
+export const MIN_NOMBRE_APORTE  = 10;
 export const MAX_NOMBRE_APORTE = 500;
 export const MONTO_MINIMO = 1000;
 
