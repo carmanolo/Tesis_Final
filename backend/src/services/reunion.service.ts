@@ -1,22 +1,31 @@
 import fs from "fs";
 import { AppDataSource } from "../config/configDb.js";
-import { ReunionEntity, Reunion } from "../entity/reunion.entity.js";
+import { ReunionEntity } from "../entity/reunion.entity.js";
+import { UserEntity } from "../entity/user.entity.js";
 import { crearEventoReunion, actualizarEventoReunion, eliminarEventoReunion } from "./googleCalendar.service.js";
 
 export async function createReunionSer(
     fecha_reunion: Date | string,
-    descripcion: string
+    descripcion: string,
+    creadorId: number
 ): Promise<any | null> {
     const reunionRepository = AppDataSource.getRepository(ReunionEntity as any);
+    const userRepository = AppDataSource.getRepository(UserEntity as any);
 
     try {
-        if (!fecha_reunion || !descripcion) {
+        if (!fecha_reunion || !descripcion || !creadorId) {
             throw new Error("Funcion mal llamada");
         }
 
+        //busqueda de creador de reunion para identificar carrera asociada
+        const creador: any = await userRepository.findOne({where: {id: creadorId}});
+        if(!creador) throw new Error("Creador no encontrado");
+
         const newReunion = reunionRepository.create({
             fecha_reunion,
-            descripcion
+            descripcion,
+            creadorId:creador.id,
+            carreraId: creador.carreraId,
         });
         await reunionRepository.save(newReunion);
 

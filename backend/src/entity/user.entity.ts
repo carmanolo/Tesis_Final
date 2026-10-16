@@ -40,7 +40,7 @@ export const UserEntity = new EntitySchema<IUser>({
         },
         role: {
             type: String,
-            default: "user",
+            default: "estudiante",
         },
         carreraId: {
             type: "int",
