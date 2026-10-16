@@ -122,6 +122,37 @@ describe("reunion.validations - Pruebas Unitarias", () => {
       expect(error!.message).toBe(CAMPOS_ADICIONALES);
     });
 
+    describe.each(["carreraId", "id_carrera"])("%s", (campo) => {
+      it("acepta un id positivo", () => {
+        const { error } = integrityValidation.validate({ [campo]: 1 });
+        expect(error).toBeUndefined();
+      });
+
+      it("rechaza un valor que no es número", () => {
+        const { error } = integrityValidation.validate({ [campo]: "abc" });
+        expect(error).toBeDefined();
+        expect(error!.message).toBe("El id de la carrera debe ser un número");
+      });
+
+      it("rechaza cero", () => {
+        const { error } = integrityValidation.validate({ [campo]: 0 });
+        expect(error).toBeDefined();
+        expect(error!.message).toBe("El id de la carrera debe ser un número positivo");
+      });
+
+      it("rechaza un número negativo", () => {
+        const { error } = integrityValidation.validate({ [campo]: -1 });
+        expect(error).toBeDefined();
+        expect(error!.message).toBe("El id de la carrera debe ser un número positivo");
+      });
+
+      it("rechaza un número decimal", () => {
+        const { error } = integrityValidation.validate({ [campo]: 1.5 });
+        expect(error).toBeDefined();
+        expect(error!.details[0].type).toBe("number.integer");
+      });
+    });
+
     describe("id_reunion", () => {
       it("acepta un id válido", () => {
         const { error } = integrityValidation.validate({ id_reunion: MIN_ID });
@@ -168,6 +199,16 @@ describe("reunion.validations - Pruebas Unitarias", () => {
       expect(error).toBeUndefined();
     });
 
+    it("acepta además carreraId e id_carrera (opcionales)", () => {
+      const { error } = createValidation.validate({
+        fecha_reunion: HOY_CHILE,
+        descripcion: descripcionValida,
+        carreraId: 1,
+        id_carrera: 1,
+      });
+      expect(error).toBeUndefined();
+    });
+
     it("exige la fecha de la reunión", () => {
       const { error } = createValidation.validate({ descripcion: descripcionValida });
       expect(error).toBeDefined();
@@ -200,20 +241,21 @@ describe("reunion.validations - Pruebas Unitarias", () => {
   });
 
   describe("updateValidation", () => {
-    it("acepta solo fecha_reunion", () => {
-      const { error } = updateValidation.validate({ fecha_reunion: HOY_CHILE });
+    it.each([
+      ["fecha_reunion", HOY_CHILE],
+      ["descripcion", descripcionValida],
+      ["carreraId", 1],
+      ["id_carrera", 1],
+    ])("acepta solo el campo %s", (campo, valor) => {
+      const { error } = updateValidation.validate({ [campo]: valor });
       expect(error).toBeUndefined();
     });
 
-    it("acepta solo descripcion", () => {
-      const { error } = updateValidation.validate({ descripcion: descripcionValida });
-      expect(error).toBeUndefined();
-    });
-
-    it("acepta ambos campos", () => {
+    it("acepta varios campos", () => {
       const { error } = updateValidation.validate({
         fecha_reunion: HOY_CHILE,
         descripcion: descripcionValida,
+        carreraId: 1,
       });
       expect(error).toBeUndefined();
     });

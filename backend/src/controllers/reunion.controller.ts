@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import path from "path";
+import fs from "fs";
 import {
     getReunionSer,
     getReunionesSer,
@@ -14,14 +15,17 @@ import { idValidation } from "../validations/modules/id.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 import { REUNION_NO_ENCONTRADA, ACTA_NO_PROPORCIONADA } from "../constants/reunion.constants.js";
 import { SHOW_ERRORS } from "../constants/ajustes.constants.js";
+import { AppDataSource } from "../config/configDb.js";
+import UserEntity from "../entity/user.entity.js";
+import CarreraEntity from "../entity/carrera.entity.js";
 
 export async function createReunion(req: Request, res: Response): Promise<any> {
   try {
+    const { id, carreraId: userCarreraId } = (req.user as any) || {};
+
     if (!req.body) {
       return handleErrorClient(res, 400, "datos no proporcionados");
     }
-
-    const { fecha_reunion, descripcion } = req.body;
 
     const { error } = integrityValidation.validate(req.body);
     if (error) {
@@ -33,16 +37,47 @@ export async function createReunion(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, "faltan parametros", result.error.message);
     }
 
-    const creadorId= (req as any).user?.id;
-    if (!creadorId) {
+    if (!id) {
       return handleErrorClient(res, 401, "usuario no autenticado");
     }
-    const newReunion = await createReunionSer(fecha_reunion, descripcion, creadorId);
-    if (newReunion) {
-      return handleSuccess(res, 201, "Reunión registrada exitosamente", newReunion.data || newReunion);
-    } else {
-      return handleErrorServer(res, 500, "error al registrar la reunión");
+
+    const { fecha_reunion, descripcion, carreraId, id_carrera } = req.body;
+
+    // Asociar internamente la carrera del usuario creador
+    let targetCarreraId = userCarreraId || carreraId || id_carrera;
+    if (!targetCarreraId && id) {
+      const userRepo = AppDataSource.getRepository(UserEntity as any);
+      const user = await userRepo.findOne({ where: { id } });
+      if (user?.carreraId) {
+        targetCarreraId = user.carreraId;
+      }
     }
+
+    // Si aún no tiene carrera (ej. administrador sin carrera asignada), tomar la primera carrera registrada
+    if (!targetCarreraId) {
+      const carreraRepo = AppDataSource.getRepository(CarreraEntity as any);
+      const primerCarrera = await carreraRepo.findOne({ where: {} });
+      if (primerCarrera) {
+        targetCarreraId = primerCarrera.id_carrera;
+      }
+    }
+
+    if (!targetCarreraId) {
+      return handleErrorClient(res, 400, "No se encontró ninguna carrera disponible para asociar a la reunión");
+    }
+
+    const { data, error: errSer } = await createReunionSer(
+      fecha_reunion,
+      descripcion,
+      id,
+      Number(targetCarreraId)
+    );
+
+    if (errSer || !data) {
+      return handleErrorClient(res, 400, errSer || "error al registrar la reunión");
+    }
+
+    return handleSuccess(res, 201, "Reunión registrada exitosamente", data);
   } catch (error: any) {
     console.error("error en registro de reunión");
     return handleErrorServer(res, 500, "error interno del servidor", error.message);
@@ -51,28 +86,34 @@ export async function createReunion(req: Request, res: Response): Promise<any> {
 
 export async function getReuniones(req: Request, res: Response): Promise<any> {
   try {
-    const reunionData = await getReunionesSer();
+    const { carreraId, rol, role } = (req.user as any) || {};
+    const userRole = rol || role;
+    const queryCarreraId = req.query.carreraId ? Number(req.query.carreraId) : carreraId;
 
-    if (!reunionData) {
-      return handleErrorClient(res, 400, "Reuniones no encontradas");
+    const reuniones = await getReunionesSer(queryCarreraId, userRole);
+
+    if (!reuniones) {
+      return handleErrorServer(res, 500, "Error interno del servidor");
     }
 
-    return handleSuccess(res, 200, "Reuniones obtenidas exitosamente", reunionData[0] || reunionData);
+    return handleSuccess(res, 200, "Reuniones obtenidas exitosamente", reuniones);
   } catch (error: any) {
     console.error("Error en reunion.controller.ts -> getReuniones(): ", error);
-    return res.status(500).json({ message: "Error interno del servidor." });
+    return handleErrorServer(res, 500, "Error interno del servidor", error.message);
   }
 }
 
 export async function getReunionById(req: Request, res: Response): Promise<any> {
   try {
+    const { carreraId, rol, role } = (req.user as any) || {};
+    const userRole = rol || role;
     const { id_reunion } = req.params;
 
     if (!id_reunion || isNaN(Number(id_reunion))) {
       return handleErrorClient(res, 400, "el id de la reunión es inválido");
     }
 
-    const reunion = await getReunionSer(Number(id_reunion));
+    const reunion = await getReunionSer(Number(id_reunion), carreraId, userRole);
 
     if (!reunion) {
       return handleErrorClient(res, 404, "Reunión no encontrada");
@@ -86,6 +127,9 @@ export async function getReunionById(req: Request, res: Response): Promise<any> 
 
 export async function patchReunionById(req: Request, res: Response): Promise<any> {
   try {
+    const { carreraId, rol, role } = (req.user as any) || {};
+    const userRole = rol || role;
+
     if (!req.params || !req.body) {
       return handleErrorClient(res, 400, "datos no proporcionados");
     }
@@ -112,7 +156,7 @@ export async function patchReunionById(req: Request, res: Response): Promise<any
       return handleErrorClient(res, 400, "faltó actualizar parametros", result.error.message);
     }
 
-    const reunionUpdate = await getReunionSer(Number(id_reunion));
+    const reunionUpdate = await getReunionSer(Number(id_reunion), carreraId, userRole);
 
     if (!reunionUpdate) {
       return handleErrorClient(res, 404, "Reunión no encontrada");
@@ -120,9 +164,15 @@ export async function patchReunionById(req: Request, res: Response): Promise<any
 
     const fechaAnterior = String(reunionUpdate.fecha_reunion).slice(0, 10);
 
-    Object.assign(reunionUpdate, req.body);
+    const { carreraId: newCarreraId, id_carrera: newIdCarrera, ...restData } = req.body;
+    Object.assign(reunionUpdate, restData);
 
-    //verifica en caso de que el atributo midificado sea la fecha de reunion
+    if (newCarreraId || newIdCarrera) {
+      reunionUpdate.carreraId = Number(newCarreraId || newIdCarrera);
+      reunionUpdate.carrera = { id_carrera: reunionUpdate.carreraId };
+    }
+
+    //verifica en caso de que el atributo modificado sea la fecha de reunion
     if (req.body.fecha_reunion && String(req.body.fecha_reunion).slice(0, 10) !== fechaAnterior) {
       reunionUpdate.recordatorio_enviado = false;
     }
@@ -139,9 +189,17 @@ export async function patchReunionById(req: Request, res: Response): Promise<any
 
 export async function deleteReunionById(req: Request, res: Response): Promise<any> {
   try {
+    const { carreraId, rol, role } = (req.user as any) || {};
+    const userRole = rol || role;
     const { id_reunion } = req.params;
-    if (!id_reunion) {
-      return handleErrorClient(res, 400, "El id de la reunión es obligatorio");
+    if (!id_reunion || isNaN(Number(id_reunion))) {
+      return handleErrorClient(res, 400, "El id de la reunión es inválido");
+    }
+
+    // Primero verifica que la pueda ver / pertenezca a su carrera
+    const reunion = await getReunionSer(Number(id_reunion), carreraId, userRole);
+    if (!reunion) {
+      return handleErrorClient(res, 404, "Reunión no encontrada");
     }
 
     const result = await deleteReunionSer(Number(id_reunion));
@@ -151,7 +209,7 @@ export async function deleteReunionById(req: Request, res: Response): Promise<an
     }
 
     if (result.message === REUNION_NO_ENCONTRADA) {
-      return handleSuccess(res, 404, result.message, result.result);
+      return handleErrorClient(res, 404, result.message);
     }
 
     return handleErrorClient(res, 400, result.message, result.result);
@@ -166,10 +224,19 @@ export async function deleteReunionById(req: Request, res: Response): Promise<an
 
 export async function subirActa(req: Request, res: Response): Promise<any> {
   try {
+    const { carreraId, rol, role } = (req.user as any) || {};
+    const userRole = rol || role;
     const { id_reunion } = req.params;
 
     if (!id_reunion || isNaN(Number(id_reunion))) {
       return handleErrorClient(res, 400, "el id de la reunión es inválido");
+    }
+
+    // Verificar permiso por carrera
+    const reunion = await getReunionSer(Number(id_reunion), carreraId, userRole);
+    if (!reunion) {
+      if (req.file?.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return handleErrorClient(res, 404, "Reunión no encontrada");
     }
 
     if (!req.file) {
@@ -190,10 +257,18 @@ export async function subirActa(req: Request, res: Response): Promise<any> {
 
 export async function descargarActa(req: Request, res: Response): Promise<any> {
   try {
+    const { carreraId, rol, role } = (req.user as any) || {};
+    const userRole = rol || role;
     const { id_reunion } = req.params;
 
     if (!id_reunion || isNaN(Number(id_reunion))) {
       return handleErrorClient(res, 400, "el id de la reunión es inválido");
+    }
+
+    // Verificar pertenencia a carrera
+    const reunion = await getReunionSer(Number(id_reunion), carreraId, userRole);
+    if (!reunion) {
+      return handleErrorClient(res, 404, "Reunión no encontrada");
     }
 
     const result = await obtenerActaSer(Number(id_reunion));
