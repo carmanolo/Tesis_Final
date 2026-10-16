@@ -33,7 +33,11 @@ export async function createReunion(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, "faltan parametros", result.error.message);
     }
 
-    const newReunion = await createReunionSer(fecha_reunion, descripcion);
+    const creadorId= (req as any).user?.id;
+    if (!creadorId) {
+      return handleErrorClient(res, 401, "usuario no autenticado");
+    }
+    const newReunion = await createReunionSer(fecha_reunion, descripcion, creadorId);
     if (newReunion) {
       return handleSuccess(res, 201, "Reunión registrada exitosamente", newReunion.data || newReunion);
     } else {
