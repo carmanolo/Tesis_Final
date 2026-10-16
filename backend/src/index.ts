@@ -5,6 +5,7 @@ import indexRoutes from "./routes/index.routes.js";
 import { PORT, HOST } from "./config/configEnv.js";
 import { connectDB } from "./config/configDb.js";
 import { createUsers } from "./config/initDb.js";
+import { iniciarCronRecordatorios } from "./services/recordatorio.service.js";
 
 async function setupServer(): Promise<void> {
   const app = express();
@@ -37,6 +38,7 @@ async function setupAPI(): Promise<void> {
   try {
     await connectDB();
     await createUsers();
+    iniciarCronRecordatorios();
     await setupServer();
   } catch (error) {
     console.error("Error en index.ts -> setupAPI(): ", error);

@@ -118,8 +118,14 @@ export async function patchReunionById(req: Request, res: Response): Promise<any
       return handleErrorClient(res, 404, "Reunión no encontrada");
     }
 
+    const fechaAnterior = String(reunionUpdate.fecha_reunion).slice(0, 10);
+
     Object.assign(reunionUpdate, req.body);
 
+    //verifica en caso de que el atributo midificado sea la fecha de reunion
+    if (req.body.fecha_reunion && String(req.body.fecha_reunion).slice(0, 10) !== fechaAnterior) {
+      reunionUpdate.recordatorio_enviado = false;
+    }
     const updateReunion = await patchReunionSer(reunionUpdate);
     if (!updateReunion.data) {
       return handleErrorClient(res, 400, updateReunion.message);
