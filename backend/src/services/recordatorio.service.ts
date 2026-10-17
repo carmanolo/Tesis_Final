@@ -3,7 +3,7 @@ import { AppDataSource } from "../config/configDb.js";
 import { ReunionEntity } from "../entity/reunion.entity.js"
 import { UserEntity } from "../entity/user.entity.js"
 import { enviarCorreo } from "./mail.service.js";
-import { ROL_ESTUDIANTE, TZ } from "../constants/ajustes.constants.js";
+import { TZ } from "../constants/ajustes.constants.js";
 
 function fechaDeManana(): string {
     const hoy = new Date().toLocaleDateString("en-CA", {timeZone: TZ});
@@ -24,7 +24,7 @@ export async function enviarRecordatoriosDeManana(): Promise<void>{
         if(!reunion.carreraId) continue;
 
         const estudiantes: any[] = await userRepo.find({
-            where: { carreraId: reunion.carreraId, role: ROL_ESTUDIANTE },
+            where: { carreraId: reunion.carreraId},
             select: { id: true, email: true, username: true },
         });
 

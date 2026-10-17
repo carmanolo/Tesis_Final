@@ -68,11 +68,11 @@ export const createValidation = Joi.object({
     carreraId: Joi.any(),
     id_carrera: Joi.any(),
 }).min(1).unknown(false)
-  .messages({
-    "object.min": "Debe proporcionar al menos un campo",
-    "any.unknown": CAMPOS_ADICIONALES,
-    "object.unknown": CAMPOS_ADICIONALES,
-  });
+    .messages({
+        "object.min": "Debe proporcionar al menos un campo",
+        "any.unknown": CAMPOS_ADICIONALES,
+        "object.unknown": CAMPOS_ADICIONALES,
+    });
 
 export const updateValidation = Joi.object({
     fecha_reunion: Joi.any(),
