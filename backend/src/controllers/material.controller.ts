@@ -1,11 +1,5 @@
 import { Request, Response } from "express";
-import {
-    getMaterialSer,
-    getMaterialesSer,
-    createMaterialSer,
-    patchMaterialSer,
-    deleteMaterialSer
-} from "../services/material.service.js";
+import { getMaterialSer, getMaterialesSer, createMaterialSer, patchMaterialSer, deleteMaterialSer } from "../services/material.service.js";
 import { createValidation, integrityValidation, updateValidation } from "../validations/material.validation.js";
 import { idValidation } from "../validations/modules/id.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
@@ -32,18 +26,7 @@ export async function createMaterial(req: Request, res: Response): Promise<any> 
             return handleErrorClient(res, 400, "Faltan parámetros requeridos", result.error.message);
         }
 
-        const {
-            nombre_material,
-            fecha_prestamo,
-            nombre_prestamo,
-            prestatario,
-            stock,
-            estado_prestamo = "prestado",
-            tne_entregada,
-            paso_tne,
-            carreraId,
-            id_carrera
-        } = req.body;
+        const {nombre_material, fecha_prestamo, nombre_prestamo, prestatario, stock, estado_prestamo = "prestado", tne_entregada, paso_tne, carreraId,id_carrera} = req.body;
 
         const finalNombrePrestamo = String(nombre_prestamo || prestatario || "").trim();
         const finalFecha = fecha_prestamo ? fecha_prestamo : null;
