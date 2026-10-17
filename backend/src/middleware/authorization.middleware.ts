@@ -29,7 +29,7 @@ export function authorizeRoles(...rolesPermitidos: string[]): RequestHandler {
                 );
             }
 
-            req.user.rol = rolActual;
+            req.user.role = rolActual;
             req.user.id = userFound.id;                 
             req.user.carreraId = userFound.carreraId;   
             next();

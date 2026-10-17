@@ -8,13 +8,19 @@ import {
   loginValidation,
 } from "../validations/auth.validations.js";
 import { Request, Response } from "express";
+import { handleErrorClient } from "../handlers/responseHandlers.js";
 
 export async function register(req: Request, res: Response): Promise<any> {
   try {
     const userRepository = AppDataSource.getRepository(User as any);
     const { username, rut, email, password } = req.body;
     const { error } = registerValidation.validate(req.body);
-    if (error) return res.status(400).json({ message: error.message });
+    if (error) {
+  return res.status(400).json({
+    status: "Client error",
+    message: error.message,
+  });
+}
 
     const existingEmailUser = await userRepository.findOne({
       where: { email },
@@ -58,7 +64,7 @@ export async function login(req: Request, res: Response): Promise<any> {
     const userRepository = AppDataSource.getRepository(User as any);
     const { email, password } = req.body;
     const { error } = loginValidation.validate(req.body);
-    if (error) return res.status(400).json({ message: error.message });
+    if (error) return handleErrorClient(res, 400, error.message);
 
     const userFound = await userRepository.findOne({ where: { email } });
     if (!userFound)
@@ -68,9 +74,7 @@ export async function login(req: Request, res: Response): Promise<any> {
 
     const isMatch = await comparePassword(password, userFound.password);
     if (!isMatch)
-      return res
-        .status(401)
-        .json({ message: "La contraseña ingresada no es correcta" });
+      return handleErrorClient(res, 400, "Contraseña incorrecta")
 
     const payload = {
       id: userFound.id,
