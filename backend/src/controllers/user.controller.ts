@@ -12,7 +12,6 @@ import { obtenerCarreraPorSigla, getCarreraSer } from "../services/carrera.servi
 
 export async function createUser(req: Request, res: Response): Promise<any> {
   try {
-    let newUser: any = null;
     if (!req.body || !req.params) {
       return handleErrorClient(res, 400, "datos no proporcionados");
     }
@@ -39,13 +38,15 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, "faltan parametros", result.error.message);
     }
 
-    newUser = await createUserSer(username, email, password, role, carreraId);
-    if (newUser) {
-      newUser.password = undefined;
-      return handleSuccess(res, 201, "Usuario registrado exitosamente", newUser.data || newUser);
-    } else {
-      return handleErrorServer(res, 500, "error al registrar usuario");
+    const { data: newUser, error: errSer } = await createUserSer(username, email, password, role, carreraId);
+    if (errSer || !newUser) {
+      if (errSer?.startsWith("Ya existe")) {
+        return handleErrorClient(res, 409, errSer);
+      }
+      return handleErrorServer(res, 500, errSer || "error al registrar usuario");
     }
+    newUser.password = undefined;
+    return handleSuccess(res, 201, "Usuario registrado exitosamente", newUser.data || newUser);
   } catch (error: any) {
     console.error("error en registro de usuario");
     return handleErrorServer(res, 500, "error interno del servidor", error.message);
