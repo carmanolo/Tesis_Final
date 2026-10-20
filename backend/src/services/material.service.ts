@@ -5,6 +5,7 @@ import { isAdminRole } from "../utils/user.utils.js";
 
 export async function createMaterialSer(
     nombre_material: string,
+    tipo_material: string,
     fecha_prestamo: Date | string | null | undefined,
     nombre_prestamo: string | null | undefined,
     stock: number,
@@ -27,6 +28,7 @@ export async function createMaterialSer(
         const materialRepository = AppDataSource.getRepository(MaterialEntity as any);
         const newMaterial = materialRepository.create({
             nombre_material,
+            tipo_material,
             fecha_prestamo: fecha_prestamo ? (new Date(fecha_prestamo) as any) : null,
             nombre_prestamo: nombre_prestamo || "",
             stock,

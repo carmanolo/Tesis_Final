@@ -18,4 +18,4 @@ router.delete("/eliminar/:id_reunion", authorizeRoles("administrador", "presiden
 router.post("/:id_reunion/acta", authorizeRoles("administrador", "presidente cee", "vicepresidente cee", "secretario cee"), uploadActaMiddleware, subirActa);
 router.get("/:id_reunion/acta/descargar", descargarActa);
 
-export default router; //secreatario, presidente, vicepresidente
+export default router; 
