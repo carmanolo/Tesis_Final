@@ -11,4 +11,4 @@ export const ACTA_TAMANO_MAXIMO_BYTES = ACTA_TAMANO_MAXIMO_MB * 1024 * 1024;
 
 // Roles que pueden crear/editar/eliminar reuniones y subir/reemplazar el acta.
 // AJUSTA estos strings a los roles reales que usa tu getUserRole() (ej. "cee", "directiva").
-export const ACCESO_GESTION_ACTAS = ["presidente cee", "secretario cee", "tesorero cee", "administrador", "vocal cee"];
+export const ACCESO_GESTION_ACTAS = ["presidente cee", "secretario cee", "administrador", "vicepresidente cee"];

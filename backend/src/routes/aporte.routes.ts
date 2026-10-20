@@ -7,10 +7,10 @@ const router = Router();
 
 router.use(authenticateJwt);
 
-router.get("/", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), getAportes);
+router.get("/", authorizeRoles("administrador","presidente cee", "vicepresidente cee", "tesorero cee"), getAportes);
 router.get("/:id_aporte", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), getAporteById);
-router.post("/crear/", authorizeRoles("administrador", "tesorero cee"), createAporte);
-router.patch("/editar/:id_aporte", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), patchAporteById);
-router.delete("/eliminar/:id_aporte", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), deleteAporteById);
+router.post("/crear/", authorizeRoles("administrador", "presidente cee" , "vicepresidente cee", "tesorero cee"), createAporte);
+router.patch("/editar/:id_aporte", authorizeRoles("administrador","presidente cee", "vicepresidente cee", "tesorero cee"), patchAporteById);
+router.delete("/eliminar/:id_aporte", authorizeRoles("administrador","presidente cee", "vicepresidente cee", "tesorero cee"), deleteAporteById);
 
 export default router; //tesorero, vicepresidente, presidente
