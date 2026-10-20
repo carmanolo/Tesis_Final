@@ -1,21 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import {
-  createValidation,
-  fechaNoPasadaValidation,
-  integrityValidation,
-  updateValidation,
-} from "../../validations/aporte.validations.js";
-import {
-  APORTE_OBLIGATORIO,
-  CAMPOS_ADICIONALES,
-  ERROR_CANTIDAD_INVALIDA,
-  MAX_NOMBRE_APORTE,
-  MIN_NOMBRE_APORTE,
-  MONTO_MINIMO,
-  MONTO_OBLIGATORIA,
-  NOMBRE_OBLIGATORIO,
-  PROCEDENCIA_OBLIGATORIA,
-} from "../../constants/aporte.constants.js";
+import { createValidation, fechaNoPasadaValidation, integrityValidation, updateValidation } from "../../validations/aporte.validations.js";
+import { APORTE_OBLIGATORIO, CAMPOS_ADICIONALES, ERROR_CANTIDAD_INVALIDA, MAX_NOMBRE_APORTE, MIN_NOMBRE_APORTE, MONTO_MINIMO, MONTO_OBLIGATORIA, NOMBRE_OBLIGATORIO, PROCEDENCIA_OBLIGATORIA} from "../../constants/aporte.constants.js";
 import { MAX_ID, MIN_ID } from "../../constants/user.constants.js";
 
 // 2026-10-14T01:00:00Z === 2026-10-13 22:00 en Chile (UTC-3).
@@ -25,7 +10,9 @@ const HOY_CHILE = "2026-10-13";
 const AYER_CHILE = "2026-10-12";
 const MANANA_CHILE = "2026-10-14";
 
-const descripcionValida = "Aporte para la semana de la carrera";
+// const descripcionValida = "Aporte para la semana de la carrera";
+//validar ingreso de espacios y valide que existan numeros y palabras
+const descripcionValida = "##___________";
 const procedenciaValida = "Centro de alumnos";
 const montoValido = 50000;
 

@@ -13,4 +13,4 @@ router.post("/crear/", authorizeRoles("administrador", "tesorero cee", "presiden
 router.patch("/editar/:id_material", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), patchMaterialById);
 router.delete("/eliminar/:id_material", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), deleteMaterialById);
 
-export default router;
+export default router; //utiles, articulos deportivos, juegos, calculadora

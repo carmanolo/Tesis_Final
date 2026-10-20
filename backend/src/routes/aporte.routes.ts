@@ -13,4 +13,4 @@ router.post("/crear/", authorizeRoles("administrador", "tesorero cee"), createAp
 router.patch("/editar/:id_aporte", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), patchAporteById);
 router.delete("/eliminar/:id_aporte", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), deleteAporteById);
 
-export default router;
+export default router; //tesorero, vicepresidente, presidente

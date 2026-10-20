@@ -3,11 +3,11 @@ import { ResponsiveBar } from "@nivo/bar";
 import { MESES, normalizarFechaISO } from "../../utils/calendar.utils.js";
 
 const COLOR_BASE = "#014898";
-const COLOR_DESTACADO = "#EE820F";
+const COLOR_DESTACADO = "#EE820F"; // arreglar y coocar más colores
 const TOP_N = 10;
 
 const CRITERIOS = [
-    { id: "procedencia", etiqueta: "Procedencia con más aportes" },
+    { id: "procedencia", etiqueta: "Procedencia con más aportes" }, //colocar etiquetas a los aportes: convertir descripción en un select
     { id: "actividad", etiqueta: "Actividad con mayor monto" },
     { id: "mes", etiqueta: "Aportes por mes" },
 ];
@@ -42,7 +42,7 @@ const agruparPorTexto = (aportes, campo) => {
 const agruparPorMes = (aportes) => {
     const grupos = new Map();
     aportes.forEach((aporte) => {
-        const iso = normalizarFechaISO(aporte.fecha_aporte); 
+        const iso = normalizarFechaISO(aporte.fecha_aporte);
         if (!iso) return;
         const [anio, mes] = iso.split("-");
         const clave = `${anio}-${mes}`;

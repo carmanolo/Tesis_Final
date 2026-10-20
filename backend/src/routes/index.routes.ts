@@ -16,3 +16,7 @@ router.use("/aportes", AporteRoutes);
 router.use("/materiales", MaterialRoutes);
 
 export default router;
+
+//extension de reuniones recientes o objetos pendientes por devolver
+//articulos prestados por mes
+//reunion por mes

@@ -24,18 +24,46 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
+/// <reference types="cypress" />
+
+declare global {
+  namespace Cypress {
+    interface Chainable {
+      login(correo?: string, clave?: string): Chainable<void>;
+    }
+  }
+}
+
 Cypress.Commands.add("login", (correo = "admin@gmail.com", clave = "admin123") => {
   cy.session([correo, clave], () => {
     cy.request({
       method: "POST",
-      url: "http://localhost:3000/api/login", // Ajusta esta URL a la ruta real de tu backend para hacer login
+      url: "http://localhost:3000/api/auth/login",
       body: {
-        correo: correo,
-        clave: clave,
+        email: correo,
+        password: clave,
       },
     }).then((response) => {
-      // Si tu aplicación guarda un Token en localStorage, guárdalo aquí:
-      window.localStorage.setItem("token", response.body.token);
+      const { accessToken } = response.body;
+
+      // 1. Establecer la cookie de autenticación 'jwt-auth'
+      cy.setCookie('jwt-auth', accessToken);
+
+      // 2. Decodificar el token en base64 para extraer los datos del usuario
+      const payloadBase64 = accessToken.split('.')[1];
+      const decodedPayload = JSON.parse(window.atob(payloadBase64));
+
+      const userData = {
+        username: decodedPayload.username,
+        email: decodedPayload.email,
+        rut: decodedPayload.rut,
+        role: decodedPayload.role,
+      };
+
+      // 3. Guardar el usuario en sessionStorage
+      window.sessionStorage.setItem('usuario', JSON.stringify(userData));
     });
   });
 });
+
+export {};
