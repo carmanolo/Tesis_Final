@@ -154,7 +154,7 @@ describe("user.controller - Pruebas Unitarias", () => {
 
     it("responde 201 y no expone la contraseña", async () => {
       const creado = { id: 1, ...body };
-      (createUserSer as any).mockResolvedValue(creado);
+      (createUserSer as any).mockResolvedValue({ data: creado, error: null });
       const res = crearRes();
 
       await createUser(crearReq({ body }), res);
@@ -164,7 +164,7 @@ describe("user.controller - Pruebas Unitarias", () => {
     });
 
     it("responde 500 si el servicio no devuelve el usuario", async () => {
-      (createUserSer as any).mockResolvedValue(null);
+      (createUserSer as any).mockResolvedValue({ data: null, error: null });
       const res = crearRes();
       await createUser(crearReq({ body }), res);
       expect(handleErrorServer).toHaveBeenCalledWith(res, 500, "error al registrar usuario");

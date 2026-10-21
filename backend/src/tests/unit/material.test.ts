@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mocks (se hoistean automáticamente por encima de los imports)
-const repos = vi.hoisted(() => ({user: { findOne: vi.fn() }, carrera: { findOne: vi.fn() },}));
+const repos = vi.hoisted(() => ({ user: { findOne: vi.fn() }, carrera: { findOne: vi.fn() } }));
 
 vi.mock("../../entity/user.entity.js", () => ({ default: { nombre: "UserEntity" } }));
 vi.mock("../../entity/carrera.entity.js", () => ({ default: { nombre: "CarreraEntity" } }));
@@ -36,9 +36,9 @@ vi.mock("../../handlers/responseHandlers.js", () => ({
 
 import { createMaterial, deleteMaterialById, getMaterialById, getMateriales, patchMaterialById } from "../../controllers/material.controller.js";
 import { createMaterialSer, deleteMaterialSer, getMaterialSer, getMaterialesSer, patchMaterialSer } from "../../services/material.service.js";
-import {createValidation, integrityValidation, updateValidation, } from "../../validations/material.validation.js";
+import { createValidation, integrityValidation, updateValidation } from "../../validations/material.validation.js";
 import { idValidation } from "../../validations/modules/id.validation.js";
-import { handleErrorClient, handleErrorServer, handleSuccess,} from "../../handlers/responseHandlers.js";
+import { handleErrorClient, handleErrorServer, handleSuccess } from "../../handlers/responseHandlers.js";
 import { AppDataSource } from "../../config/configDb.js";
 import UserEntity from "../../entity/user.entity.js";
 import { MATERIAL_NO_ENCONTRADO } from "../../constants/material.constants.js";
@@ -50,6 +50,18 @@ const crearReq = (parcial: Record<string, any> = {}) =>
 
 const validacionOk = { error: undefined };
 const validacionFalla = (message: string) => ({ error: { message } });
+
+// Posición de cada argumento en la llamada a createMaterialSer
+const ARG = {
+  nombre: 0,
+  tipo: 1,
+  fecha: 2,
+  prestamo: 3,
+  stock: 4,
+  carrera: 5,
+  estado: 6,
+  tne: 7,
+} as const;
 
 describe("material.controller - Pruebas Unitarias", () => {
   beforeEach(() => {
@@ -70,11 +82,14 @@ describe("material.controller - Pruebas Unitarias", () => {
   describe("createMaterial", () => {
     const bodyBase = {
       nombre_material: "Proyector",
+      tipo_material: "Equipo",
       fecha_prestamo: "2026-10-20",
       nombre_prestamo: "  Ana Pérez  ",
       stock: 5,
     };
     const user = { id: 1, carreraId: 2 };
+
+    const argsLlamada = () => (createMaterialSer as any).mock.calls[0];
 
     beforeEach(() => {
       (createMaterialSer as any).mockResolvedValue({ data: { id_material: 1 }, error: null });
@@ -113,27 +128,51 @@ describe("material.controller - Pruebas Unitarias", () => {
       expect(createMaterialSer).not.toHaveBeenCalled();
     });
 
-    it("responde 400 si está prestado (por defecto) y el stock es 0", async () => {
-      await createMaterial(crearReq({ body: { ...bodyBase, stock: 0 }, user }), res);
+    it("acepta stock numérico enviado como string", async () => {
+      await createMaterial(crearReq({ body: { ...bodyBase, stock: "7" }, user }), res);
+      expect(argsLlamada()[ARG.stock]).toBe(7);
+    });
+
+    it("responde 400 si el estado es 'prestado' y el stock es 0", async () => {
+      await createMaterial(
+        crearReq({ body: { ...bodyBase, stock: 0, estado_prestamo: "prestado" }, user }), res
+      );
       expect(handleErrorClient).toHaveBeenCalledWith(
         res, 400, "No es posible registrar en estado prestado con stock menor a 1"
       );
+      expect(createMaterialSer).not.toHaveBeenCalled();
     });
 
-    it("descuenta 1 del stock cuando el estado es prestado (por defecto)", async () => {
-      await createMaterial(crearReq({ body: bodyBase, user }), res);
+    it("descuenta 1 del stock cuando el estado es 'prestado'", async () => {
+      await createMaterial(
+        crearReq({ body: { ...bodyBase, estado_prestamo: "prestado" }, user }), res
+      );
       expect(createMaterialSer).toHaveBeenCalledWith(
-        "Proyector", "2026-10-20", "Ana Pérez", 4, 2, "prestado", false
+        "Proyector", "Equipo", "2026-10-20", "Ana Pérez", 4, 2, "prestado", false
       );
     });
 
-    it("no descuenta stock si el estado no es prestado", async () => {
+    it("usa el estado 'Disponible' por defecto y no descuenta stock", async () => {
+      await createMaterial(crearReq({ body: bodyBase, user }), res);
+      expect(createMaterialSer).toHaveBeenCalledWith(
+        "Proyector", "Equipo", "2026-10-20", "Ana Pérez", 5, 2, "Disponible", false
+      );
+    });
+
+    it("no descuenta stock si el estado no es prestado (aunque el stock sea 0)", async () => {
       await createMaterial(
         crearReq({ body: { ...bodyBase, stock: 0, estado_prestamo: "disponible" }, user }), res
       );
       expect(createMaterialSer).toHaveBeenCalledWith(
-        "Proyector", "2026-10-20", "Ana Pérez", 0, 2, "disponible", false
+        "Proyector", "Equipo", "2026-10-20", "Ana Pérez", 0, 2, "disponible", false
       );
+    });
+
+    it("envía tipo_material al servicio", async () => {
+      await createMaterial(
+        crearReq({ body: { ...bodyBase, tipo_material: "Herramienta" }, user }), res
+      );
+      expect(argsLlamada()[ARG.tipo]).toBe("Herramienta");
     });
 
     it("usa 'prestatario' si no viene nombre_prestamo", async () => {
@@ -141,16 +180,23 @@ describe("material.controller - Pruebas Unitarias", () => {
       await createMaterial(
         crearReq({ body: { ...sinNombre, prestatario: "Luis" }, user }), res
       );
-      expect((createMaterialSer as any).mock.calls[0][2]).toBe("Luis");
+      expect(argsLlamada()[ARG.prestamo]).toBe("Luis");
+    });
+
+    it("prioriza nombre_prestamo sobre prestatario", async () => {
+      await createMaterial(
+        crearReq({ body: { ...bodyBase, prestatario: "Luis" }, user }), res
+      );
+      expect(argsLlamada()[ARG.prestamo]).toBe("Ana Pérez");
     });
 
     it("envía string vacío y fecha null si no vienen", async () => {
       await createMaterial(
         crearReq({ body: { nombre_material: "Cable", stock: 3 }, user }), res
       );
-      const args = (createMaterialSer as any).mock.calls[0];
-      expect(args[1]).toBeNull();
-      expect(args[2]).toBe("");
+      const args = argsLlamada();
+      expect(args[ARG.fecha]).toBeNull();
+      expect(args[ARG.prestamo]).toBe("");
     });
 
     describe("determinación de la carrera", () => {
@@ -158,14 +204,14 @@ describe("material.controller - Pruebas Unitarias", () => {
         await createMaterial(
           crearReq({ body: { ...bodyBase, carreraId: 9 }, user: { id: 1, carreraId: 2 } }), res
         );
-        expect((createMaterialSer as any).mock.calls[0][4]).toBe(2);
+        expect(argsLlamada()[ARG.carrera]).toBe(2);
       });
 
       it("usa carreraId del body si el usuario no tiene carrera", async () => {
         await createMaterial(
           crearReq({ body: { ...bodyBase, carreraId: 9 }, user: { id: 1 } }), res
         );
-        expect((createMaterialSer as any).mock.calls[0][4]).toBe(9);
+        expect(argsLlamada()[ARG.carrera]).toBe(9);
         expect(repos.user.findOne).not.toHaveBeenCalled();
       });
 
@@ -173,14 +219,22 @@ describe("material.controller - Pruebas Unitarias", () => {
         await createMaterial(
           crearReq({ body: { ...bodyBase, id_carrera: 8 }, user: {} }), res
         );
-        expect((createMaterialSer as any).mock.calls[0][4]).toBe(8);
+        expect(argsLlamada()[ARG.carrera]).toBe(8);
+      });
+
+      it("convierte la carrera a número", async () => {
+        await createMaterial(
+          crearReq({ body: { ...bodyBase, carreraId: "9" }, user: {} }), res
+        );
+        expect(argsLlamada()[ARG.carrera]).toBe(9);
       });
 
       it("busca la carrera en la BD a partir del id del usuario", async () => {
         repos.user.findOne.mockResolvedValue({ id: 1, carreraId: 4 });
         await createMaterial(crearReq({ body: bodyBase, user: { id: 1 } }), res);
         expect(repos.user.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
-        expect((createMaterialSer as any).mock.calls[0][4]).toBe(4);
+        expect(argsLlamada()[ARG.carrera]).toBe(4);
+        expect(repos.carrera.findOne).not.toHaveBeenCalled();
       });
 
       it("toma la primera carrera registrada si no hay ninguna otra", async () => {
@@ -188,14 +242,14 @@ describe("material.controller - Pruebas Unitarias", () => {
         repos.carrera.findOne.mockResolvedValue({ id_carrera: 6 });
         await createMaterial(crearReq({ body: bodyBase, user: { id: 1 } }), res);
         expect(repos.carrera.findOne).toHaveBeenCalledWith({ where: {} });
-        expect((createMaterialSer as any).mock.calls[0][4]).toBe(6);
+        expect(argsLlamada()[ARG.carrera]).toBe(6);
       });
 
       it("funciona sin req.user (toma la primera carrera)", async () => {
         repos.carrera.findOne.mockResolvedValue({ id_carrera: 6 });
         await createMaterial(crearReq({ body: bodyBase }), res);
         expect(repos.user.findOne).not.toHaveBeenCalled();
-        expect((createMaterialSer as any).mock.calls[0][4]).toBe(6);
+        expect(argsLlamada()[ARG.carrera]).toBe(6);
       });
 
       it("responde 400 si no hay ninguna carrera disponible", async () => {
@@ -208,16 +262,21 @@ describe("material.controller - Pruebas Unitarias", () => {
     });
 
     describe("tne", () => {
+      it("es false por defecto", async () => {
+        await createMaterial(crearReq({ body: bodyBase, user }), res);
+        expect(argsLlamada()[ARG.tne]).toBe(false);
+      });
+
       it("prioriza tne_entregada sobre paso_tne", async () => {
         await createMaterial(
           crearReq({ body: { ...bodyBase, tne_entregada: true, paso_tne: false }, user }), res
         );
-        expect((createMaterialSer as any).mock.calls[0][6]).toBe(true);
+        expect(argsLlamada()[ARG.tne]).toBe(true);
       });
 
       it("usa paso_tne si no viene tne_entregada", async () => {
         await createMaterial(crearReq({ body: { ...bodyBase, paso_tne: true }, user }), res);
-        expect((createMaterialSer as any).mock.calls[0][6]).toBe(true);
+        expect(argsLlamada()[ARG.tne]).toBe(true);
       });
     });
 
@@ -354,6 +413,7 @@ describe("material.controller - Pruebas Unitarias", () => {
       await patchMaterialById(crearReq({ params: { id_material: "abc" } }), res);
       expect(idValidation.validate).toHaveBeenCalledWith({ id: "abc" });
       expect(handleErrorClient).toHaveBeenCalledWith(res, 400, "id inválido");
+      expect(getMaterialSer).not.toHaveBeenCalled();
     });
 
     it("responde 400 si falla integrityValidation", async () => {
@@ -375,6 +435,7 @@ describe("material.controller - Pruebas Unitarias", () => {
       );
       expect(getMaterialSer).toHaveBeenCalledWith(3, 2, "usuario");
       expect(handleErrorClient).toHaveBeenCalledWith(res, 404, MATERIAL_NO_ENCONTRADO);
+      expect(patchMaterialSer).not.toHaveBeenCalled();
     });
 
     describe("manejo de stock según el estado", () => {
@@ -414,12 +475,23 @@ describe("material.controller - Pruebas Unitarias", () => {
         const m = await ejecutar({ stock: 10, estado_prestamo: "prestado" });
         expect(m.stock).toBe(9);
       });
+
+      it("aplica el stock del body si no hay cambio de estado", async () => {
+        const m = await ejecutar({ stock: 10 });
+        expect(m.stock).toBe(10);
+      });
     });
 
     describe("campos", () => {
       it("copia los campos del body al material", async () => {
         const m = await ejecutar({ nombre_material: "Notebook" });
         expect(m.nombre_material).toBe("Notebook");
+      });
+
+      it("actualiza tipo_material y estado_prestamo", async () => {
+        const m = await ejecutar({ tipo_material: "Herramienta", estado_prestamo: "devuelto" });
+        expect(m.tipo_material).toBe("Herramienta");
+        expect(m.estado_prestamo).toBe("devuelto");
       });
 
       it("mapea 'prestatario' a nombre_prestamo", async () => {
@@ -448,6 +520,12 @@ describe("material.controller - Pruebas Unitarias", () => {
         const m = await ejecutar({ [campo]: "7" });
         expect(m.carreraId).toBe(7);
         expect(m.carrera).toEqual({ id_carrera: 7 });
+      });
+
+      it("no modifica la carrera si no viene en el body", async () => {
+        const m = await ejecutar({ nombre_material: "Otro" });
+        expect(m.carreraId).toBe(2);
+        expect(m.carrera).toBeUndefined();
       });
     });
 
@@ -482,6 +560,7 @@ describe("material.controller - Pruebas Unitarias", () => {
     it.each([["abc"], [undefined]])("responde 400 si el id es %s", async (id) => {
       await deleteMaterialById(crearReq({ params: { id_material: id } }), res);
       expect(handleErrorClient).toHaveBeenCalledWith(res, 400, "El id del material es inválido");
+      expect(getMaterialSer).not.toHaveBeenCalled();
     });
 
     it("responde 404 si el material no existe", async () => {
