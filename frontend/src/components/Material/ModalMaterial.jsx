@@ -1,21 +1,15 @@
 import { useEffect, useState } from "react";
 import { TIPO_MATERIAL } from "../../constants/material.constants.jsx";
-import { normalizarFechaISO } from "../../utils/calendar.utils.ts";
 
 const valoresIniciales = (mat) => ({
     nombre_material: mat?.nombre_material || "",
     tipo_material: mat?.tipo_material || "",
     stock: mat?.stock !== undefined && mat?.stock !== null ? String(mat.stock) : "1",
-    fecha_prestamo: mat?.fecha_prestamo ? normalizarFechaISO(mat.fecha_prestamo) : "",
-    prestatario: mat?.prestatario ?? mat?.nombre_prestamo ?? "",
-    estado_prestamo: mat?.estado_prestamo || "disponible",
-    tne_entregada: mat?.tne_entregada === true ? "true" : "false",
 });
 
-const validar = (form, isEdit, materialOriginal) => {
+const validar = (form) => {
     const errores = {};
     const nombre = form.nombre_material.trim();
-    const prestatario = form.prestatario.trim();
     const stockNum = Number(form.stock);
 
     if (!nombre) {
@@ -28,26 +22,8 @@ const validar = (form, isEdit, materialOriginal) => {
         errores.tipo_material = "Selecciona un tipo de material";
     }
 
-    if (!form.estado_prestamo) {
-        errores.estado_prestamo = "Selecciona un estado de préstamo";
-    }
-
     if (form.stock === "" || !Number.isInteger(stockNum) || stockNum < 0) {
         errores.stock = "El stock debe ser un número entero mayor o igual a 0";
-    } else {
-        if (!isEdit && form.estado_prestamo === "prestado" && stockNum < 1) {
-            errores.stock = "Para registrar en estado Prestado, el stock debe ser al menos 1";
-        }
-        if (isEdit) {
-            const estadoAnterior = String(materialOriginal?.estado_prestamo || "").toLowerCase();
-            if (form.estado_prestamo === "prestado" && estadoAnterior !== "prestado" && stockNum < 1) {
-                errores.stock = "No hay stock suficiente para cambiar el estado a Prestado";
-            }
-        }
-    }
-
-    if (prestatario && (prestatario.length < 3 || prestatario.length > 50)) {
-        errores.prestatario = "El prestatario debe tener entre 3 y 50 caracteres si se especifica";
     }
 
     return errores;
@@ -83,19 +59,16 @@ export const ModalMaterial = ({
 
     const handleGuardar = async (e) => {
         e?.preventDefault();
-        const erroresForm = validar(form, !esNuevo, material);
+        const erroresForm = validar(form);
         setErrores(erroresForm);
         if (Object.keys(erroresForm).length > 0) return;
 
+        const stockNum = Number(form.stock);
         const datos = {
             nombre_material: form.nombre_material.trim(),
             tipo_material: form.tipo_material,
-            stock: Number(form.stock),
-            fecha_prestamo: form.fecha_prestamo || null,
-            prestatario: form.prestatario.trim(),
-            nombre_prestamo: form.prestatario.trim(),
-            estado_prestamo: form.estado_prestamo,
-            tne_entregada: form.tne_entregada === "true",
+            stock: stockNum,
+            estado_prestamo: stockNum > 0 ? "disponible" : "prestado",
         };
 
         setGuardando(true);
@@ -119,7 +92,7 @@ export const ModalMaterial = ({
             onClick={onCerrar}
         >
             <div
-                className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-lg p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto border border-base-300"
+                className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto border border-base-300"
                 onClick={(e) => e.stopPropagation()}
             >
                 <button
@@ -148,6 +121,7 @@ export const ModalMaterial = ({
                             className={`input input-bordered w-full ${errores.nombre_material ? "input-error" : ""}`}
                             value={form.nombre_material}
                             onChange={cambiar("nombre_material")}
+                            autoFocus
                         />
                         {errores.nombre_material && (
                             <span className="text-xs text-error mt-1">{errores.nombre_material}</span>
@@ -182,7 +156,7 @@ export const ModalMaterial = ({
                         <div className="form-control">
                             <label className="label">
                                 <span className="label-text font-semibold">
-                                    Stock <span className="text-error">*</span>
+                                    Stock disponible <span className="text-error">*</span>
                                 </span>
                             </label>
                             <input
@@ -200,77 +174,8 @@ export const ModalMaterial = ({
                         </div>
                     </div>
 
-                    {/* Fila: Fecha y Prestatario */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="form-control">
-                            <label className="label">
-                                <span className="label-text font-semibold">Fecha de préstamo</span>
-                            </label>
-                            <input
-                                type="date"
-                                className="input input-bordered w-full"
-                                value={form.fecha_prestamo}
-                                onChange={cambiar("fecha_prestamo")}
-                            />
-                        </div>
-
-                        <div className="form-control">
-                            <label className="label">
-                                <span className="label-text font-semibold">Prestatario (opcional)</span>
-                            </label>
-                            <input
-                                type="text"
-                                placeholder="Nombre del solicitante"
-                                className={`input input-bordered w-full ${errores.prestatario ? "input-error" : ""}`}
-                                value={form.prestatario}
-                                onChange={cambiar("prestatario")}
-                            />
-                            {errores.prestatario && (
-                                <span className="text-xs text-error mt-1">{errores.prestatario}</span>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Fila: Estado préstamo y TNE */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="form-control">
-                            <label className="label">
-                                <span className="label-text font-semibold">
-                                    Estado préstamo <span className="text-error">*</span>
-                                </span>
-                            </label>
-                            <select
-                                className="select select-bordered w-full"
-                                value={form.estado_prestamo}
-                                onChange={cambiar("estado_prestamo")}
-                            >
-                                <option value="disponible">Disponible</option>
-                                <option value="prestado">Prestado</option>
-                                <option value="pendiente">Pendiente</option>
-                                <option value="devuelto">Devuelto</option>
-                            </select>
-                        </div>
-
-                        <div className="form-control">
-                            <label className="label">
-                                <span className="label-text font-semibold">¿TNE entregada?</span>
-                            </label>
-                            <select
-                                className="select select-bordered w-full"
-                                value={form.tne_entregada}
-                                onChange={cambiar("tne_entregada")}
-                            >
-                                <option value="false">No</option>
-                                <option value="true">Sí</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Nota explicativa sobre el stock */}
                     <p className="text-xs text-base-content/70 italic mt-2">
-                        {esNuevo
-                            ? "Nota: Si el estado es Prestado, se descontará automáticamente 1 unidad del stock ingresado al crearlo."
-                            : "Nota: Si cambias el estado a Prestado se descontará 1 unidad. Si cambia a Devuelto/Disponible se recuperará 1 unidad."}
+                        * Los préstamos a estudiantes se gestionan individualmente desde la tarjeta del material.
                     </p>
 
                     {/* Botones de acción */}

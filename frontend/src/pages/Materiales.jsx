@@ -7,6 +7,8 @@ import { useGetMateriales } from "../hooks/materiales/useGetMaterial.jsx";
 import { DUPageBrowser } from "../components/daisyUI/DUPageBrowser.jsx";
 import { DUMaterialList } from "../components/daisyUI/DUMaterialCollapse.jsx";
 import { ModalMaterial } from "../components/Material/ModalMaterial.jsx";
+import { ModalPrestarMaterial } from "../components/Material/ModalPrestarMaterial.jsx";
+import { usePrestamo } from "../hooks/materiales/usePrestamo.jsx";
 
 import { getUserRole } from "../services/user.service.js";
 import { PUEDE_EDITAR_MATERIAL, TIPO_MATERIAL } from "../constants/material.constants.jsx";
@@ -23,9 +25,13 @@ const Material = () => {
     const { handleCreateMaterial } = useCreateMaterial(fetchMaterial);
     const { handleEditMateriales } = usePatchMaterial(fetchMaterial);
     const { handleDeleteMateriales } = useDeleteMateriales(fetchMaterial);
+    const { handleCreatePrestamo, handleDevolverPrestamo, handleDeletePrestamo } = usePrestamo(fetchMaterial);
 
     const [modalAbierto, setModalAbierto] = useState(false);
     const [materialSeleccionado, setMaterialSeleccionado] = useState(null);
+
+    const [modalPrestarAbierto, setModalPrestarAbierto] = useState(false);
+    const [materialAPrestar, setMaterialAPrestar] = useState(null);
 
     const [buscar, setBuscar] = useState("");
     const [tipoFiltro, setTipoFiltro] = useState("");
@@ -46,6 +52,16 @@ const Material = () => {
         setMaterialSeleccionado(null);
     };
 
+    const abrirPrestar = (material) => {
+        setMaterialAPrestar(material);
+        setModalPrestarAbierto(true);
+    };
+
+    const cerrarPrestar = () => {
+        setModalPrestarAbierto(false);
+        setMaterialAPrestar(null);
+    };
+
     useEffect(() => {
         if (typeof fetchMaterial === "function") {
             fetchMaterial();
@@ -58,15 +74,24 @@ const Material = () => {
         setCurrentPage(1);
     };
 
-    // Filtro por texto (nombre, prestatario, estado) y tipo de material
+    // Filtro por texto (nombre material, tipo o prestatarios de préstamos) y tipo de material
     const materialesFiltrados = useMemo(() => {
         const lista = Array.isArray(materiales) ? materiales : [];
         const q = buscar.trim().toLowerCase();
         const tipo = tipoFiltro.trim().toLowerCase();
 
         return lista.filter((m) => {
-            const coincideTexto = !q || [m.nombre_material, m.prestatario ?? m.nombre_prestamo, m.estado_prestamo, m.tipo_material]
-                .some((campo) => String(campo ?? "").toLowerCase().includes(q));
+            const prestamos = Array.isArray(m.prestamos) ? m.prestamos : [];
+            const nombresPrestatarios = prestamos.map((p) => p.prestatario).join(" ");
+
+            const coincideTexto = !q || [
+                m.nombre_material,
+                m.tipo_material,
+                m.prestatario,
+                m.nombre_prestamo,
+                nombresPrestatarios,
+            ].some((campo) => String(campo ?? "").toLowerCase().includes(q));
+
             const coincideTipo = !tipo || String(m.tipo_material ?? "").trim().toLowerCase() === tipo;
             return coincideTexto && coincideTipo;
         });
@@ -88,7 +113,7 @@ const Material = () => {
                         <div>
                             <div>
                                 <input
-                                    className="input input-bordered input-sm join-item"
+                                    className="input input-bordered input-sm join-item w-[300px]"
                                     placeholder="Buscar material o prestatario..."
                                     value={buscar}
                                     onChange={(e) => {
@@ -143,6 +168,9 @@ const Material = () => {
                     data={currentPageContent}
                     handleEditMateriales={abrirEditarMaterial}
                     handleDeleteMateriales={handleDeleteMateriales}
+                    onAbrirPrestar={abrirPrestar}
+                    handleDevolverPrestamo={handleDevolverPrestamo}
+                    handleDeletePrestamo={handleDeletePrestamo}
                     canCrudMaterial={canCrudMaterial}
                 />
             </div>
@@ -163,6 +191,13 @@ const Material = () => {
                 onCrear={handleCreateMaterial}
                 onEditar={handleEditMateriales}
                 onCerrar={cerrarModal}
+            />
+
+            <ModalPrestarMaterial
+                abierto={modalPrestarAbierto}
+                material={materialAPrestar}
+                onPrestar={handleCreatePrestamo}
+                onCerrar={cerrarPrestar}
             />
         </div>
     );
