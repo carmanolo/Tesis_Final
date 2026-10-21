@@ -1,6 +1,6 @@
 export const ESTADOS_PRESTAMO = ["pendiente", "devuelto", "prestado", "disponible"];
 export const PUEDE_EDITAR_MATERIAL = ["administrador", "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee"];
-
+export const TIPO_MATERIAL = ["calculadora", "articulos deportivos", "juegos", "utiles", "uniforme de seguridad"];
 export const ESTADO_ESTILOS= {
     pendiente: {
         label: "Pendiente",

@@ -20,11 +20,19 @@ export const DUMaterialCollapse = ({ material, canCrudMaterial, handleEditMateri
 
             <div className="collapse-title flex items-center gap-3 font-semibold">
                 <span className="truncate">{material.nombre_material}</span>
+                {material.tipo_material && (
+                    <span className="badge badge-sm badge-outline capitalize opacity-75">
+                        {material.tipo_material}
+                    </span>
+                )}
                 <span className={`badge ml-auto mr-6 ${estado.badge}`}>{estado.label}</span>
             </div>
 
             <div className="collapse-content">
-                <div className="grid grid-cols-2 gap-3 pt-2 md:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 pt-2 md:grid-cols-5">
+                    <Dato titulo="Tipo">
+                        {material.tipo_material ? String(material.tipo_material).charAt(0).toUpperCase() + String(material.tipo_material).slice(1) : "—"}
+                    </Dato>
                     <Dato titulo="Fecha préstamo">
                         {material.fecha_prestamo ? formatearFechaDDMMAAAA(material.fecha_prestamo) : "—"}
                     </Dato>
