@@ -7,10 +7,10 @@ const router = Router();
 router.use(authenticateJwt);
 router.get("/", getReuniones);
 router.get("/:id_reunion", getReunionById);
-router.post("/crear", authorizeRoles("administrador", "presidente cee", "secreatario cee", "tesorero cee", "vocal cee"), createReunion);
-router.patch("/editar/:id_reunion", authorizeRoles("administrador", "presidente cee", "secreatario cee", "tesorero cee", "vocal cee"), patchReunionById);
-router.delete("/eliminar/:id_reunion", authorizeRoles("administrador", "presidente cee", "secreatario cee", "tesorero cee", "vocal cee"), deleteReunionById);
+router.post("/crear", authorizeRoles("administrador", "presidente cee", "vicepresidente cee", "secretario cee"), createReunion);
+router.patch("/editar/:id_reunion", authorizeRoles("administrador", "presidente cee", "secretario cee", "vicepresidente cee"), patchReunionById);
+router.delete("/eliminar/:id_reunion", authorizeRoles("administrador", "presidente cee", "secretario cee", "vicepresidente cee"), deleteReunionById);
 // Gestión de actas (importación/exportación de archivos PDF y Word)
-router.post("/:id_reunion/acta", authorizeRoles("administrador", "presidente cee", "secreatario cee", "tesorero cee", "vocal cee"), uploadActaMiddleware, subirActa);
+router.post("/:id_reunion/acta", authorizeRoles("administrador", "presidente cee", "vicepresidente cee", "secretario cee"), uploadActaMiddleware, subirActa);
 router.get("/:id_reunion/acta/descargar", descargarActa);
 export default router;

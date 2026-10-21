@@ -57,8 +57,8 @@ export async function getMaterialesSer(carreraId?: number, role?: string): Promi
         const materialRepository = AppDataSource.getRepository(MaterialEntity as any);
         const materiales = await materialRepository.find({
             where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
-            relations: { carrera: true },
-            order: { fecha_prestamo: "DESC" },
+            relations: { carrera: true, prestamos: true },
+            order: { id_material: "DESC" },
         });
 
         return materiales;
@@ -79,7 +79,7 @@ export async function getMaterialSer(id_material: number, carreraId?: number, ro
         const materialRepository = AppDataSource.getRepository(MaterialEntity as any);
         const material = await materialRepository.findOne({
             where: whereCondition,
-            relations: { carrera: true },
+            relations: { carrera: true, prestamos: true },
         });
 
         return material;
