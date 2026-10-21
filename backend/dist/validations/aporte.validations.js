@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { idValidationFunction } from "./modules/id.validation.js";
-import { MIN_NOMBRE_APORTE, MAX_NOMBRE_APORTE, NOMBRE_OBLIGATORIO, APORTE_OBLIGATORIO, PROCEDENCIA_OBLIGATORIA, MONTO_OBLIGATORIA, CAMPOS_ADICIONALES, ERROR_CANTIDAD_INVALIDA } from "../constants/aporte.constants.js";
+import { MIN_NOMBRE_APORTE, MAX_NOMBRE_APORTE, NOMBRE_OBLIGATORIO, APORTE_OBLIGATORIO, PROCEDENCIA_OBLIGATORIA, MONTO_OBLIGATORIA, MONTO_MINIMO, CAMPOS_ADICIONALES, ERROR_CANTIDAD_INVALIDA } from "../constants/aporte.constants.js";
 function hoyEnChile() {
     return new Intl.DateTimeFormat("en-CA", {
         timeZone: "America/Santiago",
@@ -20,21 +20,23 @@ export function fechaNoPasadaValidation(value, helpers) {
 export const integrityValidation = Joi.object({
     id_aporte: Joi.any().custom(idValidationFunction),
     descripcion_aporte: Joi.string().min(MIN_NOMBRE_APORTE).max(MAX_NOMBRE_APORTE).messages({
-        "string.base": "El nombre de la Aporte debe ser un string",
-        "string.empty": "El nombre de la Aporte no puede ser vacía",
-        "string.min": `El nombre de la Aporte debe tener al menos ${MIN_NOMBRE_APORTE} caracteres`,
-        "string.max": `El nombre de la Aporte  no puede tener más de ${MAX_NOMBRE_APORTE} caracteres`,
+        "string.base": "La descripción del aporte debe ser un string",
+        "string.empty": "La descripción del aporte no puede ser vacía",
+        "string.min": `La descripción del aporte debe tener al menos ${MIN_NOMBRE_APORTE} caracteres`,
+        "string.max": `La descripción del aporte no puede tener más de ${MAX_NOMBRE_APORTE} caracteres`,
     }),
     fecha_aporte: Joi.date().custom(fechaNoPasadaValidation).messages({
-        "date.base": "La fecha del Aporte debe ser una fecha válida",
-        "date.min": "La fecha del Aporte no puede ser anterior a hoy",
+        "date.base": "La fecha del aporte debe ser una fecha válida",
+        "date.min": "La fecha del aporte no puede ser anterior a hoy",
     }),
     procedencia: Joi.string().messages({
-        "string.base": "El nombre de la Aporte debe ser un string",
-        "string.empty": "El nombre de la Aporte no puede ser vacía",
+        "string.base": "La procedencia debe ser un string",
+        "string.empty": "La procedencia no puede ser vacía",
     }),
-    monto: Joi.number().integer().messages({
+    monto: Joi.number().integer().min(MONTO_MINIMO).messages({
         "number.base": ERROR_CANTIDAD_INVALIDA,
+        "number.integer": ERROR_CANTIDAD_INVALIDA,
+        "number.min": `El monto del aporte debe ser al menos ${MONTO_MINIMO}`,
     }),
     carreraId: Joi.number().integer().positive().messages({
         "number.base": "El id de la carrera debe ser un número",

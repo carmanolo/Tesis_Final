@@ -20,7 +20,7 @@ export async function createMaterial(req, res) {
         if (result.error) {
             return handleErrorClient(res, 400, "Faltan parámetros requeridos", result.error.message);
         }
-        const { nombre_material, fecha_prestamo, nombre_prestamo, prestatario, stock, estado_prestamo = "prestado", tne_entregada, paso_tne, carreraId, id_carrera } = req.body;
+        const { nombre_material, tipo_material, fecha_prestamo, nombre_prestamo, prestatario, stock, estado_prestamo = "Disponible", tne_entregada, paso_tne, carreraId, id_carrera } = req.body;
         const finalNombrePrestamo = String(nombre_prestamo || prestatario || "").trim();
         const finalFecha = fecha_prestamo ? fecha_prestamo : null;
         let parsedStock = Number(stock);
@@ -55,7 +55,7 @@ export async function createMaterial(req, res) {
             return handleErrorClient(res, 400, "No se encontró ninguna carrera disponible para asociar al material");
         }
         const finalTne = tne_entregada !== undefined ? Boolean(tne_entregada) : (paso_tne !== undefined ? Boolean(paso_tne) : false);
-        const { data, error: errSer } = await createMaterialSer(nombre_material, finalFecha, finalNombrePrestamo, parsedStock, Number(targetCarreraId), estado_prestamo, finalTne);
+        const { data, error: errSer } = await createMaterialSer(nombre_material, tipo_material, finalFecha, finalNombrePrestamo, parsedStock, Number(targetCarreraId), estado_prestamo, finalTne);
         if (errSer || !data) {
             return handleErrorClient(res, 400, errSer || "Error al registrar el material");
         }

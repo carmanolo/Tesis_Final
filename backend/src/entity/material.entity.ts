@@ -1,5 +1,6 @@
 import { EntitySchema } from "typeorm";
 import type { Carrera } from "./carrera.entity.js";
+import type { Prestamo } from "./prestamo.entity.js";
 
 export interface Material {
     id_material: number;
@@ -12,6 +13,7 @@ export interface Material {
     tne_entregada: boolean;
     carreraId?: number;
     carrera?: Carrera;
+    prestamos?: Prestamo[];
 }
 
 export const MaterialEntity = new EntitySchema<Material>({
@@ -66,6 +68,11 @@ export const MaterialEntity = new EntitySchema<Material>({
             inverseSide: "materiales",
             nullable: false,
             onDelete: "CASCADE",
+        },
+        prestamos: {
+            type: "one-to-many",
+            target: "Prestamo",
+            inverseSide: "material",
         },
     },
 });
