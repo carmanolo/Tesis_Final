@@ -10,7 +10,6 @@ import { USER_NO_ENCONTRADO } from "../constants/user.constants.js";
 import { obtenerCarreraPorSigla, getCarreraSer } from "../services/carrera.service.js";
 export async function createUser(req, res) {
     try {
-        let newUser = null;
         if (!req.body || !req.params) {
             return handleErrorClient(res, 400, "datos no proporcionados");
         }
@@ -33,14 +32,15 @@ export async function createUser(req, res) {
         if (result.error) {
             return handleErrorClient(res, 400, "faltan parametros", result.error.message);
         }
-        newUser = await createUserSer(username, email, password, role, carreraId);
-        if (newUser) {
-            newUser.password = undefined;
-            return handleSuccess(res, 201, "Usuario registrado exitosamente", newUser.data || newUser);
+        const { data: newUser, error: errSer } = await createUserSer(username, email, password, role, carreraId);
+        if (errSer || !newUser) {
+            if (errSer?.startsWith("Ya existe")) {
+                return handleErrorClient(res, 409, errSer);
+            }
+            return handleErrorServer(res, 500, errSer || "error al registrar usuario");
         }
-        else {
-            return handleErrorServer(res, 500, "error al registrar usuario");
-        }
+        newUser.password = undefined;
+        return handleSuccess(res, 201, "Usuario registrado exitosamente", newUser.data || newUser);
     }
     catch (error) {
         console.error("error en registro de usuario");

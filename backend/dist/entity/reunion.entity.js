@@ -40,6 +40,25 @@ export const ReunionEntity = new EntitySchema({
             type: String,
             nullable: true,
         },
-    }
+        carreraId: { type: "int", nullable: true },
+        creadorId: { type: "int", nullable: true },
+        recordatorio_enviado: { type: Boolean, default: false },
+    },
+    relations: {
+        carrera: {
+            type: "many-to-one",
+            target: "Carrera",
+            joinColumn: { name: "carreraId", referencedColumnName: "id_carrera" },
+            onDelete: "SET NULL",
+            nullable: true,
+        },
+        creador: {
+            type: "many-to-one",
+            target: "User",
+            joinColumn: { name: "creadorId", referencedColumnName: "id" },
+            onDelete: "SET NULL",
+            nullable: true,
+        },
+    },
 });
 export default ReunionEntity;

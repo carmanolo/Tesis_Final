@@ -4,13 +4,18 @@ import { encryptPassword, comparePassword } from "../helpers/bcrypt.helper.js";
 import { AppDataSource } from "../config/configDb.js";
 import { SESSION_SECRET } from "../config/configEnv.js";
 import { registerValidation, loginValidation, } from "../validations/auth.validations.js";
+import { handleErrorClient } from "../handlers/responseHandlers.js";
 export async function register(req, res) {
     try {
         const userRepository = AppDataSource.getRepository(User);
         const { username, rut, email, password } = req.body;
         const { error } = registerValidation.validate(req.body);
-        if (error)
-            return res.status(400).json({ message: error.message });
+        if (error) {
+            return res.status(400).json({
+                status: "Client error",
+                message: error.message,
+            });
+        }
         const existingEmailUser = await userRepository.findOne({
             where: { email },
         });
@@ -49,7 +54,7 @@ export async function login(req, res) {
         const { email, password } = req.body;
         const { error } = loginValidation.validate(req.body);
         if (error)
-            return res.status(400).json({ message: error.message });
+            return handleErrorClient(res, 400, error.message);
         const userFound = await userRepository.findOne({ where: { email } });
         if (!userFound)
             return res
@@ -57,9 +62,7 @@ export async function login(req, res) {
                 .json({ message: "El correo electrónico no está registrado" });
         const isMatch = await comparePassword(password, userFound.password);
         if (!isMatch)
-            return res
-                .status(401)
-                .json({ message: "La contraseña ingresada no es correcta" });
+            return handleErrorClient(res, 400, "Contraseña incorrecta");
         const payload = {
             id: userFound.id,
             carreraId: userFound.carreraId,
