@@ -13,9 +13,10 @@ import AporteEntity from "../../entity/aporte.entity.js";
 // Configuración (ajusta estos valores si tus rutas son distintas)
 const BASE_APORTES = "/api/aportes";
 const RUTA_CREAR = `${BASE_APORTES}/crear`;
-
 const EMAIL_ADMIN = "admin@gmail.com";
-const PREFIJO_DESCRIPCION = "Aporte de prueba"; 
+const EMAIL_CEE = "carlos.dominguez2301@alumnos.ubiobio.cl";
+// Prefijo poco común para que la limpieza nunca borre datos reales
+const PREFIJO_DESCRIPCION = "__TEST__ Aporte";
 const PROCEDENCIA_VALIDA = "Venta de completos";
 const MONTO_VALIDO = 15000;
 
@@ -38,11 +39,12 @@ const letrasAleatorias = (largo: number) =>
 
 describe("POST de creación de aportes - Pruebas de Integración", () => {
   let admin: any;
+  let miembro: any;
   let estudiante: any;
-  let carreras: any[];
   let carrera: any;
   let aporteRepo: any;
   let tokenAdmin: string;
+  let tokenMiembro: string;
   let tokenSinPermiso: string;
   const idsCreados: number[] = [];
 
@@ -70,7 +72,10 @@ describe("POST de creación de aportes - Pruebas de Integración", () => {
   });
 
   const crear = (body: Record<string, any>, token: string = tokenAdmin) =>
-    request(app).post(RUTA_CREAR).set("Authorization", `Bearer ${token}`).send(body);
+    request(app)
+      .post(RUTA_CREAR)
+      .set("Authorization", `Bearer ${token}`)
+      .send(body);
 
   const esperarCreado = (response: any) => {
     expect(
@@ -83,6 +88,9 @@ describe("POST de creación de aportes - Pruebas de Integración", () => {
   const cantidadConDescripcion = (descripcion_aporte: string) =>
     aporteRepo.count({ where: { descripcion_aporte } });
 
+  const buscarGuardado = (response: any) =>
+    aporteRepo.findOne({ where: { id_aporte: response.body.data.id_aporte } });
+
   beforeAll(async () => {
     if (!AppDataSource.isInitialized) {
       await AppDataSource.initialize();
@@ -94,19 +102,28 @@ describe("POST de creación de aportes - Pruebas de Integración", () => {
     if (!admin) {
       throw new Error(`No existe el usuario ${EMAIL_ADMIN} en la BD de pruebas`);
     }
+
+    miembro = await userRepo.findOne({ where: { email: EMAIL_CEE } });
+    if (!miembro) {
+      throw new Error(`No existe el usuario ${EMAIL_CEE} en la BD de pruebas`);
+    }
+    if (!miembro.carreraId) {
+      throw new Error(`El usuario ${EMAIL_CEE} debe tener una carrera asignada`);
+    }
+
     estudiante = await userRepo.findOne({ where: { role: "estudiante" } });
     if (!estudiante) {
       throw new Error("No existe ningún usuario con rol 'estudiante' en la BD de pruebas");
     }
 
-    carreras = await AppDataSource.getRepository(CarreraEntity as any).find({ take: 2 });
+    const carreras = await AppDataSource.getRepository(CarreraEntity as any).find({ take: 1 });
     carrera = carreras[0];
     if (!carrera) {
       throw new Error("No existe ninguna carrera en la BD de pruebas");
     }
 
-    // Token determinista: el administrador actuando sobre una carrera concreta
-    tokenAdmin = firmar(admin, { carreraId: carrera.id_carrera });
+    tokenAdmin = firmar(admin);
+    tokenMiembro = firmar(miembro);
     tokenSinPermiso = firmar(estudiante);
   }, 30000);
 
@@ -132,6 +149,7 @@ describe("POST de creación de aportes - Pruebas de Integración", () => {
       expect(await cantidadConDescripcion(body.descripcion_aporte)).toBe(0);
     });
 
+    // Ajusta a 401 si tu middleware responde así con tokens inválidos
     it("rechaza con 403 si el token es inválido", async () => {
       const body = datosUnicos();
       const response = await crear(body, "token-falso");
@@ -185,6 +203,15 @@ describe("POST de creación de aportes - Pruebas de Integración", () => {
       expect(await cantidadConDescripcion(body.descripcion_aporte)).toBe(0);
     });
 
+    // Ajusta si tu esquema permite monto 0
+    it("rechaza con 400 un monto igual a cero", async () => {
+      const body = datosUnicos({ monto: 0 });
+      const response = await crear(body);
+
+      expect(response.statusCode).toBe(400);
+      expect(await cantidadConDescripcion(body.descripcion_aporte)).toBe(0);
+    });
+
     it("rechaza con 400 una fecha con formato inválido", async () => {
       const body = datosUnicos({ fecha_aporte: "no-es-una-fecha" });
       const response = await crear(body);
@@ -215,77 +242,79 @@ describe("POST de creación de aportes - Pruebas de Integración", () => {
 
     it("guarda el aporte en la BD asociado al usuario creador y a su carrera", async () => {
       const body = datosUnicos();
-      const response = await crear(body);
+      const response = await crear(body, tokenMiembro);
       esperarCreado(response);
 
-      const guardado = await aporteRepo.findOne({
-        where: { id_aporte: response.body.data.id_aporte },
-      });
+      const guardado = await buscarGuardado(response);
 
       expect(guardado).not.toBeNull();
       expect(guardado.descripcion_aporte).toBe(body.descripcion_aporte);
       expect(Number(guardado.monto)).toBe(MONTO_VALIDO);
-      expect(guardado.creadorId).toBe(admin.id);
-      expect(guardado.carreraId).toBe(carrera.id_carrera);
+      expect(guardado.creadorId).toBe(miembro.id);
+      expect(guardado.carreraId).toBe(miembro.carreraId);
     });
 
-    it("permite montos con decimales o cifras altas", async () => {
+    it("permite montos con cifras altas", async () => {
       const body = datosUnicos({ monto: 1250000 });
       const response = await crear(body);
 
       esperarCreado(response);
       expect(Number(response.body.data.monto)).toBe(1250000);
     });
-  });
-  
-  describe("asociación de la carrera", () => {
-    it("usa la carrera del usuario en la BD aunque el body indique otra", async (ctx) => {
-      if (!admin.carreraId || !carreras[1]) return ctx.skip(); // requiere admin con carrera y 2 carreras
 
-      const otraCarrera = carreras.find((c) => c.id_carrera !== admin.carreraId);
-      const body = datosUnicos({ carreraId: otraCarrera.id_carrera });
-      const response = await crear(body);
-      esperarCreado(response);
-
-      const guardado = await aporteRepo.findOne({
-      where: { id_aporte: response.body.data.id_aporte },
-    });
-    expect(guardado.carreraId).toBe(admin.carreraId);
-    });
-
-    it("usa la carreraId del body cuando el token no trae carrera", async () => {
-      const tokenSinCarrera = firmar(admin, { carreraId: null });
-      const body = datosUnicos({ carreraId: carrera.id_carrera });
-      const response = await crear(body, tokenSinCarrera);
-      esperarCreado(response);
-
-      const guardado = await aporteRepo.findOne({
-        where: { id_aporte: response.body.data.id_aporte },
-      });
-      expect(guardado.carreraId).toBe(carrera.id_carrera);
-    });
-
-    it("asigna una carrera por defecto si ni el token ni el body la indican", async () => {
-      const tokenSinCarrera = firmar(admin, { carreraId: null });
-      const body = datosUnicos();
-      const response = await crear(body, tokenSinCarrera);
-      esperarCreado(response);
-
-      const guardado = await aporteRepo.findOne({
-        where: { id_aporte: response.body.data.id_aporte },
-      });
-      expect(guardado.carreraId).toBeTruthy();
-    });
-
-    it("rechaza con 400 si la carrera indicada en el body no existe y no crea el aporte", async (ctx) => {
-      if (admin.carreraId) return ctx.skip(); // con carrera asignada, la del usuario se impone
-
-      const body = datosUnicos({ carreraId: 999999 });
+    // Ajusta si tu columna `monto` es entera
+    it("rechaza con 400 un monto con decimales (solo se permiten enteros)", async () => {
+      const body = datosUnicos({ monto: 1500.5 });
       const response = await crear(body);
 
       expect(response.statusCode).toBe(400);
-      expect(response.body.message).toBe("La carrera especificada no existe");
       expect(await cantidadConDescripcion(body.descripcion_aporte)).toBe(0);
+    });
+  });
+
+  describe("asociación de la carrera", () => {
+    it("usa la carrera del usuario en la BD aunque el body indique otra", async () => {
+      // 999999 no existe: si el controlador lo usara, la API respondería 400
+      const response = await crear(datosUnicos({ carreraId: 999999 }), tokenMiembro);
+      esperarCreado(response);
+
+      const guardado = await buscarGuardado(response);
+      expect(guardado.carreraId).toBe(miembro.carreraId);
+    });
+
+    describe("usuario sin carrera asignada (administrador)", () => {
+      beforeAll(() => {
+        if (admin.carreraId) {
+          throw new Error(
+            `${EMAIL_ADMIN} tiene carrera asignada: estos tests necesitan un administrador sin carrera`
+          );
+        }
+      });
+
+      it("usa la carreraId del body", async () => {
+        const response = await crear(datosUnicos({ carreraId: carrera.id_carrera }));
+        esperarCreado(response);
+
+        const guardado = await buscarGuardado(response);
+        expect(guardado.carreraId).toBe(carrera.id_carrera);
+      });
+
+      it("asigna la primera carrera registrada si el body tampoco la indica", async () => {
+        const response = await crear(datosUnicos());
+        esperarCreado(response);
+
+        const guardado = await buscarGuardado(response);
+        expect(guardado.carreraId).toBeTruthy();
+      });
+
+      it("rechaza con 400 si la carrera del body no existe y no crea el aporte", async () => {
+        const body = datosUnicos({ carreraId: 999999 });
+        const response = await crear(body);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toBe("La carrera especificada no existe");
+        expect(await cantidadConDescripcion(body.descripcion_aporte)).toBe(0);
+      });
     });
   });
 });
