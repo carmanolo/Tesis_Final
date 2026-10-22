@@ -24,6 +24,7 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
+
 /// <reference types="cypress" />
 
 declare global {
@@ -35,35 +36,45 @@ declare global {
 }
 
 Cypress.Commands.add("login", (correo = "admin@gmail.com", clave = "admin123") => {
-  cy.session([correo, clave], () => {
-    cy.request({
-      method: "POST",
-      url: "http://localhost:3000/api/auth/login",
-      body: {
-        email: correo,
-        password: clave,
+  cy.session(
+    [correo, clave],
+    () => {
+      cy.request({
+        method: "POST",
+        url: "http://localhost:3000/api/auth/login",
+        body: { email: correo, password: clave },
+      }).then((response) => {
+        const { accessToken } = response.body;
+
+        // 1. Cookie de autenticación
+        cy.setCookie("jwt-auth", accessToken, { path: "/" });
+
+        // 2. Datos del usuario a partir del payload del token
+        const payloadBase64 = accessToken.split(".")[1];
+        const decodedPayload = JSON.parse(window.atob(payloadBase64));
+
+        const userData = {
+          username: decodedPayload.username,
+          email: decodedPayload.email,
+          rut: decodedPayload.rut,
+          role: decodedPayload.role,
+        };
+
+        // 3. Guardar el usuario en el sessionStorage de la APP (no del runner).
+        //    Se visita primero el origen de la app para escribir en su storage.
+        cy.visit("/login");
+        cy.window().then((win) => {
+          win.sessionStorage.setItem("usuario", JSON.stringify(userData));
+        });
+      });
+    },
+    {
+      // Si la cookie no existe, la sesión se considera inválida y se recrea
+      validate() {
+        cy.getCookie("jwt-auth").should("exist");
       },
-    }).then((response) => {
-      const { accessToken } = response.body;
-
-      // 1. Establecer la cookie de autenticación 'jwt-auth'
-      cy.setCookie('jwt-auth', accessToken);
-
-      // 2. Decodificar el token en base64 para extraer los datos del usuario
-      const payloadBase64 = accessToken.split('.')[1];
-      const decodedPayload = JSON.parse(window.atob(payloadBase64));
-
-      const userData = {
-        username: decodedPayload.username,
-        email: decodedPayload.email,
-        rut: decodedPayload.rut,
-        role: decodedPayload.role,
-      };
-
-      // 3. Guardar el usuario en sessionStorage
-      window.sessionStorage.setItem('usuario', JSON.stringify(userData));
-    });
-  });
+    }
+  );
 });
 
 export {};
