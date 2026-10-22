@@ -11,3 +11,10 @@ export const PROCEDENCIA_OBLIGATORIA = "La procedencia es obligatoria";
 export const MONTO_OBLIGATORIA = "El monto del Aporte es obligatorio";
 export const CAMPOS_ADICIONALES = "Se enviaron campos adicionales no permitidos";
 export const ERROR_CANTIDAD_INVALIDA = "El formato de la cantidad es incorrecto, debe ser un número";
+export const OPCIONES_PROCEDENCIA= ["DDE", "Rectoria","FACE", "FACI", "FARCORDI","FI","FEDUH", "FACSA","Externo", "Otro"];
+export const OPCIONES_DESCRIPCION = [
+    "Aniversario FACE",
+    "Aniversario Carrera",
+    "Aniversario Universidad",
+    "Otro",
+];
