@@ -116,7 +116,16 @@ export const GraficoAportes = ({ aportes = [] }) => {
                         keys={["monto"]}
                         indexBy="categoria"
                         layout={esPorMes ? "vertical" : "horizontal"}
-                        margin={esPorMes ? { top: 20, right: 20, bottom: 70, left: 80 } : { top: 20, right: 30, bottom: 50, left: 170 }}
+                        margin={
+                            esPorMes
+                                ? { top: 20, right: 20, bottom: 70, left: 80 }
+                                : {
+                                    top: 20,
+                                    right: 30,
+                                    bottom: 50,
+                                    left: criterio === "actividad" ? 250 : 180,
+                                }
+                        }
                         padding={0.3}
                         colors={(barra) => (barra.data.destacado ? COLOR_DESTACADO : COLOR_BASE)}
                         valueFormat={(valor) => formatoCLP.format(valor)}
@@ -129,7 +138,15 @@ export const GraficoAportes = ({ aportes = [] }) => {
                         axisLeft={
                             esPorMes
                                 ? { format: (valor) => formatoCompacto.format(valor) }
-                                : null
+                                : {
+                                    tickSize: 5,
+                                    tickPadding: 8,
+                                    tickRotation: 0,
+                                    format: (valor) => {
+                                        const texto = String(valor ?? "");
+                                        return texto.length > 38 ? `${texto.slice(0, 36)}…` : texto;
+                                    },
+                                }
                         }
                         enableGridX={!esPorMes}
                         enableGridY={esPorMes}
