@@ -21,18 +21,18 @@ function nextDayStr(dateStr: string): string {
     return d.toISOString().slice(0, 10);
 }
 
-function buildEvent(fecha: Date | string, descripcion: string, attendees: string[] = []) {
+
+function buildEvent(fecha: Date | string, descripcion: string, attendees?: string[]) {
     const start = toDateStr(fecha);
     return {
         summary: "Reunión",
         description: descripcion,
         start: { date: start },
-        end: { date: nextDayStr(start) }, // en eventos de día completo el fin es exclusivo
-        attendees: attendees.map((email) => ({ email })),
+        end: { date: nextDayStr(start) },
+        ...(attendees ? { attendees: attendees.map((email) => ({ email })) } : {}),
         reminders: {
             useDefault: false,
             overrides: [
-                // 900 min antes de las 00:00 del día de la reunión = 09:00 del día anterior
                 { method: "popup", minutes: 900 },
                 { method: "email", minutes: 900 },
             ],
@@ -61,23 +61,17 @@ export async function crearEventoReunion(
 export async function actualizarEventoReunion(
     eventId: string,
     fecha: Date | string,
-    descripcion: string
+    descripcion: string,
+    attendees?: string[]
 ): Promise<void> {
     try {
         await calendar.events.patch({
             calendarId: CALENDAR_ID,
             eventId,
-            requestBody: buildEvent(fecha, descripcion),
+            sendUpdates: attendees?.length ? "all" : "none",
+            requestBody: buildEvent(fecha, descripcion, attendees),
         });
     } catch (error) {
         console.error("Error al actualizar evento en Google Calendar", error);
-    }
-}
-
-export async function eliminarEventoReunion(eventId: string): Promise<void> {
-    try {
-        await calendar.events.delete({ calendarId: CALENDAR_ID, eventId });
-    } catch (error) {
-        console.error("Error al eliminar evento en Google Calendar", error);
     }
 }

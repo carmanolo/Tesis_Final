@@ -4,6 +4,7 @@ import { ReunionEntity } from "../entity/reunion.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
 import { isAdminRole } from "../utils/user.utils.js";
 import { crearEventoReunion, actualizarEventoReunion, eliminarEventoReunion } from "./googleCalendar.service.js";
+import { getEmailsCarrera } from "../helpers/emailCarrera.helper.js";
 
 const repo = () => AppDataSource.getRepository(ReunionEntity as any);
 
@@ -35,13 +36,15 @@ export async function createReunionSer(
         });
 
         const saved = await repo().save(nueva);
+        
 
         try {
-            const eventId = await crearEventoReunion(fecha_reunion, descripcion);
+            const attendees = await getEmailsCarrera(carreraId);
+            const eventId = await crearEventoReunion(fecha_reunion, descripcion, attendees);
             if (eventId) {
                 (saved as any).google_event_id = eventId;
                 await repo().save(saved);
-            }
+            }   
         } catch (calError) {
             console.error("Error al crear evento de Google Calendar:", calError);
         }
@@ -103,10 +106,14 @@ export async function patchReunionSer(reunion: Partial<any>): Promise<any> {
 
         if (savedReunion.google_event_id) {
             try {
+                const attendees = savedReunion.carreraId
+                ? await getEmailsCarrera(savedReunion.carreraId)
+                : [];
                 await actualizarEventoReunion(
-                    savedReunion.google_event_id,
-                    savedReunion.fecha_reunion,
-                    savedReunion.descripcion
+                savedReunion.google_event_id,
+                savedReunion.fecha_reunion,
+                savedReunion.descripcion,
+                attendees
                 );
             } catch (calError) {
                 console.error("Error al actualizar evento de Google Calendar:", calError);
