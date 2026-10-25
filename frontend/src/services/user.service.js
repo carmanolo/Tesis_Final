@@ -79,3 +79,13 @@ export async function getStats() {
         throw error;
     }
 }
+
+export async function sendRegistroMailService(userId) {
+    try {
+        const response = await axios.post(`/users/notificar-registro/${userId}`);
+        return Object.assign(response.data, {status: response.status});
+    } catch (error) {
+        console.error("Error al enviar correo de registro:", error);
+        throw error;
+    }
+}

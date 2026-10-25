@@ -7,7 +7,8 @@ import { useEffect, useState } from "react";
 import { DUUserTable } from "../components/daisyUI/DUUserTable";
 import { DUPageBrowser } from "../components/daisyUI/DUPageBrowser.jsx";
 import { DUMailtoButton } from "../components/daisyUI/DUMailtoButton";
-import { PERMISOS, ROLES_VALIDOS } from "../constants/user.constants";
+//import { PERMISOS, ROLES_VALIDOS } from "../constants/user.constants";
+import { sendRegistroMailService } from "../services/user.service.js";
 
 const Users = () => {
 
@@ -20,6 +21,15 @@ const Users = () => {
   const { handleEditUser } = useEditUser(fetchUsers, carreras);
 
   const { handleCreateUser } = useCreateUser(fetchUsers, carreras);
+
+  const handleSendMail = async (id, targetUser) => {
+    try {
+      await sendRegistroMailService(id);
+      alert(`Correo enviado a ${targetUser?.email}`);
+    } catch (error) {
+      alert(error?.response?.data?.message || "Error al enviar el correo");
+    }
+  };
 
   const user = JSON.parse(sessionStorage.getItem("usuario")) || {};
   const userRole = (user?.role || user?.rol || "").toLowerCase();
@@ -54,6 +64,7 @@ const Users = () => {
         <DUUserTable data={currentPageContent || []}
           handleEditUser={handleEditUser}
           handleDeleteUser={handleDeleteUser}
+          handleSendMail={handleSendMail}
           canEdit={canEdit}
           canDelete={canDelete}
           carreraList={carreraList}
