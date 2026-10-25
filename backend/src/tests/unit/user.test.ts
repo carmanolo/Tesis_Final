@@ -176,6 +176,49 @@ describe("user.controller - Pruebas Unitarias", () => {
       await createUser(crearReq({ body }), res);
       expect(handleErrorServer).toHaveBeenCalledWith(res, 500, "error interno del servidor", "boom");
     });
+
+    describe("validaciones jefe de carrera", () => {
+      it("rechaza con 403 si el jefe de carrera no tiene carrera asignada", async () => {
+        const res = crearRes();
+        await createUser(crearReq({ body: { ...body, carreraId: 2 }, user: { role: "jefe de carrera" } }), res);
+        expect(handleErrorClient).toHaveBeenCalledWith(res, 403, "El jefe de carrera no tiene una carrera asignada");
+        expect(createUserSer).not.toHaveBeenCalled();
+      });
+
+      it("rechaza con 403 si el jefe de carrera intenta crear un usuario de otra carrera", async () => {
+        const res = crearRes();
+        await createUser(crearReq({ body: { ...body, carreraId: 3 }, user: { role: "jefe de carrera", carreraId: 1 } }), res);
+        expect(handleErrorClient).toHaveBeenCalledWith(res, 403, "Solo tiene permisos para crear usuarios de su respectiva carrera");
+        expect(createUserSer).not.toHaveBeenCalled();
+      });
+
+      it("rechaza con 403 si el jefe de carrera intenta crear un administrador", async () => {
+        const res = crearRes();
+        await createUser(crearReq({ body: { ...body, role: "administrador", carreraId: 1 }, user: { role: "jefe de carrera", carreraId: 1 } }), res);
+        expect(handleErrorClient).toHaveBeenCalledWith(res, 403, "No tiene permisos para crear usuarios con rol administrador");
+        expect(createUserSer).not.toHaveBeenCalled();
+      });
+
+      it("permite crear un usuario si la carrera coincide con la del jefe de carrera", async () => {
+        const creado = { id: 1, ...body, carreraId: 1 };
+        (createUserSer as any).mockResolvedValue({ data: creado, error: null });
+        const res = crearRes();
+        await createUser(crearReq({ body: { ...body, carreraId: 1 }, user: { role: "jefe de carrera", carreraId: 1 } }), res);
+        expect(handleSuccess).toHaveBeenCalledWith(res, 201, "Usuario registrado exitosamente", creado);
+        expect(createUserSer).toHaveBeenCalledWith(body.username, body.email, body.password, body.role, 1);
+      });
+
+      it("asigna automáticamente la carrera del jefe si no se indica carreraId en el body", async () => {
+        const creado = { id: 1, ...body, carreraId: 2 };
+        (createUserSer as any).mockResolvedValue({ data: creado, error: null });
+        const res = crearRes();
+        const req = crearReq({ body: { ...body }, user: { role: "jefe de carrera", carreraId: 2 } });
+        await createUser(req, res);
+        expect(req.body.carreraId).toBe(2);
+        expect(handleSuccess).toHaveBeenCalledWith(res, 201, "Usuario registrado exitosamente", creado);
+        expect(createUserSer).toHaveBeenCalledWith(body.username, body.email, body.password, body.role, 2);
+      });
+    });
   });
 
   describe("getUsers", () => {

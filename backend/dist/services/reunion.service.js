@@ -4,6 +4,7 @@ import { ReunionEntity } from "../entity/reunion.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
 import { isAdminRole } from "../utils/user.utils.js";
 import { crearEventoReunion, actualizarEventoReunion, eliminarEventoReunion } from "./googleCalendar.service.js";
+import { getEmailsCarrera } from "../helpers/emailCarrera.helper.js";
 const repo = () => AppDataSource.getRepository(ReunionEntity);
 export async function createReunionSer(fecha_reunion, descripcion, creadorId, carreraId) {
     try {
@@ -25,7 +26,8 @@ export async function createReunionSer(fecha_reunion, descripcion, creadorId, ca
         });
         const saved = await repo().save(nueva);
         try {
-            const eventId = await crearEventoReunion(fecha_reunion, descripcion);
+            const attendees = await getEmailsCarrera(carreraId);
+            const eventId = await crearEventoReunion(fecha_reunion, descripcion, attendees);
             if (eventId) {
                 saved.google_event_id = eventId;
                 await repo().save(saved);
@@ -86,7 +88,10 @@ export async function patchReunionSer(reunion) {
         const savedReunion = await repo().save(reunion);
         if (savedReunion.google_event_id) {
             try {
-                await actualizarEventoReunion(savedReunion.google_event_id, savedReunion.fecha_reunion, savedReunion.descripcion);
+                const attendees = savedReunion.carreraId
+                    ? await getEmailsCarrera(savedReunion.carreraId)
+                    : [];
+                await actualizarEventoReunion(savedReunion.google_event_id, savedReunion.fecha_reunion, savedReunion.descripcion, attendees);
             }
             catch (calError) {
                 console.error("Error al actualizar evento de Google Calendar:", calError);

@@ -7,11 +7,12 @@ const COLOR_DESTACADO = "#EE820F"; // arreglar y coocar más colores
 const TOP_N = 10;
 
 const CRITERIOS = [
-    { id: "procedencia", etiqueta: "Procedencia con más aportes" }, //colocar etiquetas a los aportes: convertir descripción en un select
+    { id: "procedencia", etiqueta: "Procedencia con más aportes" }, 
     { id: "actividad", etiqueta: "Actividad con mayor monto" },
     { id: "mes", etiqueta: "Aportes por mes" },
 ];
 
+// Pasar moneda a valor chileno
 const formatoCLP = new Intl.NumberFormat("es-CL", {
     style: "currency",
     currency: "CLP",

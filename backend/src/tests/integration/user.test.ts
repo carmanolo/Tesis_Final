@@ -26,6 +26,7 @@ app.use(BASE_USUARIOS, userRoutes);
 describe("POST de creación de usuarios - Pruebas de Integración", () => {
   let tokenAdmin: string;
   let tokenSinPermiso: string;
+  let tokenJefe: string;
   let carrera: any;
   let userRepo: any;
   const emailsCreados: string[] = [];
@@ -40,7 +41,7 @@ let contador = 0;
 const datosUnicos = (extra: Record<string, any> = {}) => {
   contador += 1;
   const sufijo = `${Date.now().toString().slice(-7)}${contador}`;
-  const email = `test${sufijo}@gmail.cl`;
+  const email = `test${sufijo}@gmail.com`;
   emailsCreados.push(email);
   return {
   username: `Test ${letrasAleatorias(8)}`,
@@ -77,6 +78,22 @@ const datosUnicos = (extra: Record<string, any> = {}) => {
         throw new Error("No existe ninguna carrera en la BD de pruebas");
     }
 
+    let jefe: any = await userRepo.findOne({ where: { role: "jefe de carrera" } });
+    if (!jefe) {
+      jefe = userRepo.create({
+        username: "Jefe Test Integracion",
+        email: "jefetest@ubiobio.cl",
+        password: "hash",
+        role: "jefe de carrera",
+        carreraId: carrera.id_carrera,
+      });
+      await userRepo.save(jefe);
+      emailsCreados.push(jefe.email);
+    } else {
+      jefe.carreraId = carrera.id_carrera;
+      await userRepo.save(jefe);
+    }
+
     const firmar = (u: any) =>
       jwt.sign(
         {
@@ -93,6 +110,7 @@ const datosUnicos = (extra: Record<string, any> = {}) => {
 
     tokenAdmin = firmar(admin);
     tokenSinPermiso = firmar(estudiante);
+    tokenJefe = firmar(jefe);
   }, 30000);
 
 
@@ -128,6 +146,33 @@ const datosUnicos = (extra: Record<string, any> = {}) => {
       const response = await crear(body, tokenSinPermiso);
 
       expect(response.statusCode).toBe(403);
+      expect(await cantidadConEmail(body.email)).toBe(0);
+    });
+
+    it("permite a un jefe de carrera crear usuarios de su respectiva carrera", async () => {
+      const body = datosUnicos({ carreraId: carrera.id_carrera });
+      const response = await crear(body, tokenJefe);
+
+      expect(response.statusCode).toBe(201);
+      expect(response.body.data.carreraId).toBe(carrera.id_carrera);
+      expect(await cantidadConEmail(body.email)).toBe(1);
+    });
+
+    it("rechaza con 403 si el jefe de carrera intenta crear un usuario de otra carrera", async () => {
+      const body = datosUnicos({ carreraId: carrera.id_carrera + 999 });
+      const response = await crear(body, tokenJefe);
+
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toBe("Solo tiene permisos para crear usuarios de su respectiva carrera");
+      expect(await cantidadConEmail(body.email)).toBe(0);
+    });
+
+    it("rechaza con 403 si el jefe de carrera intenta crear un usuario con rol administrador", async () => {
+      const body = datosUnicos({ role: "administrador", carreraId: carrera.id_carrera });
+      const response = await crear(body, tokenJefe);
+
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toBe("No tiene permisos para crear usuarios con rol administrador");
       expect(await cantidadConEmail(body.email)).toBe(0);
     });
   });

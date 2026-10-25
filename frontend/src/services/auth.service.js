@@ -27,8 +27,8 @@ export async function loginService(datauser) {
 
         const { status, data } = response;
         if (status === 200) {
-            const { username, email, rut, role } = jwtDecode(data.accessToken);
-            const userData = { username, email, rut, role };
+            const { username, email, rut, role, carreraId, id } = jwtDecode(data.accessToken);
+            const userData = { username, email, rut, role, carreraId, id };
             sessionStorage.setItem("usuario", JSON.stringify(userData));
             axios.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
             cookies.set('jwt-auth', data.accessToken, { path: '/' });

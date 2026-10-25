@@ -75,3 +75,11 @@ export async function actualizarEventoReunion(
         console.error("Error al actualizar evento en Google Calendar", error);
     }
 }
+
+export async function eliminarEventoReunion(eventId: string): Promise<void> {
+    try {
+        await calendar.events.delete({ calendarId: CALENDAR_ID, eventId });
+    } catch (error) {
+        console.error("Error al eliminar evento en Google Calendar", error);
+    }
+}

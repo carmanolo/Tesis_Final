@@ -44,7 +44,7 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       label: "Usuarios",
       destination: "/users",
       iconColor: "text-[#0284c7]",
-      roles: ["administrador"],
+      roles: ["administrador", "jefe de carrera"],
     },
     {
       icon: FaGraduationCap,

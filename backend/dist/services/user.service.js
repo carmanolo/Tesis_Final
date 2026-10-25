@@ -44,12 +44,19 @@ export async function createUserSer(username, email, password, role, carreraId) 
         return { data: null, error: "Error interno al crear el usuario" };
     }
 }
-export async function getUsersSer() {
+export async function getUsersSer(carreraId, role) {
     try {
         const userRepository = AppDataSource.getRepository(UserEntity);
-        const users = await userRepository.find({ relations: { carreras: true } });
+        const whereCondition = {};
+        if (role === "jefe de carrera" && carreraId) {
+            whereCondition.carreraId = Number(carreraId);
+        }
+        const users = await userRepository.find({
+            where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
+            relations: { carreras: true }
+        });
         if (!users || users.length === 0)
-            return { message: "Arreglo vacío" };
+            return [[], null];
         return [users, null];
     }
     catch (error) {

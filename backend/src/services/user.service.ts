@@ -60,12 +60,19 @@ export async function createUserSer(
     }
 }
 
-export async function getUsersSer(): Promise<any> {
+export async function getUsersSer(carreraId?: number, role?: string): Promise<any> {
     try {
         const userRepository = AppDataSource.getRepository(UserEntity as any);
-        const users = await userRepository.find({relations: {carreras:true}});
+        const whereCondition: any = {};
+        if (role === "jefe de carrera" && carreraId) {
+            whereCondition.carreraId = Number(carreraId);
+        }
+        const users = await userRepository.find({
+            where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
+            relations: {carreras:true}
+        });
         
-        if (!users || users.length === 0) return { message: "Arreglo vacío" };
+        if (!users || users.length === 0) return [[], null];
         return [users, null];
     } catch (error) {
         console.error("error al obtener usuarios: ", error);

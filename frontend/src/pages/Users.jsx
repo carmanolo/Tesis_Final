@@ -21,9 +21,9 @@ const Users = () => {
 
   const { handleCreateUser } = useCreateUser(fetchUsers, carreras);
 
-  ;
-
-  const canCrudUsuarios = PERMISOS.includes(ROLES_VALIDOS);
+  const user = JSON.parse(sessionStorage.getItem("usuario")) || {};
+  const userRole = (user?.role || user?.rol || "").toLowerCase();
+  const canCrudUsuarios = userRole === "administrador";
 
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {

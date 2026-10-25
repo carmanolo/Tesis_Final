@@ -23,6 +23,33 @@ export async function createUser(req, res) {
             delete req.body.sigla_carrera;
             delete req.body.siglaCarrera;
         }
+        if (!req.body.carreraId && req.body.id_carrera) {
+            req.body.carreraId = Number(req.body.id_carrera);
+        }
+        const userRole = req.user?.role || req.user?.rol;
+        let userCarreraId = req.user?.carreraId;
+        if (userRole === "jefe de carrera") {
+            if (!userCarreraId && req.user?.id) {
+                const userRepo = AppDataSource.getRepository(User);
+                const u = await userRepo.findOne({ where: { id: req.user.id } });
+                if (u?.carreraId) {
+                    userCarreraId = u.carreraId;
+                    req.user.carreraId = u.carreraId;
+                }
+            }
+            if (!userCarreraId) {
+                return handleErrorClient(res, 403, "El jefe de carrera no tiene una carrera asignada");
+            }
+            if (req.body.carreraId && Number(req.body.carreraId) !== Number(userCarreraId)) {
+                return handleErrorClient(res, 403, "Solo tiene permisos para crear usuarios de su respectiva carrera");
+            }
+            if (!req.body.carreraId) {
+                req.body.carreraId = Number(userCarreraId);
+            }
+            if (req.body.role === "administrador") {
+                return handleErrorClient(res, 403, "No tiene permisos para crear usuarios con rol administrador");
+            }
+        }
         const { username, email, password, role, carreraId } = req.body;
         const { error } = integrityValidation.validate(req.body);
         if (error) {
@@ -49,7 +76,9 @@ export async function createUser(req, res) {
 }
 export async function getUsers(req, res) {
     try {
-        const userData = await getUsersSer();
+        const userRole = req.user?.role || req.user?.rol;
+        const userCarreraId = req.user?.carreraId;
+        const userData = await getUsersSer(userRole === "jefe de carrera" ? userCarreraId : undefined, userRole);
         if (!userData) {
             return handleErrorClient(res, 400, "Usuarios no encontrados");
         }

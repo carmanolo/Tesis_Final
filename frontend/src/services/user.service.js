@@ -59,6 +59,16 @@ export const getUserRole = () => {
     }
 }
 
+export const getUserCarreraId = () => {
+   try {
+        const user = JSON.parse(sessionStorage.getItem("usuario"));
+        return user?.carreraId || null;
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
 
 export async function getStats() {
     try {

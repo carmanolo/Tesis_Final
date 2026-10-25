@@ -22,6 +22,7 @@ app.use(BASE_USUARIOS, userRoutes);
 describe("POST de creación de usuarios - Pruebas de Integración", () => {
     let tokenAdmin;
     let tokenSinPermiso;
+    let tokenJefe;
     let carrera;
     let userRepo;
     const emailsCreados = [];
@@ -31,7 +32,7 @@ describe("POST de creación de usuarios - Pruebas de Integración", () => {
     const datosUnicos = (extra = {}) => {
         contador += 1;
         const sufijo = `${Date.now().toString().slice(-7)}${contador}`;
-        const email = `test${sufijo}@gmail.cl`;
+        const email = `test${sufijo}@gmail.com`;
         emailsCreados.push(email);
         return {
             username: `Test ${letrasAleatorias(8)}`,
@@ -61,6 +62,22 @@ describe("POST de creación de usuarios - Pruebas de Integración", () => {
         if (!carrera) {
             throw new Error("No existe ninguna carrera en la BD de pruebas");
         }
+        let jefe = await userRepo.findOne({ where: { role: "jefe de carrera" } });
+        if (!jefe) {
+            jefe = userRepo.create({
+                username: "Jefe Test Integracion",
+                email: "jefetest@ubiobio.cl",
+                password: "hash",
+                role: "jefe de carrera",
+                carreraId: carrera.id_carrera,
+            });
+            await userRepo.save(jefe);
+            emailsCreados.push(jefe.email);
+        }
+        else {
+            jefe.carreraId = carrera.id_carrera;
+            await userRepo.save(jefe);
+        }
         const firmar = (u) => jwt.sign({
             id: u.id,
             carreraId: u.carreraId,
@@ -71,6 +88,7 @@ describe("POST de creación de usuarios - Pruebas de Integración", () => {
         }, SESSION_SECRET, { expiresIn: "1h" });
         tokenAdmin = firmar(admin);
         tokenSinPermiso = firmar(estudiante);
+        tokenJefe = firmar(jefe);
     }, 30000);
     afterAll(async () => {
         // Limpieza directa en BD: no depende de que exista la ruta de eliminación
@@ -98,6 +116,27 @@ describe("POST de creación de usuarios - Pruebas de Integración", () => {
             const body = datosUnicos();
             const response = await crear(body, tokenSinPermiso);
             expect(response.statusCode).toBe(403);
+            expect(await cantidadConEmail(body.email)).toBe(0);
+        });
+        it("permite a un jefe de carrera crear usuarios de su respectiva carrera", async () => {
+            const body = datosUnicos({ carreraId: carrera.id_carrera });
+            const response = await crear(body, tokenJefe);
+            expect(response.statusCode).toBe(201);
+            expect(response.body.data.carreraId).toBe(carrera.id_carrera);
+            expect(await cantidadConEmail(body.email)).toBe(1);
+        });
+        it("rechaza con 403 si el jefe de carrera intenta crear un usuario de otra carrera", async () => {
+            const body = datosUnicos({ carreraId: carrera.id_carrera + 999 });
+            const response = await crear(body, tokenJefe);
+            expect(response.statusCode).toBe(403);
+            expect(response.body.message).toBe("Solo tiene permisos para crear usuarios de su respectiva carrera");
+            expect(await cantidadConEmail(body.email)).toBe(0);
+        });
+        it("rechaza con 403 si el jefe de carrera intenta crear un usuario con rol administrador", async () => {
+            const body = datosUnicos({ role: "administrador", carreraId: carrera.id_carrera });
+            const response = await crear(body, tokenJefe);
+            expect(response.statusCode).toBe(403);
+            expect(response.body.message).toBe("No tiene permisos para crear usuarios con rol administrador");
             expect(await cantidadConEmail(body.email)).toBe(0);
         });
     });
