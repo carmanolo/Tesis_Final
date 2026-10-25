@@ -5,7 +5,9 @@ import { FaUserAlt } from "react-icons/fa";
 import { AiFillStar } from "react-icons/ai";
 import { DisplayCarrera } from "../../class/DisplayCarrera.ts";
 
-const mostrarUsuarios = (data, handleEditUser, handleDeleteUser, carreraList, canCrudUsuarios) => {
+const mostrarUsuarios = (data, handleEditUser, handleDeleteUser, carreraList, canEdit, canDelete) => {
+  const showActions = canEdit || canDelete;
+
   if (Array.isArray(data) && data.length > 0) {
       return data.map((user) => {
         const currentCarrera = new DisplayCarrera(carreraList, user.carreraId || 0);
@@ -34,10 +36,26 @@ const mostrarUsuarios = (data, handleEditUser, handleDeleteUser, carreraList, ca
             <td>
               {currentCarrera.nombre_carrera} {currentCarrera.sigla ? `(${currentCarrera.sigla})` : ""}
             </td>
-            {canCrudUsuarios && (
+            {showActions && (
               <td>
-                <button className="btn btn-primary m-1" onClick={() => { handleEditUser(user?.id, user || {}) }}><MdSettings /></button>
-                <button className="btn btn-secondary m-1" onClick={() => { handleDeleteUser(user?.id) }}><MdDeleteForever /></button>
+                {canEdit && (
+                  <button 
+                    className="btn btn-primary m-1" 
+                    title="Editar usuario" 
+                    onClick={() => { handleEditUser(user?.id, user || {}) }}
+                  >
+                    <MdSettings />
+                  </button>
+                )}
+                {canDelete && (
+                  <button 
+                    className="btn btn-secondary m-1" 
+                    title="Eliminar usuario" 
+                    onClick={() => { handleDeleteUser(user?.id) }}
+                  >
+                    <MdDeleteForever />
+                  </button>
+                )}
               </td>
             )}
           </tr>
@@ -46,13 +64,25 @@ const mostrarUsuarios = (data, handleEditUser, handleDeleteUser, carreraList, ca
   } else {
       return (
           <tr>
-              <td colSpan={canCrudUsuarios ? 5 : 4}>No hay Usuarios disponibles.</td>
+              <td colSpan={showActions ? 5 : 4}>No hay Usuarios disponibles.</td>
           </tr>
       );
   }
 };
 
-export const DUUserTable = ({ data, handleEditUser, handleDeleteUser, carreraList, canCrudUsuarios = true }) => {
+export const DUUserTable = ({ 
+  data, 
+  handleEditUser, 
+  handleDeleteUser, 
+  carreraList, 
+  canEdit = true, 
+  canDelete = false,
+  canCrudUsuarios
+}) => {
+    const allowEdit = canCrudUsuarios !== undefined ? canCrudUsuarios : canEdit;
+    const allowDelete = canCrudUsuarios !== undefined ? canCrudUsuarios : canDelete;
+    const showActions = allowEdit || allowDelete;
+
     return (
         <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 m-3 max-h-full">
         <table className="table">
@@ -62,15 +92,18 @@ export const DUUserTable = ({ data, handleEditUser, handleDeleteUser, carreraLis
                 <th>Gmail</th>
                 <th>Rol</th>
                 <th>Carrera</th>
-                {canCrudUsuarios && <th>Acciones</th>}
+                {showActions && <th>Acciones</th>}
             </tr>
             </thead>
             <tbody>
-              {mostrarUsuarios(data, 
+              {mostrarUsuarios(
+                data, 
                 handleEditUser, 
                 handleDeleteUser,  
                 carreraList,
-                canCrudUsuarios)}
+                allowEdit,
+                allowDelete
+              )}
             </tbody>
         </table>
         </div>

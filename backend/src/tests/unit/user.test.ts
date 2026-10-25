@@ -381,6 +381,58 @@ describe("user.controller - Pruebas Unitarias", () => {
       await patchUserById(crearReq({ params: { id: "1" }, body: { username: "x" } }), res);
       expect(handleErrorServer).toHaveBeenCalledWith(res, 500, "Error interno del servidor", "boom");
     });
+
+    describe("validaciones jefe de carrera", () => {
+      it("rechaza con 403 si el jefe de carrera no tiene carrera asignada", async () => {
+        (getUserSer as any).mockResolvedValue(usuarioExistente());
+        const res = crearRes();
+        await patchUserById(crearReq({ params: { id: "1" }, body: { username: "nuevo" }, user: { role: "jefe de carrera" } }), res);
+        expect(handleErrorClient).toHaveBeenCalledWith(res, 403, "El jefe de carrera no tiene una carrera asignada");
+        expect(patchUserSer).not.toHaveBeenCalled();
+      });
+
+      it("rechaza con 403 si el usuario a editar pertenece a otra carrera", async () => {
+        (getUserSer as any).mockResolvedValue({ ...usuarioExistente(), carreraId: 2 });
+        const res = crearRes();
+        await patchUserById(crearReq({ params: { id: "1" }, body: { username: "nuevo" }, user: { role: "jefe de carrera", carreraId: 1 } }), res);
+        expect(handleErrorClient).toHaveBeenCalledWith(res, 403, "Solo tiene permisos para editar usuarios de su respectiva carrera");
+        expect(patchUserSer).not.toHaveBeenCalled();
+      });
+
+      it("rechaza con 403 si el usuario a editar es administrador", async () => {
+        (getUserSer as any).mockResolvedValue({ ...usuarioExistente(), role: "administrador", carreraId: 1 });
+        const res = crearRes();
+        await patchUserById(crearReq({ params: { id: "1" }, body: { username: "nuevo" }, user: { role: "jefe de carrera", carreraId: 1 } }), res);
+        expect(handleErrorClient).toHaveBeenCalledWith(res, 403, "No tiene permisos para editar usuarios administradores");
+        expect(patchUserSer).not.toHaveBeenCalled();
+      });
+
+      it("rechaza con 403 si el jefe de carrera intenta cambiar la carrera del usuario a otra", async () => {
+        (getUserSer as any).mockResolvedValue(usuarioExistente());
+        const res = crearRes();
+        await patchUserById(crearReq({ params: { id: "1" }, body: { carreraId: 3 }, user: { role: "jefe de carrera", carreraId: 1 } }), res);
+        expect(handleErrorClient).toHaveBeenCalledWith(res, 403, "No puede cambiar a un usuario a una carrera distinta a la suya");
+        expect(patchUserSer).not.toHaveBeenCalled();
+      });
+
+      it("rechaza con 403 si el jefe de carrera intenta asignar rol administrador", async () => {
+        (getUserSer as any).mockResolvedValue(usuarioExistente());
+        const res = crearRes();
+        await patchUserById(crearReq({ params: { id: "1" }, body: { role: "administrador" }, user: { role: "jefe de carrera", carreraId: 1 } }), res);
+        expect(handleErrorClient).toHaveBeenCalledWith(res, 403, "No tiene permisos para asignar el rol administrador");
+        expect(patchUserSer).not.toHaveBeenCalled();
+      });
+
+      it("permite al jefe de carrera actualizar un usuario de su carrera", async () => {
+        const existente = usuarioExistente();
+        (getUserSer as any).mockResolvedValue(existente);
+        (patchUserSer as any).mockResolvedValue({ data: { ...existente, username: "actualizado" } });
+        const res = crearRes();
+        await patchUserById(crearReq({ params: { id: "1" }, body: { username: "actualizado" }, user: { role: "jefe de carrera", carreraId: 1 } }), res);
+        expect(handleSuccess).toHaveBeenCalledWith(res, 200, "Usuario actualizado con éxito", expect.any(Object));
+        expect(patchUserSer).toHaveBeenCalled();
+      });
+    });
   });
 
   describe("deleteUserById", () => {

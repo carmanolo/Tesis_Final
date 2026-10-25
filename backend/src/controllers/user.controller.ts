@@ -155,6 +155,10 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
       delete req.body.siglaCarrera;
     }
 
+    if (!req.body.carreraId && req.body.id_carrera) {
+      req.body.carreraId = Number(req.body.id_carrera);
+    }
+
     if (!req.body.password || req.body.password.trim() === "") {
       delete req.body.password;
     }
@@ -173,6 +177,40 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
 
     if (!userUpdate) {
       return handleErrorClient(res, 404, "Usuario no encontrado");
+    }
+
+    const userRole = req.user?.role || req.user?.rol;
+    let userCarreraId = req.user?.carreraId;
+
+    if (userRole === "jefe de carrera") {
+      if (!userCarreraId && req.user?.id) {
+        const userRepo = AppDataSource.getRepository(User as any);
+        const u = await userRepo.findOne({ where: { id: req.user.id } });
+        if (u?.carreraId) {
+          userCarreraId = u.carreraId;
+          req.user.carreraId = u.carreraId;
+        }
+      }
+
+      if (!userCarreraId) {
+        return handleErrorClient(res, 403, "El jefe de carrera no tiene una carrera asignada");
+      }
+
+      if (Number(userUpdate.carreraId) !== Number(userCarreraId)) {
+        return handleErrorClient(res, 403, "Solo tiene permisos para editar usuarios de su respectiva carrera");
+      }
+
+      if (userUpdate.role === "administrador") {
+        return handleErrorClient(res, 403, "No tiene permisos para editar usuarios administradores");
+      }
+
+      if (req.body.carreraId && Number(req.body.carreraId) !== Number(userCarreraId)) {
+        return handleErrorClient(res, 403, "No puede cambiar a un usuario a una carrera distinta a la suya");
+      }
+
+      if (req.body.role === "administrador") {
+        return handleErrorClient(res, 403, "No tiene permisos para asignar el rol administrador");
+      }
     }
 
     if (req.body.carreraId) {

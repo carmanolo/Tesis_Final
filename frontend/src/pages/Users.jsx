@@ -23,7 +23,8 @@ const Users = () => {
 
   const user = JSON.parse(sessionStorage.getItem("usuario")) || {};
   const userRole = (user?.role || user?.rol || "").toLowerCase();
-  const canCrudUsuarios = userRole === "administrador";
+  const canEdit = userRole === "administrador" || userRole === "jefe de carrera";
+  const canDelete = userRole === "administrador";
 
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
@@ -53,7 +54,8 @@ const Users = () => {
         <DUUserTable data={currentPageContent || []}
           handleEditUser={handleEditUser}
           handleDeleteUser={handleDeleteUser}
-          canCrudUsuarios={canCrudUsuarios}
+          canEdit={canEdit}
+          canDelete={canDelete}
           carreraList={carreraList}
         />
       </div>

@@ -329,4 +329,57 @@ const datosUnicos = (extra: Record<string, any> = {}) => {
       expect(await cantidadConEmail(otro.email)).toBe(0);
     });
   });
+
+  describe("PATCH de edición de usuarios - Pruebas de Integración", () => {
+    const RUTA_EDITAR = (id: number) => `${BASE_USUARIOS}/editar/${id}`;
+    const editar = (id: number, body: Record<string, any>, token: string = tokenAdmin) =>
+      request(app).patch(RUTA_EDITAR(id)).set("Authorization", `Bearer ${token}`).send(body);
+
+    it("permite a un jefe de carrera editar un usuario de su carrera", async () => {
+      const body = datosUnicos({ carreraId: carrera.id_carrera });
+      const respCrear = await crear(body, tokenAdmin);
+      const userId = respCrear.body.data.id;
+
+      const editResp = await editar(userId, { username: "Nuevo Nombre Jefe" }, tokenJefe);
+      expect(editResp.statusCode).toBe(200);
+      expect(editResp.body.data.username).toBe("Nuevo Nombre Jefe");
+    });
+
+    it("rechaza con 403 si un jefe de carrera intenta editar un usuario de otra carrera", async () => {
+      const carreraRepo = AppDataSource.getRepository(CarreraEntity as any);
+      const todasCarreras: any[] = await carreraRepo.find();
+      let otraCarrera = todasCarreras.find((c: any) => Number(c.id_carrera) !== Number(carrera.id_carrera));
+      if (!otraCarrera) {
+        otraCarrera = carreraRepo.create({
+          nombre_carrera: "Carrera Prueba Extra",
+          sigla: `EXT${Date.now().toString().slice(-3)}`,
+        });
+        await carreraRepo.save(otraCarrera);
+      }
+
+      const usuarioOtraCarrera = userRepo.create({
+        username: `Otra Carrera ${Date.now().toString().slice(-4)}`,
+        email: `otra${Date.now()}@gmail.com`,
+        password: "hash",
+        role: "estudiante",
+        carreraId: otraCarrera.id_carrera,
+      });
+      await userRepo.save(usuarioOtraCarrera);
+      emailsCreados.push(usuarioOtraCarrera.email);
+
+      const editResp = await editar(usuarioOtraCarrera.id, { username: "Cambio No Permitido" }, tokenJefe);
+      expect(editResp.statusCode).toBe(403);
+      expect(editResp.body.message).toBe("Solo tiene permisos para editar usuarios de su respectiva carrera");
+    });
+
+    it("rechaza con 403 si un jefe de carrera intenta asignar el rol administrador al editar", async () => {
+      const body = datosUnicos({ carreraId: carrera.id_carrera });
+      const respCrear = await crear(body, tokenAdmin);
+      const userId = respCrear.body.data.id;
+
+      const editResp = await editar(userId, { role: "administrador" }, tokenJefe);
+      expect(editResp.statusCode).toBe(403);
+      expect(editResp.body.message).toBe("No tiene permisos para asignar el rol administrador");
+    });
+  });
 });

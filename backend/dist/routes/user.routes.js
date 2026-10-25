@@ -10,6 +10,6 @@ router.get("/getUserStats", getUserStats);
 router.get("/", getUsers);
 router.get("/:id", getUserById);
 router.post("/crear/", authorizeRoles("administrador", "jefe de carrera"), createUser);
-router.patch("/editar/:id", authorizeRoles("administrador"), patchUserById);
+router.patch("/editar/:id", authorizeRoles("administrador", "jefe de carrera"), patchUserById);
 router.delete("/eliminar/:id", authorizeRoles("administrador"), deleteUserById);
 export default router;
