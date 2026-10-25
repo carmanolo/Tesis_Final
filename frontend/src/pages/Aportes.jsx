@@ -38,7 +38,6 @@ const Aporte = () => {
 
     useEffect(() => {
         fetchAporte();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // El aporte abierto se busca en la lista para que el modal se actualice solo tras editar
