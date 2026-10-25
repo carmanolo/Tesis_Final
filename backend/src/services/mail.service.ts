@@ -18,3 +18,12 @@ export async function enviarCorreo(to: string, subject: string, text: string): P
         return false;
     }
 }
+
+// NUEVO: correo de confirmación de registro para miembros del CEE
+export async function enviarCorreoRegistroCEE(to: string, nombre: string, cargo: string): Promise<boolean> {
+    return enviarCorreo(
+        to,
+        "Registro exitoso en el CEE",
+        `El alumno ${nombre} se ha registrado exitosamente como ${cargo} del CEE.`
+    );
+}
