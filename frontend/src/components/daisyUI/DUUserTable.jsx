@@ -1,79 +1,83 @@
-import useCreateUser from "@hooks/users/useCreateUser";
-import useGetUsers from "../hooks/users/useGetUsers.jsx";
-import useDeleteUser from "@hooks/users/useDeleteUser.jsx";
-import useEditUser from "@hooks/users/useEditUser.jsx";
-import { useGetCarreraList } from "../hooks/listas/useGetCarreraList.jsx";
-import { useEffect, useState } from "react";
-import { DUUserTable } from "../components/daisyUI/DUUserTable";
-import { DUPageBrowser } from "../components/daisyUI/DUPageBrowser.jsx";
-import { DUMailtoButton } from "../components/daisyUI/DUMailtoButton";
-import { PERMISOS, ROLES_VALIDOS } from "../constants/user.constants.jsx";
-// AJUSTAR: usa la misma instancia de axios (con el token JWT) que usan tus otros servicios
-import axios from "@services/root.service.js";
+import { DUMailtoButton } from "./DUMailtoButton.jsx";
+import { MdSettings } from "react-icons/md";
+import { MdDeleteForever } from "react-icons/md";
+import { FaUserAlt } from "react-icons/fa";
+import { AiFillStar } from "react-icons/ai";
+import { DisplayCarrera } from "../../class/DisplayCarrera.ts";
 
-const Users = () => {
+const mostrarUsuarios = (data, handleEditUser, handleDeleteUser, carreraList, canCrudUsuarios, handleSendMail) => {
+  if (Array.isArray(data) && data.length > 0) {
+      return data.map((user) => {
+        const currentCarrera = new DisplayCarrera(carreraList, user.carreraId || 0);
 
-  const [carreras, setCarreras] = useState([]);
-
-  const [carreraList, fetchCarreraList] = useGetCarreraList(carreras, setCarreras);
-
-  const { users, fetchUsers } = useGetUsers();
-  const { handleDeleteUser } = useDeleteUser(fetchUsers);
-  const { handleEditUser } = useEditUser(fetchUsers, carreras);
-
-  const { handleCreateUser } = useCreateUser(fetchUsers, carreras);
-
-  const handleSendMail = async (id, targetUser) => {
-    try {
-      await axios.post(`/user/notificar-registro/${id}`);
-      alert(`Correo enviado a ${targetUser?.email}`);
-    } catch (error) {
-      alert(error?.response?.data?.message || "Error al enviar el correo");
-    }
-  };
-
-  const user = JSON.parse(sessionStorage.getItem("usuario")) || {};
-  const userRole = (user?.role || user?.rol || "").toLowerCase();
-  const canEdit = userRole === "administrador" || userRole === "jefe de carrera";
-  const canDelete = userRole === "administrador";
-
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    if(typeof(fetchUsers) === "function"){
-      fetchUsers();
-    }
-    if (typeof(fetchCarreraList) === "function") {
-            fetchCarreraList();
-        }
-  }, []);
-
-  const POSTS_PER_PAGE = 4;
-    const [currentPage, setCurrentPage] = useState(1);
-
-    const lastPostIndex  = currentPage * POSTS_PER_PAGE;
-    const firstPostIndex = lastPostIndex - POSTS_PER_PAGE;
-    const currentPageContent = (Array.isArray(users) && users.slice(firstPostIndex, lastPostIndex)) || [];
-    const pageAmount = Math.abs(Math.ceil((Array.isArray(users) && users?.length) / POSTS_PER_PAGE)) || 0;
-
-  return (
-    <div className="users2-page">
-      <h2 className="text-xl font-semibold">Lista de usuarios</h2>
-      <div className="flex justify-end">
-        { (<button className="btn btn-primary " onClick={() => handleCreateUser(carreras, setCarreras)}>Crear Usuario </button>)}
-      </div>
-      <div className="usuario2-page">
-        <DUUserTable data={currentPageContent || []}
-          handleEditUser={handleEditUser}
-          handleDeleteUser={handleDeleteUser}
-          handleSendMail={handleSendMail}
-          canEdit={canEdit}
-          canDelete={canDelete}
-          carreraList={carreraList}
-        />
-      </div>
-      <DUPageBrowser setCurrentPageNumber={setCurrentPage} currentPageNumber={currentPage} pageAmount={pageAmount}></DUPageBrowser>
-    </div>
-  );
+        Object.assign(user, { carreraObject: currentCarrera });
+        return (
+          <tr key={"Class-" + user.id}>
+            <td>
+              <div className="flex flex-row align-middle items-center">
+                <span><FaUserAlt className="mr-2" /></span>
+                <span>{user?.username}</span>
+              </div>
+            </td>    
+            <td>
+              {user?.email}
+              {DUMailtoButton(
+                user?.email,
+                "ml-2",
+                handleSendMail ? () => handleSendMail(user?.id, user) : null
+              )}
+            </td>
+            <td>
+              <div className="badge badge-secondary">
+                <div className="flex flex-row align-middle items-center">
+                  <span><AiFillStar className="mr-2" /></span>
+                  <span>{String(user?.role).toUpperCase()}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              {currentCarrera.nombre_carrera} {currentCarrera.sigla ? `(${currentCarrera.sigla})` : ""}
+            </td>
+            {canCrudUsuarios && (
+              <td>
+                <button className="btn btn-primary m-1" onClick={() => { handleEditUser(user?.id, user || {}) }}><MdSettings /></button>
+                <button className="btn btn-secondary m-1" onClick={() => { handleDeleteUser(user?.id) }}><MdDeleteForever /></button>
+              </td>
+            )}
+          </tr>
+        );
+      });
+  } else {
+      return (
+          <tr>
+              <td colSpan={canCrudUsuarios ? 5 : 4}>No hay Usuarios disponibles.</td>
+          </tr>
+      );
+  }
 };
 
-export default Users;
+export const DUUserTable = ({ data, handleEditUser, handleDeleteUser, handleSendMail, carreraList, canCrudUsuarios = true }) => {
+    return (
+        <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 m-3 max-h-full">
+        <table className="table">
+            <thead>
+            <tr>
+                <th>Nombre de usuario</th>
+                <th>Gmail</th>
+                <th>Rol</th>
+                <th>Carrera</th>
+                {canCrudUsuarios && <th>Acciones</th>}
+            </tr>
+            </thead>
+            <tbody>
+              {mostrarUsuarios(data, 
+                handleEditUser, 
+                handleDeleteUser,  
+                carreraList,
+                canCrudUsuarios,
+                handleSendMail)}
+            </tbody>
+        </table>
+        </div>
+    ); 
+};

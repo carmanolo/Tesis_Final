@@ -1,14 +1,14 @@
 import useCreateUser from "@hooks/users/useCreateUser";
-import useGetUsers from "../hooks/users/useGetUsers.jsx";
+import useGetUsers from "@hooks/users/useGetUsers.jsx";
 import useDeleteUser from "@hooks/users/useDeleteUser.jsx";
 import useEditUser from "@hooks/users/useEditUser.jsx";
-import { useGetCarreraList } from "../hooks/listas/useGetCarreraList.jsx";
+import { useGetCarreraList } from "@hooks/listas/useGetCarreraList.jsx";
 import { useEffect, useState } from "react";
-import { DUUserTable } from "../components/daisyUI/DUUserTable";
-import { DUPageBrowser } from "../components/daisyUI/DUPageBrowser.jsx";
-import { DUMailtoButton } from "../components/daisyUI/DUMailtoButton";
+import { DUUserTable } from "@components/daisyUI/DUUserTable";
+import { DUPageBrowser } from "@components/daisyUI/DUPageBrowser.jsx";
+import { DUMailtoButton } from "@components/daisyUI/DUMailtoButton";
 //import { PERMISOS, ROLES_VALIDOS } from "../constants/user.constants";
-import { sendRegistroMailService } from "../services/user.service.js";
+import { sendRegistroMailService } from "@services/user.service.js";
 
 const Users = () => {
 
