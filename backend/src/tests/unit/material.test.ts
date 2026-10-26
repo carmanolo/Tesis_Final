@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mocks (se hoistean automáticamente por encima de los imports)
 const repos = vi.hoisted(() => ({ user: { findOne: vi.fn() }, carrera: { findOne: vi.fn() } }));
 
 vi.mock("../../entity/user.entity.js", () => ({ default: { nombre: "UserEntity" } }));
@@ -43,7 +42,7 @@ import { AppDataSource } from "../../config/configDb.js";
 import UserEntity from "../../entity/user.entity.js";
 import { MATERIAL_NO_ENCONTRADO } from "../../constants/material.constants.js";
 
-// Helpers
+
 const res: any = {};
 const crearReq = (parcial: Record<string, any> = {}) =>
   ({ body: {}, params: {}, query: {}, ...parcial }) as any;
@@ -51,7 +50,6 @@ const crearReq = (parcial: Record<string, any> = {}) =>
 const validacionOk = { error: undefined };
 const validacionFalla = (message: string) => ({ error: { message } });
 
-// Posición de cada argumento en la llamada a createMaterialSer
 const ARG = {
   nombre: 0,
   tipo: 1,

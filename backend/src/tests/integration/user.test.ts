@@ -9,7 +9,6 @@ import { SESSION_SECRET } from "../../config/configEnv.js";
 import UserEntity from "../../entity/user.entity.js";
 import CarreraEntity from "../../entity/carrera.entity.js";
 
-// Configuración (ajusta estos valores si tus rutas son distintas)
 const BASE_USUARIOS = "/api/users";
 const RUTA_CREAR = `${BASE_USUARIOS}/crear`;
 const RUTA_LOGIN = "/api/auth/login";
@@ -31,7 +30,6 @@ describe("POST de creación de usuarios - Pruebas de Integración", () => {
   let userRepo: any;
   const emailsCreados: string[] = [];
 
-  // Datos únicos por llamada para no chocar con usuarios existentes
   const letrasAleatorias = (largo: number) =>
   Array.from({ length: largo }, () =>
     String.fromCharCode(97 + Math.floor(Math.random() * 26))
@@ -115,7 +113,6 @@ const datosUnicos = (extra: Record<string, any> = {}) => {
 
 
   afterAll(async () => {
-    // Limpieza directa en BD: no depende de que exista la ruta de eliminación
     for (const email of emailsCreados) {
       await userRepo.delete({ email });
     }
@@ -237,7 +234,7 @@ const datosUnicos = (extra: Record<string, any> = {}) => {
     it("crea el usuario con 201 y no expone la contraseña en la respuesta", async () => {
       const body = datosUnicos();
       const response = await crear(body);
-      console.log(response.statusCode, response.body);
+      //console.log(response.statusCode, response.body);
 
       expect(response.statusCode).toBe(201);
       expect(response.body.data.email).toBe(body.email);
@@ -254,7 +251,7 @@ const datosUnicos = (extra: Record<string, any> = {}) => {
       const guardado = await userRepo.findOne({ where: { email: body.email } });
       expect(guardado).not.toBeNull();
       expect(guardado.password).not.toBe(PASSWORD_VALIDA);
-      expect(guardado.password).toMatch(/^\$2[aby]\$/); // formato bcrypt
+      expect(guardado.password).toMatch(/^\$2[aby]\$/); 
     });
 
     it("el usuario creado puede iniciar sesión con su contraseña", async () => {

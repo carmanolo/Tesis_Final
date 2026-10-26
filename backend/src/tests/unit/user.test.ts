@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mocks (se hoistean automáticamente por encima de los imports)
 const repoMock = vi.hoisted(() => ({
   findOne: vi.fn(),
   count: vi.fn(),
@@ -39,7 +38,6 @@ vi.mock("../../handlers/responseHandlers.js", () => ({
 
 vi.mock("../../constants/ajustes.constants.js", () => ({ SHOW_ERRORS: false }));
 
-// Imports (ya con los mocks aplicados)
 import {
   createUser,
   deleteUserById,
@@ -71,7 +69,6 @@ import {
 } from "../../handlers/responseHandlers.js";
 import { USER_NO_ENCONTRADO } from "../../constants/user.constants.js";
 
-// Helpers
 const crearRes = () => {
   const res: any = {};
   res.status = vi.fn().mockReturnValue(res);
@@ -507,9 +504,9 @@ describe("user.controller - Pruebas Unitarias", () => {
   describe("getUserStats", () => {
     it("responde 200 con los conteos", async () => {
       repoMock.count
-        .mockResolvedValueOnce(10) // total
-        .mockResolvedValueOnce(8) // usuarios
-        .mockResolvedValueOnce(2); // administradores
+        .mockResolvedValueOnce(10) 
+        .mockResolvedValueOnce(8) 
+        .mockResolvedValueOnce(2); 
       const res = crearRes();
       await getUserStats(crearReq(), res);
       expect(res.status).toHaveBeenCalledWith(200);

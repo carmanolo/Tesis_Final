@@ -26,7 +26,6 @@ const app = express();
 app.use(express.json());
 app.use("/api/reuniones", reunionRoutes);
 
-// Usuario administrador que ya existe en la BD de pruebas (el mismo de auth.test.js)
 const EMAIL_ADMIN = "admin@gmail.com";
 
 const PDF_FALSO = Buffer.from("%PDF-1.4\nacta de prueba\n%%EOF");
@@ -106,7 +105,6 @@ describe("Actas de reuniones - Pruebas de Integración", () => {
       rol: admin.role,
     });
 
-    // Usuario válido pero de una carrera distinta a la de la reunión
     tokenOtraCarrera = firmar({
       id: directivo.id,
       carreraId: 999999,
@@ -116,7 +114,6 @@ describe("Actas de reuniones - Pruebas de Integración", () => {
       rol: directivo.role,
     });
 
-    // Rol que no está autorizado a subir actas
     tokenSinPermiso = firmar({
       id: estudiante.id,
       carreraId: estudiante.carreraId,
@@ -130,7 +127,6 @@ describe("Actas de reuniones - Pruebas de Integración", () => {
   }, 30000);
 
   afterAll(async () => {
-    // Eliminar por la API también borra el archivo físico del acta
     for (const id of reunionesCreadas) {
       await request(app)
         .delete(`/api/reuniones/eliminar/${id}`)
@@ -165,7 +161,7 @@ describe("Actas de reuniones - Pruebas de Integración", () => {
         .set("Authorization", `Bearer ${tokenSinPermiso}`)
         .attach("archivo", PDF_FALSO, { filename: "acta.pdf", contentType: "application/pdf" });
 
-      console.log(response.body);
+      //console.log(response.body);
 
       expect(response.statusCode).toBe(403);
     });
@@ -226,7 +222,6 @@ describe("Actas de reuniones - Pruebas de Integración", () => {
         .set("Authorization", `Bearer ${tokenOtraCarrera}`)
         .attach("archivo", PDF_FALSO, { filename: "acta.pdf", contentType: "application/pdf" });
 
-      // Si el rol de este token no pasa authorizeRoles, será 403: en ambos casos no se sube nada
       expect([403, 404]).toContain(response.statusCode);
     });
 
@@ -250,7 +245,6 @@ describe("Actas de reuniones - Pruebas de Integración", () => {
       expect(primera.statusCode).toBe(200);
       const rutaVieja = primera.body.data.ruta_archivo;
 
-      // multer usa Date.now() en el nombre: se espera 5 ms para no repetirlo
       await new Promise((r) => setTimeout(r, 5));
 
       const segunda = await request(app)

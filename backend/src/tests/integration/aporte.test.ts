@@ -10,12 +10,10 @@ import UserEntity from "../../entity/user.entity.js";
 import CarreraEntity from "../../entity/carrera.entity.js";
 import AporteEntity from "../../entity/aporte.entity.js";
 
-// Configuración (ajusta estos valores si tus rutas son distintas)
 const BASE_APORTES = "/api/aportes";
 const RUTA_CREAR = `${BASE_APORTES}/crear`;
 const EMAIL_ADMIN = "admin@gmail.com";
 const EMAIL_CEE = "carlos.dominguez2301@alumnos.ubiobio.cl";
-// Prefijo poco común para que la limpieza nunca borre datos reales
 const PREFIJO_DESCRIPCION = "__TEST__ Aporte";
 const PROCEDENCIA_VALIDA = "Venta de completos";
 const MONTO_VALIDO = 15000;
@@ -128,11 +126,9 @@ describe("POST de creación de aportes - Pruebas de Integración", () => {
   }, 30000);
 
   afterAll(async () => {
-    // Limpieza directa en BD: no depende de que exista la ruta de eliminación
     for (const id of idsCreados) {
       await aporteRepo.delete({ id_aporte: id });
     }
-    // Red de seguridad por si algún test creó un aporte inesperado
     await aporteRepo.delete({ descripcion_aporte: Like(`${PREFIJO_DESCRIPCION} %`) });
 
     if (AppDataSource.isInitialized) {
@@ -148,8 +144,7 @@ describe("POST de creación de aportes - Pruebas de Integración", () => {
       expect(response.statusCode).toBe(401);
       expect(await cantidadConDescripcion(body.descripcion_aporte)).toBe(0);
     });
-
-    // Ajusta a 401 si tu middleware responde así con tokens inválidos
+    
     it("rechaza con 403 si el token es inválido", async () => {
       const body = datosUnicos();
       const response = await crear(body, "token-falso");
@@ -203,7 +198,6 @@ describe("POST de creación de aportes - Pruebas de Integración", () => {
       expect(await cantidadConDescripcion(body.descripcion_aporte)).toBe(0);
     });
 
-    // Ajusta si tu esquema permite monto 0
     it("rechaza con 400 un monto igual a cero", async () => {
       const body = datosUnicos({ monto: 0 });
       const response = await crear(body);
@@ -262,7 +256,6 @@ describe("POST de creación de aportes - Pruebas de Integración", () => {
       expect(Number(response.body.data.monto)).toBe(1250000);
     });
 
-    // Ajusta si tu columna `monto` es entera
     it("rechaza con 400 un monto con decimales (solo se permiten enteros)", async () => {
       const body = datosUnicos({ monto: 1500.5 });
       const response = await crear(body);
@@ -274,7 +267,7 @@ describe("POST de creación de aportes - Pruebas de Integración", () => {
 
   describe("asociación de la carrera", () => {
     it("usa la carrera del usuario en la BD aunque el body indique otra", async () => {
-      // 999999 no existe: si el controlador lo usara, la API respondería 400
+
       const response = await crear(datosUnicos({ carreraId: 999999 }), tokenMiembro);
       esperarCreado(response);
 

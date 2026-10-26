@@ -14,8 +14,6 @@ import {
 } from "../../constants/reunion.constants.js";
 import { MAX_ID, MIN_ID } from "../../constants/user.constants.js";
 
-// 2026-10-14T01:00:00Z === 2026-10-13 22:00 en Chile (UTC-3).
-// Sirve para verificar que "hoy" se calcula con la zona horaria de Chile y no con UTC.
 const AHORA_FALSA = new Date("2026-10-14T01:00:00Z");
 const HOY_CHILE = "2026-10-13";
 const AYER_CHILE = "2026-10-12";
@@ -303,7 +301,6 @@ describe("reunion.validations - Pruebas Unitarias", () => {
     });
 
     it("usa el día de Chile y no el de UTC para determinar 'hoy'", () => {
-      // En UTC ya es 2026-10-14, pero en Chile todavía es 2026-10-13.
       const { helpers, error } = crearHelpers(HOY_CHILE);
       fechaNoPasadaValidation(new Date(HOY_CHILE), helpers);
       expect(error).not.toHaveBeenCalled();

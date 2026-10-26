@@ -4,9 +4,9 @@ describe('Gestión de usuarios', () => {
   });
 
   it('debe crear un usuario y mostrar el mensaje de confirmación', () => {
-    // 1. Interceptar endpoints de la API (usuarios y carreras)
+    // 1. Interceptar endpoints de la API
     cy.intercept('GET', '**/api/users*').as('getUsers');
-    cy.intercept('GET', '**/carreras*').as('getCarreras'); // Ajustar patrón según tu backend si difiere
+    cy.intercept('GET', '**/carreras*').as('getCarreras'); 
     cy.intercept('POST', '**/api/users/crear*').as('createUser');
 
     // 2. Cargar vista y esperar a que terminen AMBAS peticiones
