@@ -8,10 +8,10 @@ describe('Pruebas de Subida de Acta de Reunión', () => {
 
     cy.visit('/reuniones');
 
-    // Abre el detalle de la primera reunión (el botón naranja de la lista)
+    // Abre el detalle de la primera reunión 
     cy.get('button.bg-\\[\\#EE820F\\]').first().click();
 
-    // Dentro del modal, adjunta el archivo (el input está oculto, por eso force)
+    // Dentro del modal, adjunta el archivo 
     cy.get('.fixed.inset-0').within(() => {
       cy.contains('Detalle Reunión').should('be.visible');
       cy.get('input[type="file"]').selectFile('cypress/fixtures/GuiaNeo4j.pdf', {

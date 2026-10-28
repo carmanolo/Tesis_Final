@@ -24,19 +24,16 @@ describe('Gestión de Edición de Materiales', () => {
     cy.get('.fixed').contains('h3', /editar material/i).should('be.visible');
 
     // 6. Modificar los campos del formulario dentro del modal
-    // Campo: Nombre del material
     cy.get('.fixed form input[placeholder*="Calculadora"]').clear().type('Calculadora Científica Editada');
 
-    // Campo: Tipo de material
     cy.get('.fixed form select').select('calculadora');
 
-    // Campo: Stock disponible
     cy.get('.fixed form input[type="number"]').clear().type('10');
 
     // 7. Guardar los cambios
     cy.contains('button', /guardar cambios/i).click();
 
-    // 8. Validar la respuesta del backend (PATCH /materiales/editar/:id)
+    // 8. Validar la respuesta del backend 
     cy.wait('@patchMaterial').its('response.statusCode').should('be.oneOf', [200, 201]);
 
     // 9. Validar la aparición de la alerta de éxito de SweetAlert
