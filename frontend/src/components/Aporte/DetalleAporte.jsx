@@ -1,70 +1,9 @@
 import { useEffect, useState } from "react";
-import { formatearFechaDDMMAAAA, normalizarFechaISO } from "../../utils/calendar.utils.js";
-import {
-    APORTE_DESCRIPCION_MIN,
-    APORTE_DESCRIPCION_MAX,
-    OPCIONES_PROCEDENCIA,
-    OPCIONES_DESCRIPCION,
-} from "../../constants/aporte.constants.jsx";
+import { formatearFechaDDMMAAAA } from "../../utils/calendar.utils.js";
+import { APORTE_DESCRIPCION_MIN, APORTE_DESCRIPCION_MAX, OPCIONES_PROCEDENCIA, OPCIONES_DESCRIPCION} from "../../constants/aporte.constants.jsx";
 
-const formatoCLP = new Intl.NumberFormat("es-CL", {
-    style: "currency",
-    currency: "CLP",
-    maximumFractionDigits: 0,
-});
+import { formatoCLP,  valoresIniciales } from "../../utils/aporte.utils.js";
 
-const hoyISO = () => new Date().toLocaleDateString("en-CA");
-
-const obtenerEstadoProcedencia = (procedencia) => {
-    if (!procedencia) {
-        return { procedencia: "", otra_procedencia: "" };
-    }
-    const existeEnLista = OPCIONES_PROCEDENCIA.some(
-        (op) => op.toLowerCase() !== "otro" && op.toLowerCase() === procedencia.toLowerCase()
-    );
-    if (existeEnLista) {
-        const opcionExacta = OPCIONES_PROCEDENCIA.find(
-            (op) => op.toLowerCase() === procedencia.toLowerCase()
-        );
-        return { procedencia: opcionExacta || procedencia, otra_procedencia: "" };
-    }
-    return {
-        procedencia: "Otro",
-        otra_procedencia: procedencia.toLowerCase() === "otro" ? "" : procedencia,
-    };
-};
-
-const obtenerEstadoDescripcion = (descripcion) => {
-    if (!descripcion) {
-        return { descripcion_aporte: "", otra_descripcion: "" };
-    }
-    const existeEnLista = OPCIONES_DESCRIPCION.some(
-        (op) => op.toLowerCase() !== "otro" && op.toLowerCase() === descripcion.toLowerCase()
-    );
-    if (existeEnLista) {
-        const opcionExacta = OPCIONES_DESCRIPCION.find(
-            (op) => op.toLowerCase() === descripcion.toLowerCase()
-        );
-        return { descripcion_aporte: opcionExacta || descripcion, otra_descripcion: "" };
-    }
-    return {
-        descripcion_aporte: "Otro",
-        otra_descripcion: descripcion.toLowerCase() === "otro" ? "" : descripcion,
-    };
-};
-
-const valoresIniciales = (aporte) => {
-    const estadoProcedencia = obtenerEstadoProcedencia(aporte?.procedencia);
-    const estadoDescripcion = obtenerEstadoDescripcion(aporte?.descripcion_aporte);
-    return {
-        descripcion_aporte: estadoDescripcion.descripcion_aporte,
-        otra_descripcion: estadoDescripcion.otra_descripcion,
-        fecha_aporte: aporte ? normalizarFechaISO(aporte.fecha_aporte) : hoyISO(),
-        procedencia: estadoProcedencia.procedencia,
-        otra_procedencia: estadoProcedencia.otra_procedencia,
-        monto: aporte?.monto ?? "",
-    };
-};
 
 const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedencia, otra_procedencia, monto }) => {
     const errores = {};

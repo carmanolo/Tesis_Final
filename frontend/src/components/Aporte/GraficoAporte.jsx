@@ -1,62 +1,9 @@
 import { useMemo, useState } from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import { MESES, normalizarFechaISO } from "../../utils/calendar.utils.js";
+import { formatoCLP, formatoCompacto, agruparPorTexto, agruparPorMes, aMonto} from "../../utils/aporte.utils.js";
+import { CRITERIOS, COLOR_BASE, COLOR_DESTACADO } from "../../constants/aporte.constants.jsx";
 
-const COLOR_BASE = "#014898";
-const COLOR_DESTACADO = "#EE820F"; // arreglar y coocar más colores
-const TOP_N = 10;
 
-const CRITERIOS = [
-    { id: "procedencia", etiqueta: "Procedencia con más aportes" }, 
-    { id: "actividad", etiqueta: "Actividad con mayor monto" },
-    { id: "mes", etiqueta: "Aportes por mes" },
-];
-
-// Pasar moneda a valor chileno
-const formatoCLP = new Intl.NumberFormat("es-CL", {
-    style: "currency",
-    currency: "CLP",
-    maximumFractionDigits: 0,
-});
-const formatoCompacto = new Intl.NumberFormat("es-CL", { notation: "compact" });
-
-const aMonto = (valor) => Number(valor) || 0;
-
-// Suma los montos por texto y ordena de mayor a menor
-const agruparPorTexto = (aportes, campo) => {
-    const grupos = new Map();
-    aportes.forEach((aporte) => {
-        const texto = String(aporte[campo] ?? "").trim() || "Sin dato";
-        const clave = texto.toLowerCase();
-        const actual = grupos.get(clave) || { categoria: texto, monto: 0 };
-        actual.monto += aMonto(aporte.monto);
-        grupos.set(clave, actual);
-    });
-
-    return [...grupos.values()]
-        .sort((a, b) => b.monto - a.monto)
-        .slice(0, TOP_N)
-        .map((grupo, idx) => ({ ...grupo, destacado: idx === 0 }));
-};
-
-// Suma los montos por mes, en orden cronológico
-const agruparPorMes = (aportes) => {
-    const grupos = new Map();
-    aportes.forEach((aporte) => {
-        const iso = normalizarFechaISO(aporte.fecha_aporte);
-        if (!iso) return;
-        const [anio, mes] = iso.split("-");
-        const clave = `${anio}-${mes}`;
-        const etiqueta = `${MESES[Number(mes) - 1] ?? mes} ${anio}`;
-        const actual = grupos.get(clave) || { clave, categoria: etiqueta, monto: 0 };
-        actual.monto += aMonto(aporte.monto);
-        grupos.set(clave, actual);
-    });
-
-    return [...grupos.values()]
-        .sort((a, b) => a.clave.localeCompare(b.clave))
-        .map(({ categoria, monto }) => ({ categoria, monto, destacado: false }));
-};
 
 export const GraficoAportes = ({ aportes = [] }) => {
     const [criterio, setCriterio] = useState("procedencia");

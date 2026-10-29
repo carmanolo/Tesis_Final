@@ -9,3 +9,12 @@ export const OPCIONES_DESCRIPCION = [
 ];
 export const APORTE_DESCRIPCION_MIN = 10;
 export const APORTE_DESCRIPCION_MAX = 100;
+export const COLOR_BASE = "#014898";
+export const COLOR_DESTACADO = "#EE820F"; // arreglar y coocar más colores
+export const TOP_N = 10;
+
+export const CRITERIOS = [
+    { id: "procedencia", etiqueta: "Procedencia con más aportes" }, 
+    { id: "actividad", etiqueta: "Actividad con mayor monto" },
+    { id: "mes", etiqueta: "Aportes por mes" },
+];
