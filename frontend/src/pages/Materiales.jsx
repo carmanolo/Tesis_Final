@@ -9,6 +9,7 @@ import { DUMaterialList } from "../components/daisyUI/DUMaterialCollapse.jsx";
 import { ModalMaterial } from "../components/Material/ModalMaterial.jsx";
 import { ModalPrestarMaterial } from "../components/Material/ModalPrestarMaterial.jsx";
 import { usePrestamo } from "../hooks/materiales/usePrestamo.jsx";
+import { useGetUsers } from "../hooks/users/useGetUsers.jsx";
 
 import { getUserRole } from "../services/user.service.js";
 import { PUEDE_EDITAR_MATERIAL, TIPO_MATERIAL } from "../constants/material.constants.jsx";
@@ -26,6 +27,7 @@ const Material = () => {
     const { handleEditMateriales } = usePatchMaterial(fetchMaterial);
     const { handleDeleteMateriales } = useDeleteMateriales(fetchMaterial);
     const { handleCreatePrestamo, handleDevolverPrestamo, handleDeletePrestamo } = usePrestamo(fetchMaterial);
+    const { users: usuariosList, fetchUsers } = useGetUsers();
 
     const [modalAbierto, setModalAbierto] = useState(false);
     const [materialSeleccionado, setMaterialSeleccionado] = useState(null);
@@ -65,6 +67,9 @@ const Material = () => {
     useEffect(() => {
         if (typeof fetchMaterial === "function") {
             fetchMaterial();
+        }
+        if (typeof fetchUsers === "function") {
+            fetchUsers();
         }
     }, []);
 
@@ -198,6 +203,7 @@ const Material = () => {
                 material={materialAPrestar}
                 onPrestar={handleCreatePrestamo}
                 onCerrar={cerrarPrestar}
+                usuarios={Array.isArray(usuariosList) ? usuariosList : []}
             />
         </div>
     );

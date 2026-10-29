@@ -11,5 +11,7 @@ export const fireDynamicSwal = (status, title, text) => {
         text: text || (isPositive(status) ? "Operación exitosa" : "Hubo un error desconocido"),
         icon: isPositive(status) ? "success" : "error",
         theme: "light",
+        timer: 2000,
+        showConfirmButton: false,
     });
 }
