@@ -19,7 +19,7 @@ async function editUserInfo(user, carreras, rolesDisponibles = ROLES_VALIDOS, de
         ${createSwalField(2, "gmail: ", user.email)}
         ${createSwalField(3, "Nueva contraseña (opcional): ", "", "password")}
         ${StaticDropdownList(rolesDisponibles, user.role, "swal2-input4", "m-1", false)}
-        ${StaticDropdownList(carreras, currentCarreraText, "swal2-input5", "m-1", false)}
+        ${StaticDropdownList(carreras.filter((c) => c !== currentCarreraText), currentCarreraText, "swal2-input5", "m-1", false)}
         `,
     focusConfirm: false,
     showCancelButton: true,

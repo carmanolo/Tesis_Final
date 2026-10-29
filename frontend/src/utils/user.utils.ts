@@ -72,6 +72,14 @@ export const processCarreras = (carreras: unknown): string[] => {
   return newCarreras;
 };
 
+// Minúsculas y sin tildes: "ingenieria" encuentra "Ingeniería"
+export const norm = (v:any) =>
+  String(v ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
 
 
 
