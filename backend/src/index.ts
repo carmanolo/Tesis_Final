@@ -1,11 +1,16 @@
 import cors from "cors";
 import express from "express";
 import morgan from "morgan";
+import path from "path";
+import { fileURLToPath } from "url";
 import indexRoutes from "./routes/index.routes.js";
 import { PORT, HOST } from "./config/configEnv.js";
 import { connectDB } from "./config/configDb.js";
 import { createUsers } from "./config/initDb.js";
 import { iniciarCronRecordatorios } from "./services/recordatorio.service.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function setupServer(): Promise<void> {
   const app = express();
@@ -19,8 +24,6 @@ async function setupServer(): Promise<void> {
     })
   );
 
-
-
   app.use(express.json());
 
   /*app.use((req, res, next) => {
@@ -28,6 +31,11 @@ async function setupServer(): Promise<void> {
     next();
   });*/
   app.use(morgan("dev"));
+
+  // Servir archivos estáticos (uploads: actas, publicaciones, etc.)
+  const uploadsDir = path.resolve(__dirname, "../../uploads");
+  app.use("/uploads", express.static(uploadsDir));
+
   app.use("/api", indexRoutes);
   app.listen(Number(PORT), () => {
     console.log(`Servidor corriendo en ${HOST}:${PORT}`);
