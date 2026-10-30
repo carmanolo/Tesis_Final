@@ -18,7 +18,8 @@ async function confirmAlert() {
     title: "Usuario eliminado",
     text: "El usuario ha sido eliminado correctamente",
     icon: "success",
-    confirmButtonText: "Aceptar",
+    timer: 2000,
+    showConfirmButton: false,
   });
 }
 
