@@ -6,6 +6,7 @@ import reunionRoutes from "./reunion.routes.js";
 import AporteRoutes from "./aporte.routes.js";
 import MaterialRoutes from "./material.routes.js";
 import PrestamoRoutes from "./prestamo.routes.js";
+import PublicacionRoutes from "./publicacion.routes.js";
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.use("/reuniones", reunionRoutes);
 router.use("/aportes", AporteRoutes);
 router.use("/materiales", MaterialRoutes);
 router.use("/prestamos", PrestamoRoutes);
+router.use("/publicaciones", PublicacionRoutes);
 
 export default router;
 
