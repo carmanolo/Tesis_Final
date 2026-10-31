@@ -40,3 +40,20 @@ export async function deleteAporteService(aporteId) {
     }
 }
 
+export async function descargarReporteAporteService(formato, { desde, hasta } = {}) {
+    try {
+        const params = {};
+        if (desde) params.desde = desde;
+        if (hasta) params.hasta = hasta;
+ 
+        const response = await axios.get(`/aportes/reporte/${formato}`, {
+            params,
+            responseType: "blob",
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error al descargar el reporte de aportes:", error);
+        throw error;
+    }
+}
+
