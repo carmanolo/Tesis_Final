@@ -11,6 +11,7 @@ import Profile from "@pages/Profile"
 import Reuniones from "@pages/Reuniones"
 import Aportes from "@pages/Aportes"
 import Materiales from "@pages/Materiales"
+import Publicaciones from "@pages/Publicaciones"
 import ProtectedRoute from "@components/ProtectedRoute"
 import "@styles/global.css";
 
@@ -56,6 +57,12 @@ const router = createBrowserRouter([
         path: "/materiales",
         element: (
             <Materiales />
+        ),
+      },
+      {
+        path: "/publicaciones",
+        element: (
+            <Publicaciones />
         ),
       },
       {

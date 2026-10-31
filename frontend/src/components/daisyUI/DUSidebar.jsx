@@ -13,6 +13,7 @@ import {
   FaMoneyBillWave,
   FaClipboardCheck
 } from "react-icons/fa";
+import { MdArticle } from "react-icons/md";
 import { DUSidebarItem } from "./DUSidebarItem";
 import marcaUbb from "../../assets/escudo-color-gradiente.svg";
 
@@ -69,6 +70,12 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       icon: FaClipboardCheck,
       label: "Materiales",
       destination: "/materiales",
+      iconColor: "text-[#000000]"
+    },
+    {
+      icon: MdArticle,
+      label: "Publicaciones",
+      destination: "/publicaciones",
       iconColor: "text-[#000000]"
     },
     {
