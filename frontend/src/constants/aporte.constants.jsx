@@ -1,6 +1,6 @@
 
 export const PUEDE_EDITAR_APORTE = ["administrador", "jefe de carrera", "presidente cee", "vicepresidente cee", "tesorero cee"];
-export const OPCIONES_PROCEDENCIA = ["DDE", "Rectoria", "FACE", "FACI", "FARCORDI", "FI", "FEDUH", "FACSA", "Externo", "Otro"];
+export const OPCIONES_PROCEDENCIA = ["DDE", "Rectoria", "Decanatura","Dirección de Departamento","FACE", "FACI", "FARCORDI","FI","FEDUH", "FACSA","Externo", "Otro"];
 export const OPCIONES_DESCRIPCION = [
     "Aniversario FACE",
     "Aniversario Carrera",
