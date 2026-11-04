@@ -1,5 +1,7 @@
-import { getAportesSer, getAporteSer, createAporteSer, patchAporteSer, deleteAporteSer } from "../services/aporte.service.js";
+import { getAportesSer, getAporteSer, createAporteSer, patchAporteSer, deleteAporteSer, getAportesReporteSer } from "../services/aporte.service.js";
 import { createValidation, integrityValidation, updateValidation } from "../validations/aporte.validations.js";
+import { FECHA_ISO } from "../constants/aporte.constants.js";
+import { calcularResumen, formatearFecha, generarExcelAportes, generarPdfAportes } from "../utils/aporte.utils.js";
 import { idValidation } from "../validations/modules/id.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 import { AppDataSource } from "../config/configDb.js";
@@ -131,5 +133,84 @@ export async function deleteAporteById(req, res) {
     }
     catch (error) {
         return handleErrorServer(res, 500, "Error al eliminar el Aporte", error.message);
+    }
+}
+async function cargarDatosReporte(req, res) {
+    const { carreraId, rol, role } = req.user || {};
+    const userRole = rol || role;
+    const { desde, hasta, carreraId: queryCarrera } = req.query;
+    if (desde !== undefined && (typeof desde !== "string" || !FECHA_ISO.test(desde))) {
+        handleErrorClient(res, 400, "El parámetro 'desde' debe tener formato YYYY-MM-DD");
+        return null;
+    }
+    if (hasta !== undefined && (typeof hasta !== "string" || !FECHA_ISO.test(hasta))) {
+        handleErrorClient(res, 400, "El parámetro 'hasta' debe tener formato YYYY-MM-DD");
+        return null;
+    }
+    if (desde && hasta && desde > hasta) {
+        handleErrorClient(res, 400, "'desde' no puede ser posterior a 'hasta'");
+        return null;
+    }
+    let carreraFiltro;
+    if (queryCarrera !== undefined) {
+        carreraFiltro = Number(queryCarrera);
+        if (!Number.isInteger(carreraFiltro) || carreraFiltro <= 0) {
+            handleErrorClient(res, 400, "El parámetro 'carreraId' es inválido");
+            return null;
+        }
+    }
+    const aportes = await getAportesReporteSer(carreraId, userRole, {
+        carreraId: carreraFiltro,
+        desde: desde,
+        hasta: hasta,
+    });
+    if (!aportes) {
+        handleErrorServer(res, 500, "Error interno del servidor");
+        return null;
+    }
+    const periodo = desde || hasta
+        ? `Período: ${desde ? formatearFecha(desde) : "inicio"} al ${hasta ? formatearFecha(hasta) : "hoy"}`
+        : "Período: todos los aportes";
+    return { aportes, periodo };
+}
+export async function getSaldoAportes(req, res) {
+    try {
+        const datos = await cargarDatosReporte(req, res);
+        if (!datos)
+            return;
+        return handleSuccess(res, 200, "Saldo calculado exitosamente", calcularResumen(datos.aportes));
+    }
+    catch (error) {
+        return handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+export async function descargarReportePdf(req, res) {
+    try {
+        const datos = await cargarDatosReporte(req, res);
+        if (!datos)
+            return;
+        const buffer = await generarPdfAportes(datos.aportes, { periodo: datos.periodo });
+        const nombre = `aportes_${new Date().toISOString().slice(0, 10)}.pdf`;
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename="${nombre}"`);
+        return res.status(200).send(buffer);
+    }
+    catch (error) {
+        return handleErrorServer(res, 500, "Error al generar el reporte PDF", error.message);
+    }
+}
+export async function descargarReporteExcel(req, res) {
+    try {
+        const datos = await cargarDatosReporte(req, res);
+        if (!datos)
+            return;
+        const buffer = await generarExcelAportes(datos.aportes, { periodo: datos.periodo });
+        const nombre = `aportes_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", `attachment; filename="${nombre}"`);
+        return res.status(200).send(buffer);
+    }
+    catch (error) {
+        return handleErrorServer(res, 500, "Error al generar el reporte Excel", error.message);
     }
 }

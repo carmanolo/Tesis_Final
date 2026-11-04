@@ -17,3 +17,7 @@ export async function enviarCorreo(to, subject, text) {
         return false;
     }
 }
+// NUEVO: correo de confirmación de registro para miembros del CEE
+export async function enviarCorreoRegistroCEE(to, nombre, cargo) {
+    return enviarCorreo(to, "Registro exitoso en el CEE", `El alumno ${nombre} se ha registrado exitosamente como ${cargo} del CEE.`);
+}

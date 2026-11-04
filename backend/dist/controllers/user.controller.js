@@ -1,5 +1,5 @@
 import User from "../entity/user.entity.js";
-import { createUserSer, getUsersSer, patchUserSer, deleteUserSer, getUserSer } from "../services/user.service.js";
+import { createUserSer, getUsersSer, patchUserSer, deleteUserSer, getUserSer, enviarCorreoRegistroSer } from "../services/user.service.js";
 import { encryptPassword } from "../helpers/bcrypt.helper.js";
 import { AppDataSource } from "../config/configDb.js";
 import { createValidation, integrityValidation, updateValidation } from "../validations/user.validations.js";
@@ -260,5 +260,40 @@ export async function getUserStats(req, res) {
             usuarios: 0,
             admninistradores: 0,
         });
+    }
+}
+export async function enviarCorreoRegistro(req, res) {
+    try {
+        const { id } = req.params;
+        const validateId = idValidation.validate({ id });
+        if (validateId.error) {
+            return handleErrorClient(res, 400, validateId.error.message);
+        }
+        const user = await getUserSer(Number(id));
+        if (!user) {
+            return handleErrorClient(res, 404, "Usuario no encontrado");
+        }
+        // Un jefe de carrera solo puede notificar a usuarios de su propia carrera
+        const userRole = req.user?.role || req.user?.rol;
+        if (userRole === "jefe de carrera") {
+            let userCarreraId = req.user?.carreraId;
+            if (!userCarreraId && req.user?.id) {
+                const userRepo = AppDataSource.getRepository(User);
+                const u = await userRepo.findOne({ where: { id: req.user.id } });
+                userCarreraId = u?.carreraId;
+            }
+            if (!userCarreraId || Number(user.carreraId) !== Number(userCarreraId)) {
+                return handleErrorClient(res, 403, "Solo puede notificar a usuarios de su respectiva carrera");
+            }
+        }
+        const { data, error } = await enviarCorreoRegistroSer(Number(id));
+        if (error || !data) {
+            return handleErrorServer(res, 500, error || "No se pudo enviar el correo");
+        }
+        return handleSuccess(res, 200, "Correo enviado exitosamente", data);
+    }
+    catch (error) {
+        console.error("Error en user.controller.ts -> enviarCorreoRegistro(): ", error);
+        return handleErrorServer(res, 500, "Error interno del servidor", error.message);
     }
 }

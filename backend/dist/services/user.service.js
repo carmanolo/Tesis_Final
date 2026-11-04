@@ -1,6 +1,7 @@
 import { AppDataSource } from "../config/configDb.js";
 import UserEntity from "../entity/user.entity.js";
 import { encryptPassword } from "../helpers/bcrypt.helper.js";
+import { enviarCorreoRegistroCEE } from "./mail.service.js";
 export async function createUserSer(username, email, password, role, carreraId) {
     const userRepository = AppDataSource.getRepository(UserEntity);
     try {
@@ -140,5 +141,26 @@ export async function deleteUserSer(id) {
     catch (error) {
         console.error(error);
         return { result: null, message: "Error al eliminar el usuario" };
+    }
+}
+export async function enviarCorreoRegistroSer(id) {
+    try {
+        const userRepository = AppDataSource.getRepository(UserEntity);
+        const user = await userRepository.findOne({
+            where: { id },
+            select: { id: true, username: true, email: true, role: true },
+        });
+        if (!user)
+            return { data: null, error: "Usuario no encontrado" };
+        if (!user.email)
+            return { data: null, error: "El usuario no tiene correo registrado" };
+        const ok = await enviarCorreoRegistroCEE(user.email, user.username, user.role);
+        if (!ok)
+            return { data: null, error: "No se pudo enviar el correo" };
+        return { data: { enviadoA: user.email }, error: null };
+    }
+    catch (error) {
+        console.error("Error al enviar correo de registro", error);
+        return { data: null, error: "Error interno del servidor" };
     }
 }

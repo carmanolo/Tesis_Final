@@ -6,6 +6,8 @@ import reunionRoutes from "./reunion.routes.js";
 import AporteRoutes from "./aporte.routes.js";
 import MaterialRoutes from "./material.routes.js";
 import PrestamoRoutes from "./prestamo.routes.js";
+import PublicacionRoutes from "./publicacion.routes.js";
+import HistorialActividadRoutes from "./historialActividad.routes.js";
 const router = Router();
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
@@ -14,6 +16,8 @@ router.use("/reuniones", reunionRoutes);
 router.use("/aportes", AporteRoutes);
 router.use("/materiales", MaterialRoutes);
 router.use("/prestamos", PrestamoRoutes);
+router.use("/publicaciones", PublicacionRoutes);
+router.use("/historial", HistorialActividadRoutes);
 export default router;
 //extension de reuniones recientes o objetos pendientes por devolver
 //articulos prestados por mes

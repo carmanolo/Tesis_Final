@@ -1,0 +1,15 @@
+export const MIN_TITULO = 3;
+export const MAX_TITULO = 200;
+export const MIN_DESCRIPCION = 5;
+export const MAX_DESCRIPCION = 1000;
+export const PUBLICACION_NO_ENCONTRADA = "Publicación no encontrada";
+export const TITULO_OBLIGATORIO = "El título es obligatorio";
+export const DESCRIPCION_OBLIGATORIA = "La descripción es obligatoria";
+export const CAMPOS_ADICIONALES = "No se permiten campos adicionales";
+export const UNKNOWN_ERROR = "Error desconocido";
+export const FORMATO_NO_PERMITIDO = "Formato de archivo no permitido. Solo se aceptan imágenes JPEG y PNG";
+export const IMAGEN_MIME_TYPES = ["image/jpeg", "image/png", "image/jpg"];
+export const TAMANO_MAXIMO_IMAGEN_MB = 5;
+export const TAMANO_MAXIMO_IMAGEN_BYTES = TAMANO_MAXIMO_IMAGEN_MB * 1024 * 1024;
+export const PUBLICACION_UPLOAD_DIR = "uploads/publicaciones";
+export const MAX_IMAGENES = 10;
