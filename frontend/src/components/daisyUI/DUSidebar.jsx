@@ -1,19 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "@services/auth.service.js";
-import {
-  FaHome,
-  FaUsers,
-  FaSignOutAlt,
-  FaSearch,
-  FaAngleDoubleLeft,
-  FaGraduationCap,
-  FaCalendarAlt,
-  FaUserCircle,
-  FaMoneyBillWave,
-  FaClipboardCheck,
-  FaShieldAlt,
-} from "react-icons/fa";
+import { FaHome, FaUsers, FaSignOutAlt, FaSearch,FaAngleDoubleLeft, FaGraduationCap, FaCalendarAlt, FaUserCircle,FaMoneyBillWave, FaClipboardCheck} from "react-icons/fa";
 import { MdArticle, MdOutlineHistory } from "react-icons/md";
 import { DUSidebarItem } from "./DUSidebarItem";
 import marcaUbb from "../../assets/escudo-color-gradiente.svg";
@@ -187,7 +175,7 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
               <DUSidebarItem
                 icon={FaSignOutAlt}
                 label="Cerrar Sesión"
-                destination="/login"
+                destination="/"
                 logoutSubmit={logoutSubmit}
                 iconColor="text-[#dc2626]"
               />
