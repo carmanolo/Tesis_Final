@@ -11,9 +11,10 @@ import {
   FaCalendarAlt,
   FaUserCircle,
   FaMoneyBillWave,
-  FaClipboardCheck
+  FaClipboardCheck,
+  FaShieldAlt,
 } from "react-icons/fa";
-import { MdArticle } from "react-icons/md";
+import { MdArticle, MdOutlineHistory } from "react-icons/md";
 import { DUSidebarItem } from "./DUSidebarItem";
 import marcaUbb from "../../assets/escudo-color-gradiente.svg";
 
@@ -77,6 +78,13 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       label: "Publicaciones",
       destination: "/publicaciones",
       iconColor: "text-[#000000]"
+    },
+    {
+      icon: MdOutlineHistory,
+      label: "Historial de Actividades",
+      destination: "/historial",
+      iconColor: "text-[#dc2626]",
+      roles: ["administrador"],
     },
     {
       icon: FaUserCircle,

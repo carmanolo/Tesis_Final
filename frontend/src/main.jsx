@@ -12,6 +12,7 @@ import Reuniones from "@pages/Reuniones"
 import Aportes from "@pages/Aportes"
 import Materiales from "@pages/Materiales"
 import Publicaciones from "@pages/Publicaciones"
+import Historial from "@pages/Historial"
 import ProtectedRoute from "@components/ProtectedRoute"
 import "@styles/global.css";
 
@@ -63,6 +64,14 @@ const router = createBrowserRouter([
         path: "/publicaciones",
         element: (
             <Publicaciones />
+        ),
+      },
+      {
+        path: "/historial",
+        element: (
+          <ProtectedRoute allowedRoles={["administrador"]}>
+            <Historial />
+          </ProtectedRoute>
         ),
       },
       {
