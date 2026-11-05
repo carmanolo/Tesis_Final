@@ -1,17 +1,19 @@
 import { API_URL } from "../config/env.config.js";
 
-// API_URL suele ser http://localhost:3000/api; las imágenes se sirven desde la raíz del backend.
 const baseUrl = (API_URL || "").replace(/\/api\/?$/, "");
 
 /**
  * Construye la URL completa para MOSTRAR una imagen.
- * Normaliza barras invertidas (Windows) solo para la URL de visualización.
+ * - Normaliza barras invertidas (Windows) solo para la URL de visualización.
+ * - Codifica cada segmento de la ruta para que espacios, paréntesis, tildes, etc. no rompan la URL.
  * ⚠️ Para ELIMINAR una imagen se debe enviar el valor original de
  * `publicacion.imagenes`, sin pasar por esta función.
  */
-export const getImageUrl = (imgPath:any) => {
+export const getImageUrl = (imgPath: any) => {
     if (!imgPath) return "";
-    if (imgPath.startsWith("http")) return imgPath;
-    const clean = imgPath.replace(/\\/g, "/");
-    return `${baseUrl}/${clean}`;
+    if (/^(https?:|blob:|data:)/i.test(imgPath)) return imgPath;
+
+    const clean = String(imgPath).replace(/\\/g, "/").replace(/^\/+/, "");
+    const encoded = clean.split("/").map(encodeURIComponent).join("/");
+    return `${baseUrl}/${encoded}`;
 };

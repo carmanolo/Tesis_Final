@@ -6,6 +6,7 @@ import { useEditPublicacion } from "../hooks/publicaciones/useEditPublicacion.js
 import { useDeletePublicacion } from "../hooks/publicaciones/useDeletePublicacion.jsx";
 import { useDeleteImagenPublicacion } from "../hooks/publicaciones/UseDeleteImagenPublicacion.jsx";
 import { ModalPublicacion } from "../components/Publicacion/ModalPublicacion.jsx";
+import { ModalPublicacionDetalle } from "../components/Publicacion/PublicacionDetalle.jsx";
 import { TarjetaPublicacion } from "../components/Publicacion/TarjetaPublicacion.jsx";
 import { DUPageBrowser } from "../components/daisyUI/DUPageBrowser.jsx";
 import { getUserRole } from "../services/user.service.js";
@@ -21,6 +22,7 @@ const Publicaciones = () => {
     const [publicacionSeleccionada, setPublicacionSeleccionada] = useState(null);
     const [buscar, setBuscar] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [detalle, setDetalle] = useState(null);
 
     const { publicaciones, loading, fetchPublicaciones } = useGetPublicaciones();
     const { fetchPublicacion } = useGetPublicacionById();
@@ -126,6 +128,7 @@ const Publicaciones = () => {
                                 canGestionar={canGestionar}
                                 onEditar={abrirEditar}
                                 onEliminar={handleDeletePublicacion}
+                                onVer={setDetalle}
                             />
                         ))}
                     </div>
@@ -151,6 +154,7 @@ const Publicaciones = () => {
                 onEliminarImagen={handleDeleteImagen}
                 onCerrar={cerrarModal}
             />
+            <ModalPublicacionDetalle abierto={!!detalle} publicacion={detalle} onCerrar={() => setDetalle(null)} />
         </div>
     );
 };

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { getImageUrl } from "../../utils/publicacion.utils.js";
 
-export function TarjetaPublicacion({ publicacion, canGestionar, onEditar, onEliminar }) {
+export function TarjetaPublicacion({ publicacion, canGestionar, onEditar, onEliminar, onVer }) {
     const [imagenActual, setImagenActual] = useState(0);
     const imagenes = Array.isArray(publicacion.imagenes) ? publicacion.imagenes : [];
 
@@ -16,7 +16,7 @@ export function TarjetaPublicacion({ publicacion, canGestionar, onEditar, onElim
         <div className="card bg-base-100 shadow-md border border-base-200 overflow-hidden">
             {/* Galería de imágenes */}
             {imagenes.length > 0 && (
-                <figure className="relative bg-base-200 h-52">
+                <figure className="relative bg-base-200 h-52 cursor-pointer" onClick={() => onVer?.(publicacion)}>
                     <img
                         src={getImageUrl(imagenes[indice])}
                         alt={`imagen-${indice}`}
@@ -53,7 +53,9 @@ export function TarjetaPublicacion({ publicacion, canGestionar, onEditar, onElim
             )}
 
             <div className="card-body p-4">
-                <h2 className="card-title text-base font-semibold">{publicacion.titulo}</h2>
+                <h2 className="card-title text-base font-semibold cursor-pointer hover:underline" onClick={() => onVer?.(publicacion)}>
+                    {publicacion.titulo}
+                </h2>
                 <p className="text-sm text-base-content/80 line-clamp-3">{publicacion.descripcion}</p>
 
                 <div className="flex items-center justify-between mt-2 text-xs text-base-content/60">

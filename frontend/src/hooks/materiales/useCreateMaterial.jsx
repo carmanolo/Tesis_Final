@@ -17,7 +17,6 @@ export const useCreateMaterial = (fetchMateriales) => {
         const status = response?.status || 400;
         fireDynamicSwal(status, null, response?.data?.message || response?.message);
 
-        // Retorna true si fue exitoso para que el modal sepa que debe cerrarse
         return status >= 200 && status < 300;
     };
 

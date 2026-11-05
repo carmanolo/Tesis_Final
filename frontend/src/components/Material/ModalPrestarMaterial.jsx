@@ -2,11 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 const hoyISO = () => new Date().toLocaleDateString("en-CA");
 
-/**
- * Selector de prestatario con buscador integrado.
- * - Si `usuarios` tiene elementos, muestra un dropdown filtrable.
- * - Si no hay usuarios disponibles, cae a un input de texto libre.
- */
+// Selector de prestatario con buscador integrado.
+
 const PrestatarioSelector = ({ value, onChange, error, usuarios = [] }) => {
     const [busqueda, setBusqueda] = useState("");
     const [abierto, setAbierto] = useState(false);

@@ -10,8 +10,8 @@ import { createUsers } from "./config/initDb.js";
 import { iniciarCronRecordatorios } from "./services/recordatorio.service.js";
 import { auditMiddleware } from "./middleware/audit.middleware.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+/*onst __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);*/
 
 async function setupServer(): Promise<void> {
   const app = express();
@@ -37,8 +37,8 @@ async function setupServer(): Promise<void> {
   app.use(auditMiddleware);
 
   // Servir archivos estáticos (uploads: actas, publicaciones, etc.)
-  const uploadsDir = path.resolve(__dirname, "../../uploads");
-  app.use("/uploads", express.static(uploadsDir));
+  //const uploadsDir = path.resolve(__dirname, "../../uploads");
+  app.use("/uploads", express.static(path.resolve("uploads")));
 
   app.use("/api", indexRoutes);
   app.listen(Number(PORT), () => {
