@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 
-import {useCreateAporte} from "../hooks/aportes/useCreateAporte.jsx"
-import {usePatchAporte} from "../hooks/aportes/usePatchAporte.jsx";
+import { useCreateAporte } from "../hooks/aportes/useCreateAporte.jsx"
+import { usePatchAporte } from "../hooks/aportes/usePatchAporte.jsx"
 import {useDeleteAporte} from "../hooks/aportes/useDeleteAporte.jsx";
 import {useGetAporte} from "../hooks/aportes/useGetAporte.jsx"
-import {GraficoAportes} from "../components/Aporte/GraficoAporte.jsx"
+import { GraficoAportes } from "../components/Aporte/GraficoAporte.jsx"
 import { DetalleAporte } from "../components/Aporte/DetalleAporte.jsx"
+import { ReporteAporte } from "../components/Aporte/ReporteAporte.jsx"
 import { DUPageBrowser } from "../components/daisyUI/DUPageBrowser.jsx";
 
 import { getUserRole } from "../services/user.service.js";
@@ -38,7 +39,6 @@ const Aporte = () => {
 
     useEffect(() => {
         fetchAporte();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // El aporte abierto se busca en la lista para que el modal se actualice solo tras editar
@@ -92,6 +92,8 @@ const Aporte = () => {
                     </button>
                 )}
             </div>
+
+            {canCrudAportes && <ReporteAporte />}
 
             <GraficoAportes aportes={aportes} />
 

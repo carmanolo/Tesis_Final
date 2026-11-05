@@ -1,80 +1,124 @@
 import fs from "fs";
 import { AppDataSource } from "../config/configDb.js";
-import { ReunionEntity, Reunion } from "../entity/reunion.entity.js";
+import { ReunionEntity } from "../entity/reunion.entity.js";
+import CarreraEntity from "../entity/carrera.entity.js";
+import { isAdminRole } from "../utils/user.utils.js";
 import { crearEventoReunion, actualizarEventoReunion, eliminarEventoReunion } from "./googleCalendar.service.js";
+import { getEmailsCarrera } from "../helpers/emailCarrera.helper.js";
+
+const repo = () => AppDataSource.getRepository(ReunionEntity as any);
 
 export async function createReunionSer(
     fecha_reunion: Date | string,
-    descripcion: string
-): Promise<any | null> {
-    const reunionRepository = AppDataSource.getRepository(ReunionEntity as any);
-
+    descripcion: string,
+    creadorId: number,
+    carreraId: number
+): Promise<{ data: any | null; error: string | null }> {
     try {
-        if (!fecha_reunion || !descripcion) {
-            throw new Error("Funcion mal llamada");
+        if (!fecha_reunion || !descripcion || !creadorId) {
+            return { data: null, error: "Funcion mal llamada" };
         }
 
-        const newReunion = reunionRepository.create({
+        const carreraRepo = AppDataSource.getRepository(CarreraEntity as any);
+        const carrera = await carreraRepo.findOneBy({ id_carrera: carreraId });
+
+        if (!carrera) {
+            return { data: null, error: "La carrera especificada no existe" };
+        }
+
+        const nueva = repo().create({
             fecha_reunion,
-            descripcion
+            descripcion,
+            creadorId,
+            carreraId,
+            creador: { id: creadorId },
+            carrera: { id_carrera: carreraId },
         });
-        await reunionRepository.save(newReunion);
 
-        const eventId = await crearEventoReunion(fecha_reunion, descripcion );
-        if (eventId) {
-        (newReunion as any).google_event_id = eventId;
-            await reunionRepository.save(newReunion);
+        const saved = await repo().save(nueva);
+        
+
+        try {
+            const attendees = await getEmailsCarrera(carreraId);
+            const eventId = await crearEventoReunion(fecha_reunion, descripcion, attendees);
+            if (eventId) {
+                (saved as any).google_event_id = eventId;
+                await repo().save(saved);
+            }   
+        } catch (calError) {
+            console.error("Error al crear evento de Google Calendar:", calError);
         }
 
-        return newReunion;
+        return { data: saved, error: null };
     } catch (error) {
-        console.error(error);
-        return null;
+        console.error("Error al crear reunión: ", error);
+        return { data: null, error: "Error interno al crear la reunión" };
     }
 }
 
-export async function getReunionesSer(): Promise<any> {
+// Devuelve las reuniones de la carrera o todas si es administrador
+export async function getReunionesSer(carreraId?: number, role?: string): Promise<any[] | null> {
     try {
-        const reunionRepository = AppDataSource.getRepository(ReunionEntity as any);
-        const reuniones = await reunionRepository.find();
+        const whereCondition: any = {};
+        if (!isAdminRole(role) || carreraId) {
+            whereCondition.carreraId = carreraId;
+        }
 
-        if (!reuniones || reuniones.length === 0) return { message: "Arreglo vacío" };
-        return [reuniones, null];
+        const reuniones = await repo().find({
+            where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
+            relations: { carrera: true, creador: true },
+            order: { fecha_reunion: "DESC" },
+        });
+
+        return reuniones;
     } catch (error) {
         console.error("error al obtener reuniones: ", error);
         return null;
     }
 }
 
-export async function getReunionSer(id_reunion: number): Promise<any> {
+// Devuelve la reunión si pertenece a la carrera del usuario o si es administrador
+export async function getReunionSer(id_reunion: number, carreraId?: number, role?: string): Promise<any | null> {
     try {
-        const reunionRepository = AppDataSource.getRepository(ReunionEntity as any);
-        const reunion = await reunionRepository.findOne({
-            where: { id_reunion }
+        const whereCondition: any = { id_reunion };
+        if (!isAdminRole(role)) {
+            whereCondition.carreraId = carreraId;
+        }
+
+        const reunion = await repo().findOne({
+            where: whereCondition,
+            relations: { carrera: true, creador: true },
         });
         return reunion;
     } catch (error) {
         console.error("Error al obtener la reunión", error);
-        return [null, "Error interno del servidor"];
+        throw error;
     }
 }
 
 export async function patchReunionSer(reunion: Partial<any>): Promise<any> {
-    const reunionRepository = AppDataSource.getRepository(ReunionEntity as any);
     try {
         if (!reunion) {
             throw new Error("Funcion mal llamada");
         }
 
-        const savedReunion = await reunionRepository.save(reunion as any);
+        const savedReunion = await repo().save(reunion as any);
 
         if (savedReunion.google_event_id) {
-            await actualizarEventoReunion(
-            savedReunion.google_event_id,
-            savedReunion.fecha_reunion,
-            savedReunion.descripcion
-        );
-}
+            try {
+                const attendees = savedReunion.carreraId
+                ? await getEmailsCarrera(savedReunion.carreraId)
+                : [];
+                await actualizarEventoReunion(
+                savedReunion.google_event_id,
+                savedReunion.fecha_reunion,
+                savedReunion.descripcion,
+                attendees
+                );
+            } catch (calError) {
+                console.error("Error al actualizar evento de Google Calendar:", calError);
+            }
+        }
 
         return { data: savedReunion, message: "Reunión actualizada con éxito", error: null };
     } catch (error) {
@@ -85,8 +129,7 @@ export async function patchReunionSer(reunion: Partial<any>): Promise<any> {
 
 export async function deleteReunionSer(id_reunion: number): Promise<any> {
     try {
-        const reunionRepository = AppDataSource.getRepository(ReunionEntity as any);
-        const reunion: any = await reunionRepository.findOne({ where: { id_reunion } });
+        const reunion: any = await repo().findOne({ where: { id_reunion } });
 
         if (!reunion) {
             return { result: null, message: "reunión no encontrada" };
@@ -97,13 +140,18 @@ export async function deleteReunionSer(id_reunion: number): Promise<any> {
             fs.unlinkSync(reunion.ruta_archivo);
         }
 
-        //eliminar recordatorio asociado
+        // eliminar recordatorio asociado
         if (reunion.google_event_id) {
-            await eliminarEventoReunion(reunion.google_event_id);
+            try {
+                await eliminarEventoReunion(reunion.google_event_id);
+            } catch (calError) {
+                console.error("Error al eliminar evento de Google Calendar:", calError);
+            }
         }
 
+        const result = await repo().delete({ id_reunion: reunion.id_reunion });
         return {
-            result: await reunionRepository.delete({ id_reunion: reunion.id_reunion }),
+            result,
             message: "reunión eliminada exitosamente"
         };
     } catch (error) {
@@ -112,14 +160,12 @@ export async function deleteReunionSer(id_reunion: number): Promise<any> {
     }
 }
 
-
 export async function subirActaSer(
     id_reunion: number,
     file: Express.Multer.File
 ): Promise<any> {
-    const reunionRepository = AppDataSource.getRepository(ReunionEntity as any);
     try {
-        const reunion: any = await reunionRepository.findOne({ where: { id_reunion } });
+        const reunion: any = await repo().findOne({ where: { id_reunion } });
 
         if (!reunion) {
             // Si la reunión no existe, se elimina el archivo que multer ya guardó en disco
@@ -138,7 +184,7 @@ export async function subirActaSer(
         reunion.ruta_archivo = file.path;
         reunion.fecha_subida = new Date();
 
-        const savedReunion = await reunionRepository.save(reunion);
+        const savedReunion = await repo().save(reunion);
 
         return { data: savedReunion, message: "Acta subida exitosamente" };
     } catch (error) {
@@ -150,8 +196,7 @@ export async function subirActaSer(
 
 export async function obtenerActaSer(id_reunion: number): Promise<any> {
     try {
-        const reunionRepository = AppDataSource.getRepository(ReunionEntity as any);
-        const reunion: any = await reunionRepository.findOne({ where: { id_reunion } });
+        const reunion: any = await repo().findOne({ where: { id_reunion } });
 
         if (!reunion || !reunion.ruta_archivo) {
             return { data: null, message: "acta no encontrada" };

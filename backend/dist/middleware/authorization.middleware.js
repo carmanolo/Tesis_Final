@@ -16,7 +16,7 @@ export function authorizeRoles(...rolesPermitidos) {
             if (!rolesPermitidos.includes(rolActual)) {
                 return handleErrorClient(res, 403, "Acceso denegado: no se tienen permiso", `Se requiere uno de los siguientes roles: ${rolesPermitidos.join(", ")}`);
             }
-            req.user.rol = rolActual;
+            req.user.role = rolActual;
             req.user.id = userFound.id;
             req.user.carreraId = userFound.carreraId;
             next();

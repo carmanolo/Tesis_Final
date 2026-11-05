@@ -18,7 +18,8 @@ async function confirmAlert() {
     title: "Material eliminado",
     text: "El material ha sido eliminado correctamente",
     icon: "success",
-    confirmButtonText: "Aceptar",
+    timer: 2000,
+    showConfirmButton: false,
   });
 }
 

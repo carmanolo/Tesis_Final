@@ -6,6 +6,9 @@ import CarreraEntity from "../entity/carrera.entity.js";
 import ReunionEntity from "../entity/reunion.entity.js";
 import AporteEntity from "../entity/aporte.entity.js";
 import MaterialEntity from "../entity/material.entity.js";
+import PrestamoEntity from "../entity/prestamo.entity.js";
+import PublicacionEntity from "../entity/publicacion.entity.js";
+import HistorialActividadEntity from "../entity/historialActividad.entity.js";
 export const AppDataSource = new DataSource({
     type: "postgres",
     host: DB_HOST,
@@ -13,7 +16,16 @@ export const AppDataSource = new DataSource({
     username: DB_USERNAME,
     password: PASSWORD,
     database: DATABASE,
-    entities: [UserEntity, CarreraEntity, ReunionEntity, AporteEntity, MaterialEntity],
+    entities: [
+        UserEntity,
+        CarreraEntity,
+        ReunionEntity,
+        AporteEntity,
+        MaterialEntity,
+        PrestamoEntity,
+        PublicacionEntity,
+        HistorialActividadEntity
+    ],
     synchronize: true,
     logging: false,
 });

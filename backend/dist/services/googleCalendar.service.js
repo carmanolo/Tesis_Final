@@ -12,18 +12,17 @@ function nextDayStr(dateStr) {
     d.setUTCDate(d.getUTCDate() + 1);
     return d.toISOString().slice(0, 10);
 }
-function buildEvent(fecha, descripcion, attendees = []) {
+function buildEvent(fecha, descripcion, attendees) {
     const start = toDateStr(fecha);
     return {
         summary: "Reunión",
         description: descripcion,
         start: { date: start },
-        end: { date: nextDayStr(start) }, // en eventos de día completo el fin es exclusivo
-        attendees: attendees.map((email) => ({ email })),
+        end: { date: nextDayStr(start) },
+        ...(attendees ? { attendees: attendees.map((email) => ({ email })) } : {}),
         reminders: {
             useDefault: false,
             overrides: [
-                // 900 min antes de las 00:00 del día de la reunión = 09:00 del día anterior
                 { method: "popup", minutes: 900 },
                 { method: "email", minutes: 900 },
             ],
@@ -44,12 +43,13 @@ export async function crearEventoReunion(fecha, descripcion, attendees = []) {
         return null;
     }
 }
-export async function actualizarEventoReunion(eventId, fecha, descripcion) {
+export async function actualizarEventoReunion(eventId, fecha, descripcion, attendees) {
     try {
         await calendar.events.patch({
             calendarId: CALENDAR_ID,
             eventId,
-            requestBody: buildEvent(fecha, descripcion),
+            sendUpdates: attendees?.length ? "all" : "none",
+            requestBody: buildEvent(fecha, descripcion, attendees),
         });
     }
     catch (error) {

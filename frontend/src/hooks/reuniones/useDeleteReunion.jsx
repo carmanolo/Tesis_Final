@@ -19,7 +19,8 @@ async function confirmAlert() {
         title: "Reunión eliminada",
         text: "La reunión ha sido eliminada correctamente",
         icon: "success",
-        confirmButtonText: "Aceptar",
+        timer: 2000,
+        showConfirmButton: false,
         theme: "light",
     });
 }

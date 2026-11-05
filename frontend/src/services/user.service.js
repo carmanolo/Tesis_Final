@@ -59,6 +59,16 @@ export const getUserRole = () => {
     }
 }
 
+export const getUserCarreraId = () => {
+   try {
+        const user = JSON.parse(sessionStorage.getItem("usuario"));
+        return user?.carreraId || null;
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
 
 export async function getStats() {
     try {
@@ -66,6 +76,16 @@ export async function getStats() {
         return response.data;
     } catch (error) {
         console.error("Error al obtener estadísticas: ", error);
+        throw error;
+    }
+}
+
+export async function sendRegistroMailService(userId) {
+    try {
+        const response = await axios.post(`/users/notificar-registro/${userId}`);
+        return Object.assign(response.data, {status: response.status});
+    } catch (error) {
+        console.error("Error al enviar correo de registro:", error);
         throw error;
     }
 }

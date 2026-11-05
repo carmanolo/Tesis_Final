@@ -48,5 +48,6 @@ jobs:
         run: |
           source ~/.nvm/nvm.sh
           cd frontend
+          rm cypress -r
           npm run build
           setsid pm2 start npm --name "frontend" -f -- run preview

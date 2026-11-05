@@ -29,6 +29,14 @@ export const integrityValidation = Joi.object({
         "string.min": `La descripción debe tener al menos ${MIN_DESCRIPCION} caracteres`,
         "string.max": `La descripción no puede tener más de ${MAX_DESCRIPCION} caracteres`,
     }),
+    carreraId: Joi.number().integer().positive().messages({
+        "number.base": "El id de la carrera debe ser un número",
+        "number.positive": "El id de la carrera debe ser un número positivo",
+    }),
+    id_carrera: Joi.number().integer().positive().messages({
+        "number.base": "El id de la carrera debe ser un número",
+        "number.positive": "El id de la carrera debe ser un número positivo",
+    }),
 }).unknown(false).messages({
     "any.unknown": CAMPOS_ADICIONALES,
     "object.unknown": CAMPOS_ADICIONALES,
@@ -40,6 +48,8 @@ export const createValidation = Joi.object({
     descripcion: Joi.any().required().messages({
         "any.required": DESCRIPCION_OBLIGATORIA,
     }),
+    carreraId: Joi.any(),
+    id_carrera: Joi.any(),
 }).min(1).unknown(false)
     .messages({
     "object.min": "Debe proporcionar al menos un campo",
@@ -49,6 +59,8 @@ export const createValidation = Joi.object({
 export const updateValidation = Joi.object({
     fecha_reunion: Joi.any(),
     descripcion: Joi.any(),
+    carreraId: Joi.any(),
+    id_carrera: Joi.any(),
 }).min(1).unknown(false).messages({
     "object.min": "Debe proporcionar al menos un campo para actualizar",
     "any.min": "Debe proporcionar al menos un campo para actualizar",

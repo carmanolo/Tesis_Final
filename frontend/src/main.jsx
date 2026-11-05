@@ -2,6 +2,7 @@
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Root from "@pages/Root"
+import Landing from "@pages/Landing"
 import Home from "@pages/Home"
 import Login from "@pages/Login"
 import Error404 from "@pages/Error404"
@@ -11,12 +12,19 @@ import Profile from "@pages/Profile"
 import Reuniones from "@pages/Reuniones"
 import Aportes from "@pages/Aportes"
 import Materiales from "@pages/Materiales"
+import Publicaciones from "@pages/Publicaciones"
+import Historial from "@pages/Historial"
 import ProtectedRoute from "@components/ProtectedRoute"
 import "@styles/global.css";
 
 const router = createBrowserRouter([
   {
     path: "/",
+    element: <Landing />,
+    errorElement: <Error404 />,
+  },
+  {
+    //path: "/",
     element: <Root />,
     errorElement: <Error404 />,
     children: [
@@ -27,7 +35,7 @@ const router = createBrowserRouter([
       {
         path: "/users",
         element: (
-          <ProtectedRoute allowedRoles={["administrador"]}>
+          <ProtectedRoute allowedRoles={["administrador", "jefe de carrera"]}>
             <Users />
           </ProtectedRoute>
         ),
@@ -56,6 +64,20 @@ const router = createBrowserRouter([
         path: "/materiales",
         element: (
             <Materiales />
+        ),
+      },
+      {
+        path: "/publicaciones",
+        element: (
+            <Publicaciones />
+        ),
+      },
+      {
+        path: "/historial",
+        element: (
+          <ProtectedRoute allowedRoles={["administrador"]}>
+            <Historial />
+          </ProtectedRoute>
         ),
       },
       {

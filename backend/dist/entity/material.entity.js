@@ -12,6 +12,10 @@ export const MaterialEntity = new EntitySchema({
             type: String,
             nullable: false
         },
+        tipo_material: {
+            type: String,
+            nullable: false
+        },
         fecha_prestamo: {
             type: "date",
             nullable: true
@@ -26,7 +30,7 @@ export const MaterialEntity = new EntitySchema({
         },
         estado_prestamo: {
             type: String,
-            default: "prestado",
+            default: "disponible",
             nullable: false,
         },
         tne_entregada: {
@@ -47,6 +51,11 @@ export const MaterialEntity = new EntitySchema({
             inverseSide: "materiales",
             nullable: false,
             onDelete: "CASCADE",
+        },
+        prestamos: {
+            type: "one-to-many",
+            target: "Prestamo",
+            inverseSide: "material",
         },
     },
 });

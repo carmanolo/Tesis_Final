@@ -1,4 +1,5 @@
 import { AppDataSource } from "../config/configDb.js";
+import { Between, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import AporteEntity from "../entity/aporte.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
 const repo = () => AppDataSource.getRepository(AporteEntity);
@@ -86,5 +87,35 @@ export async function deleteAporteSer(id_aporte) {
     catch (error) {
         console.error(error);
         return { result: null, message: "Error al eliminar el aporte" };
+    }
+}
+// Aportes para reportes (PDF / Excel / saldo), ordenados cronológicamente.
+export async function getAportesReporteSer(userCarreraId, role, filtros = {}) {
+    try {
+        const admin = isAdminRole(role);
+        const carreraObjetivo = admin ? filtros.carreraId : userCarreraId;
+        // Un usuario no administrador sin carrera no debe ver aportes de otras carreras
+        if (!admin && !carreraObjetivo)
+            return [];
+        const where = {};
+        if (carreraObjetivo)
+            where.carreraId = carreraObjetivo;
+        if (filtros.desde && filtros.hasta) {
+            where.fecha_aporte = Between(filtros.desde, filtros.hasta);
+        }
+        else if (filtros.desde) {
+            where.fecha_aporte = MoreThanOrEqual(filtros.desde);
+        }
+        else if (filtros.hasta) {
+            where.fecha_aporte = LessThanOrEqual(filtros.hasta);
+        }
+        return await repo().find({
+            where: Object.keys(where).length > 0 ? where : undefined,
+            order: { fecha_aporte: "ASC", id_aporte: "ASC" },
+        });
+    }
+    catch (error) {
+        console.error("Error al obtener aportes para el reporte: ", error);
+        return null;
     }
 }

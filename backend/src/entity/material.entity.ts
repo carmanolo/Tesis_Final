@@ -1,16 +1,19 @@
 import { EntitySchema } from "typeorm";
 import type { Carrera } from "./carrera.entity.js";
+import type { Prestamo } from "./prestamo.entity.js";
 
 export interface Material {
     id_material: number;
     nombre_material: string;
+    tipo_material: string;
     fecha_prestamo?: Date | null;
     nombre_prestamo?: string | null;
     stock: number;
-    estado_prestamo: "pendiente" | "devuelto" | "prestado" | string;
+    estado_prestamo: "pendiente" | "devuelto" | "prestado" |"disponible"| string;
     tne_entregada: boolean;
     carreraId?: number;
     carrera?: Carrera;
+    prestamos?: Prestamo[];
 }
 
 export const MaterialEntity = new EntitySchema<Material>({
@@ -23,6 +26,10 @@ export const MaterialEntity = new EntitySchema<Material>({
             generated: true 
         },
         nombre_material: { 
+            type: String, 
+            nullable: false 
+        },
+        tipo_material: { 
             type: String, 
             nullable: false 
         },
@@ -40,7 +47,7 @@ export const MaterialEntity = new EntitySchema<Material>({
         },
         estado_prestamo: {
             type: String,
-            default: "prestado",
+            default: "disponible",
             nullable: false,
         },
         tne_entregada: {
@@ -61,6 +68,11 @@ export const MaterialEntity = new EntitySchema<Material>({
             inverseSide: "materiales",
             nullable: false,
             onDelete: "CASCADE",
+        },
+        prestamos: {
+            type: "one-to-many",
+            target: "Prestamo",
+            inverseSide: "material",
         },
     },
 });
