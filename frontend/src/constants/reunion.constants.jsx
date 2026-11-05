@@ -9,6 +9,6 @@ export const ACTA_MIME_TYPES_PERMITIDOS = [
 export const ACTA_TAMANO_MAXIMO_MB = 10;
 export const ACTA_TAMANO_MAXIMO_BYTES = ACTA_TAMANO_MAXIMO_MB * 1024 * 1024;
 
-// Roles que pueden crear/editar/eliminar reuniones y subir/reemplazar el acta.
-// AJUSTA estos strings a los roles reales que usa tu getUserRole() (ej. "cee", "directiva").
-export const ACCESO_GESTION_ACTAS = ["presidente cee", "secretario cee", "administrador", "vicepresidente cee"];
+// Roles que pueden gestionar/ajustar reuniones y actas.
+// NOTA: "administrador" y "jefe de carrera" no deben ver los ajustes de reunión según las reglas del negocio.
+export const ACCESO_GESTION_ACTAS = ["presidente cee", "secretario cee", "vicepresidente cee", "tesorero cee", "vocal cee"];

@@ -107,7 +107,7 @@ export function iniciarCronRecordatorios() {
         enviarRecordatoriosDeManana().catch((e) => console.error("Error en cron de recordatorios de reuniones", e));
     }, { timezone: TZ });
     // 2. Verificación de préstamos vencidos (se ejecuta a las 08:00 AM y a las 18:00 PM todos los días)
-    cron.schedule("0 8,18 * * *", () => {
+    cron.schedule("0 11,18 * * *", () => {
         verificarPrestamosVencidos().catch((e) => console.error("Error en cron de préstamos vencidos", e));
     }, { timezone: TZ });
     // Ejecución inicial al levantar el servidor para actualizar préstamos pendientes de inmediato

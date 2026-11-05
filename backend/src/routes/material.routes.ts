@@ -7,10 +7,14 @@ const router = Router();
 
 router.use(authenticateJwt);
 
-router.get("/", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), getMateriales);
-router.get("/:id_material", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), getMaterialById);
-router.post("/crear/", authorizeRoles("administrador", "tesorero cee", "presidente cee", "secretario cee", "vocal cee"), createMaterial);
-router.patch("/editar/:id_material", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), patchMaterialById);
-router.delete("/eliminar/:id_material", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), deleteMaterialById);
+// Lectura de materiales accesible para cualquier usuario autenticado (incluyendo estudiantes para ver disponibilidad o préstamos en Home)
+router.get("/", getMateriales);
+router.get("/:id_material", getMaterialById);
+
+// Operaciones de gestión exclusivas para CEE y administrador
+const ROLES_GESTION_MATERIAL = ["administrador", "presidente cee", "vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee"];
+router.post("/crear/", authorizeRoles(...ROLES_GESTION_MATERIAL), createMaterial);
+router.patch("/editar/:id_material", authorizeRoles(...ROLES_GESTION_MATERIAL), patchMaterialById);
+router.delete("/eliminar/:id_material", authorizeRoles(...ROLES_GESTION_MATERIAL), deleteMaterialById);
 
 export default router; //utiles, articulos deportivos, juegos, calculadora
