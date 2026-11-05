@@ -59,7 +59,8 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       icon: FaClipboardCheck,
       label: "Materiales",
       destination: "/materiales",
-      iconColor: "text-[#000000]"
+      iconColor: "text-[#000000]",
+      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee", "estudiante"]
     },
     {
       icon: MdArticle,
