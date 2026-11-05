@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useGetPublicaciones } from "../hooks/publicaciones/useGetPublicaciones.jsx";
-import { useGetPublicacionById } from "../hooks/publicaciones/useGetPublicacionById.jsx";
+import { useGetPublicacionById } from "../hooks/publicaciones/UseGetPublicacionbyid.jsx";
 import { useCreatePublicacion } from "../hooks/publicaciones/useCreatePublicacion.jsx";
 import { useEditPublicacion } from "../hooks/publicaciones/useEditPublicacion.jsx";
 import { useDeletePublicacion } from "../hooks/publicaciones/useDeletePublicacion.jsx";
