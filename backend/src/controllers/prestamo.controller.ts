@@ -20,13 +20,22 @@ export async function createPrestamo(req: Request, res: Response): Promise<any> 
             return handleErrorClient(res, 400, "El nombre del prestatario debe tener entre 3 y 60 caracteres");
         }
 
+        // Validación obligatoria: La TNE debe haber sido entregada en garantía
+        if (tne_entregada !== true && tne_entregada !== "true") {
+            return handleErrorClient(
+                res,
+                400,
+                "No se puede registrar el préstamo sin confirmar la entrega de la TNE en garantía (debe marcar la opción TNE entregada)."
+            );
+        }
+
         const fechaFinal = fecha_prestamo ? fecha_prestamo : new Date();
 
         const { data, error } = await createPrestamoSer(
             targetMaterialId,
             nombrePrestatario,
             fechaFinal,
-            Boolean(tne_entregada)
+            true
         );
 
         if (error || !data) {

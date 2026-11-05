@@ -1,7 +1,7 @@
 export const MIN_TITULO = 3;
 export const MAX_TITULO = 200;
 export const MIN_DESCRIPCION = 5;
-export const MAX_DESCRIPCION = 1000;
+export const MAX_DESCRIPCION = 5000;
 export const PUBLICACION_NO_ENCONTRADA = "Publicación no encontrada";
 export const TITULO_OBLIGATORIO = "El título es obligatorio";
 export const DESCRIPCION_OBLIGATORIA = "La descripción es obligatoria";

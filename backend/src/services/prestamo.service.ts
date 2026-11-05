@@ -13,6 +13,10 @@ export async function createPrestamoSer(
             return { data: null, error: "El material y el nombre del prestatario son obligatorios" };
         }
 
+        if (!tne_entregada) {
+            return { data: null, error: "La TNE debe haber sido entregada en garantía para registrar el préstamo" };
+        }
+
         const materialRepository = AppDataSource.getRepository(MaterialEntity as any);
         const material = await materialRepository.findOne({ where: { id_material: materialId } });
 
@@ -31,7 +35,7 @@ export async function createPrestamoSer(
             prestatario: prestatario.trim(),
             fecha_prestamo: fecha_prestamo ? new Date(fecha_prestamo) : new Date(),
             estado_prestamo: "prestado",
-            tne_entregada: Boolean(tne_entregada),
+            tne_entregada: true,
         });
 
         // Descontar 1 unidad del stock disponible del material
@@ -102,8 +106,8 @@ export async function deletePrestamoSer(
             return { result: null, error: "Préstamo no encontrado" };
         }
 
-        // Si se elimina un préstamo que estaba activo (prestado), restaurar la unidad al stock
-        if (prestamo.estado_prestamo === "prestado") {
+        // Si se elimina un préstamo que aún no había sido devuelto, se repone el stock
+        if (prestamo.estado_prestamo !== "devuelto") {
             const materialRepository = AppDataSource.getRepository(MaterialEntity as any);
             const material = await materialRepository.findOne({ where: { id_material: prestamo.materialId } });
             if (material) {
@@ -117,6 +121,6 @@ export async function deletePrestamoSer(
         return { result, error: null };
     } catch (error) {
         console.error("Error al eliminar préstamo: ", error);
-        return { result: null, error: "Error al eliminar el préstamo" };
+        return { result: null, error: "Error interno al eliminar préstamo" };
     }
 }

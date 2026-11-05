@@ -156,6 +156,11 @@ export const ModalPrestarMaterial = ({
             err.fechaPrestamo = "Selecciona la fecha del préstamo";
         }
 
+        // Validación estricta: No se permite registrar el préstamo sin marcar la opción tne_entregada en true
+        if (tneEntregada !== "true") {
+            err.tneEntregada = "Es obligatorio marcar la entrega de la TNE en garantía para registrar el préstamo.";
+        }
+
         setErrores(err);
         if (Object.keys(err).length > 0) return;
 
@@ -164,7 +169,7 @@ export const ModalPrestarMaterial = ({
             materialId: material.id_material ?? material.id,
             prestatario: nombre,
             fecha_prestamo: fechaPrestamo,
-            tne_entregada: tneEntregada === "true",
+            tne_entregada: true,
         });
         setGuardando(false);
 
@@ -243,16 +248,24 @@ export const ModalPrestarMaterial = ({
 
                     <div className="form-control">
                         <label className="label">
-                            <span className="label-text font-semibold">¿TNE entregada en garantía?</span>
+                            <span className="label-text font-semibold">
+                                ¿TNE entregada en garantía? <span className="text-error">*</span>
+                            </span>
                         </label>
                         <select
-                            className="select select-bordered w-full"
+                            className={`select select-bordered w-full ${errores.tneEntregada ? "select-error" : ""}`}
                             value={tneEntregada}
-                            onChange={(e) => setTneEntregada(e.target.value)}
+                            onChange={(e) => {
+                                setTneEntregada(e.target.value);
+                                if (errores.tneEntregada) setErrores((prev) => ({ ...prev, tneEntregada: null }));
+                            }}
                         >
-                            <option value="false">No</option>
-                            <option value="true">Sí</option>
+                            <option value="false">No (No permitido)</option>
+                            <option value="true">Sí (TNE Entregada)</option>
                         </select>
+                        {errores.tneEntregada && (
+                            <span className="text-xs text-error mt-1">{errores.tneEntregada}</span>
+                        )}
                     </div>
 
                     <p className="text-xs text-base-content/70 italic">
