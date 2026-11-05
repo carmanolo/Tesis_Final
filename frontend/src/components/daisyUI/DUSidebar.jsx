@@ -1,18 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "@services/auth.service.js";
-import {
-  FaHome,
-  FaUsers,
-  FaSignOutAlt,
-  FaSearch,
-  FaAngleDoubleLeft,
-  FaGraduationCap,
-  FaCalendarAlt,
-  FaUserCircle,
-  FaMoneyBillWave,
-  FaClipboardCheck
-} from "react-icons/fa";
+import { FaHome, FaUsers, FaSignOutAlt, FaSearch,FaAngleDoubleLeft, FaGraduationCap, FaCalendarAlt, FaUserCircle,FaMoneyBillWave, FaClipboardCheck} from "react-icons/fa";
+import { MdArticle, MdOutlineHistory } from "react-icons/md";
 import { DUSidebarItem } from "./DUSidebarItem";
 import marcaUbb from "../../assets/escudo-color-gradiente.svg";
 
@@ -44,7 +34,7 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       label: "Usuarios",
       destination: "/users",
       iconColor: "text-[#0284c7]",
-      roles: ["administrador"],
+      roles: ["administrador", "jefe de carrera"],
     },
     {
       icon: FaGraduationCap,
@@ -69,7 +59,21 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       icon: FaClipboardCheck,
       label: "Materiales",
       destination: "/materiales",
+      iconColor: "text-[#000000]",
+      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee", "estudiante"]
+    },
+    {
+      icon: MdArticle,
+      label: "Publicaciones",
+      destination: "/publicaciones",
       iconColor: "text-[#000000]"
+    },
+    {
+      icon: MdOutlineHistory,
+      label: "Historial de Actividades",
+      destination: "/historial",
+      iconColor: "text-[#dc2626]",
+      roles: ["administrador"],
     },
     {
       icon: FaUserCircle,
@@ -172,7 +176,7 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
               <DUSidebarItem
                 icon={FaSignOutAlt}
                 label="Cerrar Sesión"
-                destination="/login"
+                destination="/"
                 logoutSubmit={logoutSubmit}
                 iconColor="text-[#dc2626]"
               />

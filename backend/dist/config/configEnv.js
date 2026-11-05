@@ -13,3 +13,5 @@ export const DB_USERNAME = process.env.DB_USERNAME || "";
 export const PASSWORD = process.env.PASSWORD || "";
 export const DATABASE = process.env.DATABASE || "";
 export const SESSION_SECRET = process.env.SESSION_SECRET || "secret_default";
+export const MAIL_USER = process.env.MAIL_USER || "";
+export const MAIL_APP_PASSWORD = process.env.MAIL_APP_PASSWORD || "";

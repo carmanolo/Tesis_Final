@@ -2,7 +2,7 @@ import { AppDataSource } from "../config/configDb.js";
 import MaterialEntity from "../entity/material.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
 import { isAdminRole } from "../utils/user.utils.js";
-export async function createMaterialSer(nombre_material, fecha_prestamo, nombre_prestamo, stock, carreraId, estado_prestamo = "prestado", tne_entregada = false) {
+export async function createMaterialSer(nombre_material, tipo_material, fecha_prestamo, nombre_prestamo, stock, carreraId, estado_prestamo = "prestado", tne_entregada = false) {
     try {
         if (!nombre_material || stock === undefined || stock === null || !carreraId) {
             return { data: null, error: "Faltan parámetros requeridos para crear el material" };
@@ -15,6 +15,7 @@ export async function createMaterialSer(nombre_material, fecha_prestamo, nombre_
         const materialRepository = AppDataSource.getRepository(MaterialEntity);
         const newMaterial = materialRepository.create({
             nombre_material,
+            tipo_material,
             fecha_prestamo: fecha_prestamo ? new Date(fecha_prestamo) : null,
             nombre_prestamo: nombre_prestamo || "",
             stock,
@@ -41,8 +42,8 @@ export async function getMaterialesSer(carreraId, role) {
         const materialRepository = AppDataSource.getRepository(MaterialEntity);
         const materiales = await materialRepository.find({
             where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
-            relations: { carrera: true },
-            order: { fecha_prestamo: "DESC" },
+            relations: { carrera: true, prestamos: true },
+            order: { id_material: "DESC" },
         });
         return materiales;
     }
@@ -61,7 +62,7 @@ export async function getMaterialSer(id_material, carreraId, role) {
         const materialRepository = AppDataSource.getRepository(MaterialEntity);
         const material = await materialRepository.findOne({
             where: whereCondition,
-            relations: { carrera: true },
+            relations: { carrera: true, prestamos: true },
         });
         return material;
     }

@@ -2,7 +2,6 @@ import { patchAporteService } from "../../services/aporte.service.js";
 import { fireDynamicSwal } from "../utils/dynamicSwal.jsx";
 
 // El formulario y sus validaciones ahora están en DetalleAporte.
-// Este hook recibe (id, datos), hace el PATCH y refresca la lista.
 export const usePatchAporte = (fetchAportes) => {
     const handleEditAporte = async (aporteId, aporteData) => {
         let response = null;

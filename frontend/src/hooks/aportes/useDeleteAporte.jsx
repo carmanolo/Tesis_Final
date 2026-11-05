@@ -18,7 +18,8 @@ async function confirmAlert() {
         title: "Aporte eliminado",
         text: "El aporte ha sido eliminado correctamente",
         icon: "success",
-        confirmButtonText: "Aceptar",
+        timer: 2000,
+        showConfirmButton: false,
     });
 }
 

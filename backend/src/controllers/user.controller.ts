@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import User from "../entity/user.entity.js";
-import { createUserSer, getUsersSer, patchUserSer, deleteUserSer, getUserSer } from "../services/user.service.js";
+import { createUserSer, getUsersSer, patchUserSer, deleteUserSer, getUserSer, enviarCorreoRegistroSer } from "../services/user.service.js";
 import { encryptPassword } from "../helpers/bcrypt.helper.js";
 import { AppDataSource } from "../config/configDb.js";
 import { createValidation, integrityValidation, updateValidation } from "../validations/user.validations.js"
@@ -12,7 +12,6 @@ import { obtenerCarreraPorSigla, getCarreraSer } from "../services/carrera.servi
 
 export async function createUser(req: Request, res: Response): Promise<any> {
   try {
-    let newUser: any = null;
     if (!req.body || !req.params) {
       return handleErrorClient(res, 400, "datos no proporcionados");
     }
@@ -27,6 +26,41 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       delete req.body.sigla_carrera;
       delete req.body.siglaCarrera;
     }
+
+    if (!req.body.carreraId && req.body.id_carrera) {
+      req.body.carreraId = Number(req.body.id_carrera);
+    }
+
+    const userRole = req.user?.role || req.user?.rol;
+    let userCarreraId = req.user?.carreraId;
+
+    if (userRole === "jefe de carrera") {
+      if (!userCarreraId && req.user?.id) {
+        const userRepo = AppDataSource.getRepository(User as any);
+        const u = await userRepo.findOne({ where: { id: req.user.id } });
+        if (u?.carreraId) {
+          userCarreraId = u.carreraId;
+          req.user.carreraId = u.carreraId;
+        }
+      }
+
+      if (!userCarreraId) {
+        return handleErrorClient(res, 403, "El jefe de carrera no tiene una carrera asignada");
+      }
+
+      if (req.body.carreraId && Number(req.body.carreraId) !== Number(userCarreraId)) {
+        return handleErrorClient(res, 403, "Solo tiene permisos para crear usuarios de su respectiva carrera");
+      }
+
+      if (!req.body.carreraId) {
+        req.body.carreraId = Number(userCarreraId);
+      }
+
+      if (req.body.role === "administrador") {
+        return handleErrorClient(res, 403, "No tiene permisos para crear usuarios con rol administrador");
+      }
+    }
+
     const { username, email, password, role, carreraId } = req.body;
 
     const { error } = integrityValidation.validate(req.body);
@@ -39,13 +73,15 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 400, "faltan parametros", result.error.message);
     }
 
-    newUser = await createUserSer(username, email, password, role, carreraId);
-    if (newUser) {
-      newUser.password = undefined;
-      return handleSuccess(res, 201, "Usuario registrado exitosamente", newUser.data || newUser);
-    } else {
-      return handleErrorServer(res, 500, "error al registrar usuario");
+    const { data: newUser, error: errSer } = await createUserSer(username, email, password, role, carreraId);
+    if (errSer || !newUser) {
+      if (errSer?.startsWith("Ya existe")) {
+        return handleErrorClient(res, 409, errSer);
+      }
+      return handleErrorServer(res, 500, errSer || "error al registrar usuario");
     }
+    newUser.password = undefined;
+    return handleSuccess(res, 201, "Usuario registrado exitosamente", newUser.data || newUser);
   } catch (error: any) {
     console.error("error en registro de usuario");
     return handleErrorServer(res, 500, "error interno del servidor", error.message);
@@ -54,7 +90,13 @@ export async function createUser(req: Request, res: Response): Promise<any> {
 
 export async function getUsers(req: Request, res: Response): Promise<any> {
   try {
-    const userData = await getUsersSer();
+    const userRole = req.user?.role || req.user?.rol;
+    const userCarreraId = req.user?.carreraId;
+
+    const userData = await getUsersSer(
+      userRole === "jefe de carrera" ? userCarreraId : undefined,
+      userRole
+    );
 
     if (!userData) {
       return handleErrorClient(res, 400, "Usuarios no encontrados");
@@ -113,6 +155,10 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
       delete req.body.siglaCarrera;
     }
 
+    if (!req.body.carreraId && req.body.id_carrera) {
+      req.body.carreraId = Number(req.body.id_carrera);
+    }
+
     if (!req.body.password || req.body.password.trim() === "") {
       delete req.body.password;
     }
@@ -131,6 +177,40 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
 
     if (!userUpdate) {
       return handleErrorClient(res, 404, "Usuario no encontrado");
+    }
+
+    const userRole = req.user?.role || req.user?.rol;
+    let userCarreraId = req.user?.carreraId;
+
+    if (userRole === "jefe de carrera") {
+      if (!userCarreraId && req.user?.id) {
+        const userRepo = AppDataSource.getRepository(User as any);
+        const u = await userRepo.findOne({ where: { id: req.user.id } });
+        if (u?.carreraId) {
+          userCarreraId = u.carreraId;
+          req.user.carreraId = u.carreraId;
+        }
+      }
+
+      if (!userCarreraId) {
+        return handleErrorClient(res, 403, "El jefe de carrera no tiene una carrera asignada");
+      }
+
+      if (Number(userUpdate.carreraId) !== Number(userCarreraId)) {
+        return handleErrorClient(res, 403, "Solo tiene permisos para editar usuarios de su respectiva carrera");
+      }
+
+      if (userUpdate.role === "administrador") {
+        return handleErrorClient(res, 403, "No tiene permisos para editar usuarios administradores");
+      }
+
+      if (req.body.carreraId && Number(req.body.carreraId) !== Number(userCarreraId)) {
+        return handleErrorClient(res, 403, "No puede cambiar a un usuario a una carrera distinta a la suya");
+      }
+
+      if (req.body.role === "administrador") {
+        return handleErrorClient(res, 403, "No tiene permisos para asignar el rol administrador");
+      }
     }
 
     if (req.body.carreraId) {
@@ -227,5 +307,45 @@ export async function getUserStats(req: Request, res: Response): Promise<any> {
       usuarios: 0,
       admninistradores: 0,
     });
+  }
+}
+
+export async function enviarCorreoRegistro(req: Request, res: Response): Promise<any> {
+  try {
+    const { id } = req.params;
+ 
+    const validateId = idValidation.validate({ id });
+    if (validateId.error) {
+      return handleErrorClient(res, 400, validateId.error.message);
+    }
+ 
+    const user = await getUserSer(Number(id));
+    if (!user) {
+      return handleErrorClient(res, 404, "Usuario no encontrado");
+    }
+ 
+    // Un jefe de carrera solo puede notificar a usuarios de su propia carrera
+    const userRole = req.user?.role || req.user?.rol;
+    if (userRole === "jefe de carrera") {
+      let userCarreraId = req.user?.carreraId;
+      if (!userCarreraId && req.user?.id) {
+        const userRepo = AppDataSource.getRepository(User as any);
+        const u = await userRepo.findOne({ where: { id: req.user.id } });
+        userCarreraId = u?.carreraId;
+      }
+      if (!userCarreraId || Number(user.carreraId) !== Number(userCarreraId)) {
+        return handleErrorClient(res, 403, "Solo puede notificar a usuarios de su respectiva carrera");
+      }
+    }
+ 
+    const { data, error } = await enviarCorreoRegistroSer(Number(id));
+    if (error || !data) {
+      return handleErrorServer(res, 500, error || "No se pudo enviar el correo");
+    }
+ 
+    return handleSuccess(res, 200, "Correo enviado exitosamente", data);
+  } catch (error: any) {
+    console.error("Error en user.controller.ts -> enviarCorreoRegistro(): ", error);
+    return handleErrorServer(res, 500, "Error interno del servidor", error.message);
   }
 }

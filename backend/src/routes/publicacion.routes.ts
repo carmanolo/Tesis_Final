@@ -1,0 +1,18 @@
+import { Router } from "express";
+import { getPublicaciones, getPublicacionById, createPublicacion, patchPublicacionById, deletePublicacionById, deleteImagenPublicacion} from "../controllers/publicacion.controller.js";
+import { authenticateJwt } from "../middleware/authentication.middleware.js";
+import { authorizeRoles } from "../middleware/authorization.middleware.js";
+import { uploadImagenesMiddleware } from "../middleware/publicacion.upload.middleware.js";
+
+const router = Router();
+router.use(authenticateJwt);
+
+
+router.get("/", getPublicaciones);
+router.get("/:id_publicacion", getPublicacionById);
+router.post("/crear", authorizeRoles("administrador", "presidente cee", "vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee"), uploadImagenesMiddleware, createPublicacion);
+router.patch("/editar/:id_publicacion", authorizeRoles("administrador", "presidente cee", "vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee"), uploadImagenesMiddleware, patchPublicacionById);
+router.delete("/eliminar/:id_publicacion", authorizeRoles("administrador", "presidente cee", "vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee"), deletePublicacionById);
+router.delete("/:id_publicacion/imagen", authorizeRoles("administrador", "presidente cee", "vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee"), deleteImagenPublicacion);
+
+export default router;

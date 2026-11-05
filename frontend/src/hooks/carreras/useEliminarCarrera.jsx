@@ -18,7 +18,8 @@ async function confirmAlert() {
     title: "Carrera eliminada",
     text: "La carrera ha sido eliminada correctamente",
     icon: "success",
-    confirmButtonText: "Aceptar",
+    timer: 2000,
+    showConfirmButton: false,
   });
 }
 

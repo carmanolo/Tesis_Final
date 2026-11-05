@@ -1,4 +1,4 @@
-export const MIN_NOMBRE_APORTE  = 5;
+export const MIN_NOMBRE_APORTE  = 10;
 export const MAX_NOMBRE_APORTE = 500;
 export const MONTO_MINIMO = 1000;
 
@@ -11,3 +11,11 @@ export const PROCEDENCIA_OBLIGATORIA = "La procedencia es obligatoria";
 export const MONTO_OBLIGATORIA = "El monto del Aporte es obligatorio";
 export const CAMPOS_ADICIONALES = "Se enviaron campos adicionales no permitidos";
 export const ERROR_CANTIDAD_INVALIDA = "El formato de la cantidad es incorrecto, debe ser un número";
+export const OPCIONES_PROCEDENCIA= ["DDE", "Rectoria", "Decanatura","FACE", "FACI", "FARCORDI","FI","FEDUH", "FACSA","Externo", "Otro"];
+export const FECHA_ISO = /^\d{4}-\d{2}-\d{2}$/;
+export const OPCIONES_DESCRIPCION = [
+    "Aniversario FACE",
+    "Aniversario Carrera",
+    "Aniversario Universidad",
+    "Otro",
+];

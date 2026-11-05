@@ -8,9 +8,12 @@ import {
     NOMBREMATERIAL_OBLIGATORIO,
     NOMBRE_OBLIGATORIO,
     FECHA_OBLIGATORIA,
+    TIPO_OBLIGATORIO,
     CAMPOS_ADICIONALES,
     ERROR_CANTIDAD_INVALIDA,
-    ESTADOS_PRESTAMO
+    ESTADOS_PRESTAMO,
+    TIPO_MATERIAL,
+    ESTADO_OBLIGATORIO
 } from "../constants/material.constants.js";  
 
 function hoyEnChile(): string {
@@ -40,6 +43,10 @@ export const integrityValidation = Joi.object({
         "string.empty": "El nombre del material no puede ser vacío",
         "string.min": `El nombre del material debe tener al menos ${MIN_NOMBRE_MATERIAL} caracteres`,
         "string.max": `El nombre del material no puede tener más de ${MAX_NOMBRE_MATERIAL} caracteres`,
+    }),
+    tipo_material: Joi.string().valid(...TIPO_MATERIAL).messages({
+        "string.base": "El estado de préstamo debe ser un texto",
+        "any.only": "El estado de préstamo debe ser: pendiente, devuelto, prestado o disponible",
     }),
 
     fecha_prestamo: Joi.date().allow(null, "").messages({
@@ -84,13 +91,18 @@ export const createValidation = Joi.object({
     nombre_material: Joi.any().required().messages({
         "any.required": NOMBREMATERIAL_OBLIGATORIO,
     }),
+    tipo_material: Joi.any().required().messages({
+        "any.required": ESTADO_OBLIGATORIO,
+    }),
     fecha_prestamo: Joi.any(),
     nombre_prestamo: Joi.any(),
     prestatario: Joi.any(),
     stock: Joi.any().required().messages({
         "any.required": STOCK_OBLIGATORIO,
     }),
-    estado_prestamo: Joi.any(),
+    estado_prestamo: Joi.any().messages({
+        "any.required": TIPO_OBLIGATORIO,
+    }),
     tne_entregada: Joi.any(),
     paso_tne: Joi.any(),
     carreraId: Joi.any(),
@@ -103,6 +115,7 @@ export const createValidation = Joi.object({
 
 export const updateValidation = Joi.object({
     nombre_material: Joi.any(),
+    tipo_material: Joi.any(),
     fecha_prestamo: Joi.any(),
     nombre_prestamo: Joi.any(),
     prestatario: Joi.any(),
