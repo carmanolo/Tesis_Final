@@ -1,6 +1,6 @@
 import { AppDataSource } from "../config/configDb.js";
 import HistorialActividadEntity, { IHistorialActividad } from "../entity/historialActividad.entity.js";
-import { MoreThanOrEqual } from "typeorm";
+import { MoreThanOrEqual, In } from "typeorm";
 
 export interface RegistrarActividadParams {
   usuarioId?: number | null;
@@ -106,7 +106,6 @@ export async function listarHistorialService(filtros: {
     }
 
     if (filtros.fecha) {
-      // fecha en formato YYYY-MM-DD
       query.andWhere("DATE(historial.createdAt) = :fecha", { fecha: filtros.fecha });
     }
 
@@ -143,3 +142,15 @@ export async function eliminarRegistroHistorialService(id: number) {
   }
 }
 
+export async function eliminarLoteHistorialService(ids: number[]) {
+  try {
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return [null, "Debe proporcionar una lista válida de IDs para eliminar."];
+    }
+    const repo = AppDataSource.getRepository(HistorialActividadEntity);
+    const resultado = await repo.delete({ id: In(ids) });
+    return [resultado, null];
+  } catch (error: any) {
+    return [null, error.message || "Error al eliminar registros por lote"];
+  }
+}

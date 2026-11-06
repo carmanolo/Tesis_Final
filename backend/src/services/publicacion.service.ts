@@ -41,7 +41,6 @@ export async function createPublicacionSer(
 // Devuelve las Publicaciones de la carrera o todas si es administrador
 export async function getPublicacionesSer(carreraId?: number, role?: string): Promise<any[] | null> {
     try {
-        // Un usuario no administrador sin carrera no debe ver publicaciones
         if (!isAdminRole(role) && !carreraId) return [];
 
         const whereCondition: any = {};
@@ -61,7 +60,7 @@ export async function getPublicacionesSer(carreraId?: number, role?: string): Pr
     }
 }
 
-// Devuelve la Publicación si pertenece a la carrera del usuario o si es administrador
+// Devuelve la Publicación si pertenece a la carrera
 export async function getPublicacionSer(id_publicacion: number, carreraId?: number, role?: string): Promise<any | null> {
     try {
         const whereCondition: any = { id_publicacion };
