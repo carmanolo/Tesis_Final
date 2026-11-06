@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { PUBLICACION_UPLOAD_DIR, IMAGEN_MIME_TYPES, TAMANO_MAXIMO_IMAGEN_BYTES, FORMATO_NO_PERMITIDO, MAX_IMAGENES, } from "../constants/publicacion.constants.js";
 import { handleErrorClient } from "../handlers/responseHandlers.js";
+import { validarFirmaArchivo } from "../utils/fileValidator.utils.js";
 // Asegura que el directorio de almacenamiento exista
 if (!fs.existsSync(PUBLICACION_UPLOAD_DIR)) {
     fs.mkdirSync(PUBLICACION_UPLOAD_DIR, { recursive: true });
@@ -17,7 +18,7 @@ const storage = multer.diskStorage({
         cb(null, filename);
     },
 });
-// Verifica estándar mime
+// Verifica estándar mime preliminar
 function fileFilter(_req, file, cb) {
     if (IMAGEN_MIME_TYPES.includes(file.mimetype)) {
         cb(null, true);
@@ -31,7 +32,7 @@ const uploadImagen = multer({
     fileFilter,
     limits: { fileSize: TAMANO_MAXIMO_IMAGEN_BYTES },
 });
-// Middleware envuelto para responder con el formato de error estándar del proyecto
+// Middleware envuelto con validación profunda de integridad y Magic Numbers para imágenes JPEG y PNG
 export function uploadImagenesMiddleware(req, res, next) {
     uploadImagen.array("imagenes", MAX_IMAGENES)(req, res, (err) => {
         if (err instanceof multer.MulterError) {
@@ -42,6 +43,27 @@ export function uploadImagenesMiddleware(req, res, next) {
         }
         else if (err) {
             return handleErrorClient(res, 400, err.message || "Error al subir las imágenes");
+        }
+        // Si se subieron archivos, validar la firma binaria de cada uno
+        const files = req.files;
+        if (files && Array.isArray(files) && files.length > 0) {
+            for (const file of files) {
+                const validacion = validarFirmaArchivo(file.path);
+                if (!validacion.valido || !["jpeg", "png"].includes(validacion.formatoDetectado || "")) {
+                    // Borrar todos los archivos subidos en esta petición para no dejar basura en el disco
+                    for (const f of files) {
+                        try {
+                            if (fs.existsSync(f.path)) {
+                                fs.unlinkSync(f.path);
+                            }
+                        }
+                        catch (unlinkErr) {
+                            console.error("Error al limpiar imagen corrupta:", unlinkErr);
+                        }
+                    }
+                    return handleErrorClient(res, 400, `El archivo "${file.originalname}" está corrupto, vacío o no corresponde a una imagen PNG o JPEG válida.`);
+                }
+            }
         }
         next();
     });

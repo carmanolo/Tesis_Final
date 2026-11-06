@@ -136,7 +136,6 @@ export async function patchPublicacionById(req: Request, res: Response): Promise
     const { carreraId: newCarreraId, id_carrera: newIdCarrera, ...restData } = req.body;
     Object.assign(Publicacion, restData);
 
-    // Solo el administrador puede mover una publicación a otra carrera
     if (isAdminRole(userRole) && (newCarreraId || newIdCarrera)) {
       Publicacion.carreraId = Number(newCarreraId || newIdCarrera);
       Publicacion.carrera = { id_carrera: Publicacion.carreraId };

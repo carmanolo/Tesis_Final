@@ -2,35 +2,25 @@ import fs from "fs";
 import path from "path";
 import { PUBLICACION_UPLOAD_DIR } from "../constants/publicacion.constants.js";
 
-/**
- * Normaliza las barras invertidas '\' de Windows a '/' para URLs web.
- */
+//Normaliza las barras invertidas '\' de Windows a '/' para URLs web.
 export const normalizePath = (filePath: string): string => {
     return filePath ? filePath.replace(/\\/g, "/") : "";
 };
 
-/**
- * Indica si el rol corresponde a un administrador.
- */
+
 export const isAdminRole = (role?: string): boolean => {
     const r = role?.toLowerCase();
     return r === "admin" || r === "administrador";
 };
 
-/**
- * Convierte el arreglo de imágenes a string JSON para guardarlo en la BD
- * asegurando que todas las rutas usen '/'.
- */
+// Convierte el arreglo de imágenes a string JSON para guardarlo en la BD
 export function serializeImagenes(value?: string[] | null): string {
     if (!Array.isArray(value)) return "[]";
     const normalized = value.map(normalizePath);
     return JSON.stringify(normalized);
 }
 
-/**
- * Convierte el string JSON de la BD a arreglo de imágenes.
- * Soporta casos donde TypeORM ya parseó el valor a Array.
- */
+//Convierte el string JSON de la BD a arreglo de imágenes.
 export function parseImagenes(value?: string | string[] | null): string[] {
     if (!value) return [];
     
@@ -47,24 +37,18 @@ export function parseImagenes(value?: string | string[] | null): string[] {
     }
 }
 
-/**
- * Transformer listo para usar en EntitySchema de TypeORM.
- */
+
 export const imagenesTransformer = {
     to: serializeImagenes,
     from: parseImagenes,
 };
 
-/**
- * Une las imágenes actuales con las nuevas normalizando separadores.
- */
+// Une las imágenes actuales con las nuevas normalizando separadores.
 export function mergeImagenes(actuales: string[] = [], nuevas: string[] = []): string[] {
     return [...actuales, ...nuevas].map(normalizePath);
 }
 
-/**
- * Quita una imagen del arreglo comparando rutas normalizadas.
- */
+// Quita una imagen del arreglo comparando rutas normalizadas.
 export function removeImagen(imagenes: string[] = [], imagenUrl: string): { imagenes: string[]; encontrada: boolean } {
     const target = normalizePath(imagenUrl);
     const filtradas = imagenes
@@ -77,9 +61,7 @@ export function removeImagen(imagenes: string[] = [], imagenUrl: string): { imag
     };
 }
 
-/**
- * Borra del disco archivos subidos por multer.
- */
+//Borra del disco archivos subidos por multer.
 export function deleteUploadedFiles(files?: Express.Multer.File[]): void {
     if (!files) return;
     for (const f of files) {
@@ -87,9 +69,8 @@ export function deleteUploadedFiles(files?: Express.Multer.File[]): void {
     }
 }
 
-/**
- * Borra del disco imágenes ya guardadas a partir de su ruta o filename.
- */
+//Borra del disco imágenes ya guardadas a partir de su ruta o filename.
+
 export function deleteImagenesFromDisk(imagenes: string[] = []): void {
     for (const img of imagenes) {
         if (!img) continue;

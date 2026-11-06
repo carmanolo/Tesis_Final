@@ -7,8 +7,9 @@ import {
     ACTA_MIME_TYPES,
     TAMANO_MAXIMO_ACTA_BYTES,
     FORMATO_NO_PERMITIDO
-} from "../constants/reunion.constants.js"
+} from "../constants/reunion.constants.js";
 import { handleErrorClient } from "../handlers/responseHandlers.js";
+import { validarFirmaArchivo } from "../utils/fileValidator.utils.js";
 
 // Asegura que el directorio de almacenamiento exista
 if (!fs.existsSync(ACTA_UPLOAD_DIR)) {
@@ -27,7 +28,7 @@ const storage = multer.diskStorage({
     }
 });
 
-//Verrifica estandar mime
+// Verifica estándar mime preliminar
 function fileFilter(_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) {
     if (ACTA_MIME_TYPES.includes(file.mimetype)) {
         cb(null, true);
@@ -42,8 +43,7 @@ const uploadActa = multer({
     limits: { fileSize: TAMANO_MAXIMO_ACTA_BYTES }
 });
 
-// Middleware "envuelto" para poder responder con el formato de error estándar del proyecto
-// en vez de dejar que multer lance el error crudo (tamaño excedido, formato inválido, etc).
+// Middleware envuelto con validación profunda de integridad y Magic Numbers
 export function uploadActaMiddleware(req: Request, res: Response, next: NextFunction) {
     uploadActa.single("archivo")(req, res, (err: any) => {
         if (err instanceof multer.MulterError) {
@@ -54,6 +54,28 @@ export function uploadActaMiddleware(req: Request, res: Response, next: NextFunc
         } else if (err) {
             return handleErrorClient(res, 400, err.message || "Error al subir el archivo");
         }
+
+        // Si se subió un archivo, validar su firma binaria (evitar corruptos / 0 bytes / extensiones falsas)
+        if (req.file) {
+            const validacion = validarFirmaArchivo(req.file.path);
+            if (!validacion.valido || !["pdf", "doc", "docx"].includes(validacion.formatoDetectado || "")) {
+                // Borrar inmediatamente el archivo corrupto del servidor
+                try {
+                    if (fs.existsSync(req.file.path)) {
+                        fs.unlinkSync(req.file.path);
+                    }
+                } catch (unlinkErr) {
+                    console.error("Error al eliminar archivo corrupto:", unlinkErr);
+                }
+
+                return handleErrorClient(
+                    res,
+                    400,
+                    validacion.error || "El archivo subido está corrupto o no corresponde a un documento PDF o Word válido."
+                );
+            }
+        }
+
         next();
     });
 }
