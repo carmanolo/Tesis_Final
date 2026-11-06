@@ -7,8 +7,6 @@ import {
   FaUserSecret,
   FaTimes,
   FaCalendarAlt,
-  FaLaptop,
-  FaMobileAlt,
   FaKey,
   FaUserCheck,
   FaTrashAlt,
@@ -84,7 +82,7 @@ function getDiaLabel(dateStr) {
 }
 
 const Historial = () => {
-  const { actividades, loading, fetchHistorial, handleDeleteItem } = useGetHistorial();
+  const { actividades, loading, fetchHistorial, handleDeleteItem, handleDeleteLote } = useGetHistorial();
 
   const [filtroTexto, setFiltroTexto] = useState("");
   const [seccionActiva, setSeccionActiva] = useState("todo"); // 'todo' | 'sospechoso' | 'auth'
@@ -99,6 +97,7 @@ const Historial = () => {
       fecha: filtroFecha,
       buscar: filtroTexto,
     });
+    setSeleccionados(new Set());
   }, [seccionActiva, filtroFecha]);
 
   const handleBuscar = (e) => {
@@ -140,6 +139,24 @@ const Historial = () => {
     }
     return res;
   }, [actividades, seccionActiva, filtroTexto]);
+
+  // Manejo de Selección total / Cancelar selección
+  const toggleSeleccionarTodo = () => {
+    if (seleccionados.size === listaFiltrada.length) {
+      setSeleccionados(new Set());
+    } else {
+      const todosIds = new Set(listaFiltrada.map((a) => a.id));
+      setSeleccionados(todosIds);
+    }
+  };
+
+  const handleEliminarSeleccionados = async () => {
+    const idsArray = Array.from(seleccionados);
+    const ok = await handleDeleteLote(idsArray);
+    if (ok) {
+      setSeleccionados(new Set());
+    }
+  };
 
   // Agrupación en: "Recientes" (últimas 2 horas) y bloques por día
   const agrupacion = useMemo(() => {
@@ -246,51 +263,86 @@ const Historial = () => {
 
       {/* -------------------- PANEL PRINCIPAL DE ACTIVIDAD -------------------- */}
       <main className="flex-1 p-6 overflow-y-auto">
-        {/* Cabecera superior con título y botón de Filtrar por fecha */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#e5e7eb] pb-3 mb-6">
-          <h2 className="text-2xl font-bold text-[#111827]">
-            {seccionActiva === "todo" && "Todo"}
-            {seccionActiva === "sospechoso" && "Actividad sospechosa detectada"}
-            {seccionActiva === "auth" && "Inicios de sesión y accesos"}
-          </h2>
-
-          <div className="flex items-center gap-3 relative">
-            <button
-              type="button"
-              onClick={() => setMostrarDatePicker((prev) => !prev)}
-              className="flex items-center gap-2 text-xs text-[#374151] hover:text-[#111827] px-3 py-1.5 rounded-md border border-[#d1d5db] bg-white hover:bg-[#f9fafb] shadow-xs"
-            >
-              <FaCalendarAlt className="text-[#6b7280] text-xs" />
-              <span>{filtroFecha ? `Fecha: ${filtroFecha}` : "Filtrar por fecha"}</span>
-            </button>
-
-            {filtroFecha && (
+        {/* Barra flotante de acciones por lote (Estilo Google Chrome) cuando hay seleccionados */}
+        {seleccionados.size > 0 ? (
+          <div className="flex items-center justify-between bg-[#1e293b] text-white px-4 py-3 rounded-lg shadow-md mb-6 animate-fadeIn">
+            <div className="flex items-center gap-4">
               <button
                 type="button"
-                onClick={() => setFiltroFecha("")}
-                className="text-xs text-[#dc2626] hover:underline"
+                onClick={() => setSeleccionados(new Set())}
+                className="text-slate-300 hover:text-white p-1 rounded-full hover:bg-slate-700 transition-colors"
+                title="Cancelar selección"
               >
-                Quitar filtro
+                <FaTimes className="text-sm" />
               </button>
-            )}
+              <span className="text-xs font-semibold">
+                {seleccionados.size} {seleccionados.size === 1 ? "elemento seleccionado" : "elementos seleccionados"}
+              </span>
+              <button
+                type="button"
+                onClick={toggleSeleccionarTodo}
+                className="text-xs text-blue-400 hover:text-blue-300 underline ml-2 cursor-pointer"
+              >
+                {seleccionados.size === listaFiltrada.length ? "Deseleccionar todos" : "Seleccionar todos"}
+              </button>
+            </div>
 
-            {/* Popover selector de fecha */}
-            {mostrarDatePicker && (
-              <div className="absolute right-0 top-10 bg-white border border-[#e5e7eb] p-3 rounded-md shadow-lg z-20 flex flex-col gap-2">
-                <label className="text-[11px] font-semibold text-[#4b5563]">Seleccionar día:</label>
-                <input
-                  type="date"
-                  value={filtroFecha}
-                  onChange={(e) => {
-                    setFiltroFecha(e.target.value);
-                    setMostrarDatePicker(false);
-                  }}
-                  className="input input-bordered input-xs"
-                />
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={handleEliminarSeleccionados}
+              className="btn btn-error btn-xs text-white gap-2"
+            >
+              <FaTrashAlt className="text-xs" />
+              <span>Eliminar</span>
+            </button>
           </div>
-        </div>
+        ) : (
+          /* Cabecera superior con título y botón de Filtrar por fecha */
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#e5e7eb] pb-3 mb-6">
+            <h2 className="text-2xl font-bold text-[#111827]">
+              {seccionActiva === "todo" && "Todo"}
+              {seccionActiva === "sospechoso" && "Actividad sospechosa detectada"}
+              {seccionActiva === "auth" && "Inicios de sesión y accesos"}
+            </h2>
+
+            <div className="flex items-center gap-3 relative">
+              <button
+                type="button"
+                onClick={() => setMostrarDatePicker((prev) => !prev)}
+                className="flex items-center gap-2 text-xs text-[#374151] hover:text-[#111827] px-3 py-1.5 rounded-md border border-[#d1d5db] bg-white hover:bg-[#f9fafb] shadow-xs"
+              >
+                <FaCalendarAlt className="text-[#6b7280] text-xs" />
+                <span>{filtroFecha ? `Fecha: ${filtroFecha}` : "Filtrar por fecha"}</span>
+              </button>
+
+              {filtroFecha && (
+                <button
+                  type="button"
+                  onClick={() => setFiltroFecha("")}
+                  className="text-xs text-[#dc2626] hover:underline"
+                >
+                  Quitar filtro
+                </button>
+              )}
+
+              {/* Popover selector de fecha */}
+              {mostrarDatePicker && (
+                <div className="absolute right-0 top-10 bg-white border border-[#e5e7eb] p-3 rounded-md shadow-lg z-20 flex flex-col gap-2">
+                  <label className="text-[11px] font-semibold text-[#4b5563]">Seleccionar día:</label>
+                  <input
+                    type="date"
+                    value={filtroFecha}
+                    onChange={(e) => {
+                      setFiltroFecha(e.target.value);
+                      setMostrarDatePicker(false);
+                    }}
+                    className="input input-bordered input-xs"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Estado de carga */}
         {loading && (
@@ -368,7 +420,7 @@ function FilaActividad({ item, seleccionado, onToggleSelect, onVerDetalle, onEli
   return (
     <div
       className={`group flex items-center justify-between gap-3 px-3 py-2 rounded-md hover:bg-[#f8f9fa] transition-colors border-b border-[#f1f5f9] text-xs ${
-        item.esSospechoso ? "bg-[#fff5f5] hover:bg-[#fee2e2]" : ""
+        seleccionado ? "bg-blue-50/70 border-blue-200" : item.esSospechoso ? "bg-[#fff5f5] hover:bg-[#fee2e2]" : ""
       }`}
     >
       {/* Izquierda: Checkbox + Icono + Título/Descripción */}
@@ -539,4 +591,3 @@ function ModalDetalleActividad({ item, onCerrar }) {
 }
 
 export default Historial;
-

@@ -27,3 +27,14 @@ export async function deleteHistorialItemService(id) {
   }
 }
 
+export async function deleteHistorialLoteService(ids) {
+  try {
+    const response = await axios.delete("/historial/lote", {
+      data: { ids },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error al eliminar lote de historial:", error);
+    throw error;
+  }
+}
