@@ -6,17 +6,17 @@ export interface IHistorialActividad {
   usuarioEmail?: string | null;
   usuarioNombre?: string | null;
   rol?: string | null;
-  accion: string;               // Ej: "INICIO_SESION", "LOGIN_FALLIDO", "CREAR_USUARIO", etc.
-  modulo: string;               // Ej: "AUTH", "USUARIOS", "MATERIALES", "PUBLICACIONES", etc.
-  descripcion: string;          // Resumen legible del evento
-  detalles?: string | null;      // JSON stringified con datos extra / payload relevante
-  ip: string;                   // Dirección IP origen
-  dispositivo?: string | null;  // User-Agent o navegador/OS detectado
-  metodoHttp?: string | null;   // POST, PATCH, DELETE, etc.
-  ruta?: string | null;         // /api/users/crear, etc.
-  estadoHttp?: number | null;   // 200, 201, 400, 401, 403, 500
-  esSospechoso: boolean;        // Marcador para detección de anomalías
-  motivoSospecha?: string | null; // Razón de la alerta de seguridad
+  accion: string;               
+  modulo: string;               
+  descripcion: string;          
+  detalles?: string | null;      
+  ip: string;                
+  dispositivo?: string | null;  
+  metodoHttp?: string | null;   
+  ruta?: string | null;         
+  estadoHttp?: number | null;   
+  esSospechoso: boolean;        
+  motivoSospecha?: string | null; 
   createdAt: Date;
 }
 
