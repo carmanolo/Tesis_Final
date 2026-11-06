@@ -6,7 +6,6 @@ import { authorizeRoles } from "../middleware/authorization.middleware.js";
 const router = Router();
 
 router.use(authenticateJwt);
-// Estrictamente exclusivo para el Administrador
 router.use(authorizeRoles("administrador"));
 
 router.get("/", getHistorial);

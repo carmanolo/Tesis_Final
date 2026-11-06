@@ -48,13 +48,14 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       label: "Reuniones",
       destination: "/reuniones",
       iconColor: "text-[#16a34a]",
+      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee", "estudiante"]
     },
     {
       icon: FaMoneyBillWave,
       label: "Aportes",
       destination: "/aportes",
       iconColor: "text-[#16a34a]",
-      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee"]
+      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "estudiante"]
     },
     {
       icon: FaClipboardCheck,
@@ -67,7 +68,8 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       icon: MdArticle,
       label: "Publicaciones",
       destination: "/publicaciones",
-      iconColor: "text-[#000000]"
+      iconColor: "text-[#000000]",
+      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee", "estudiante"]
     },
     {
       icon: MdOutlineHistory,

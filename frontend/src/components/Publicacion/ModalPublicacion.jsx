@@ -27,7 +27,6 @@ export function ModalPublicacion({ abierto, publicacion, onCrear, onEditar, onEl
 
     // Al abrir (o cambiar de publicación) reinicia el formulario.
     // Depende solo del id para no borrar lo escrito cuando la publicación se refresca
-    // (por ejemplo, tras eliminar una imagen).
     useEffect(() => {
         if (abierto) {
             previewsRef.current.forEach(URL.revokeObjectURL);

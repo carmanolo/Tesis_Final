@@ -1,6 +1,6 @@
 import profilePic from "@assets/profilePic.jpg";
 import college from "@assets/college.jpg";
-import { AiFillStar } from 'react-icons/ai';
+import { AiFillStar } from "react-icons/ai";
 import { FaUserShield, FaUserTie, FaGraduationCap } from "react-icons/fa";
 
 export const DUProfileCard = ({ user }) => {
