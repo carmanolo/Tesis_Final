@@ -1,4 +1,4 @@
-import { listarHistorialService, eliminarRegistroHistorialService, } from "../services/historialActividad.service.js";
+import { listarHistorialService, eliminarRegistroHistorialService, eliminarLoteHistorialService, } from "../services/historialActividad.service.js";
 import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/responseHandlers.js";
 export async function getHistorial(req, res) {
     try {
@@ -29,5 +29,21 @@ export async function deleteHistorialItem(req, res) {
     }
     catch (error) {
         return handleErrorServer(res, 500, "Error al eliminar registro", error.message);
+    }
+}
+export async function deleteHistorialLote(req, res) {
+    try {
+        const { ids } = req.body;
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return handleErrorClient(res, 400, "Debe seleccionar al menos un registro para eliminar.");
+        }
+        const [resultado, error] = await eliminarLoteHistorialService(ids.map(Number));
+        if (error) {
+            return handleErrorClient(res, 400, error);
+        }
+        return handleSuccess(res, 200, `${ids.length} registro(s) eliminados exitosamente`, resultado);
+    }
+    catch (error) {
+        return handleErrorServer(res, 500, "Error al eliminar lote de registros", error.message);
     }
 }

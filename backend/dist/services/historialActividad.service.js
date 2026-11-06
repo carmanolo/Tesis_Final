@@ -1,6 +1,6 @@
 import { AppDataSource } from "../config/configDb.js";
 import HistorialActividadEntity from "../entity/historialActividad.entity.js";
-import { MoreThanOrEqual } from "typeorm";
+import { MoreThanOrEqual, In } from "typeorm";
 export async function registrarActividad(params) {
     try {
         const repo = AppDataSource.getRepository(HistorialActividadEntity);
@@ -71,7 +71,6 @@ export async function listarHistorialService(filtros) {
             query.andWhere("historial.modulo = :modulo", { modulo: filtros.modulo });
         }
         if (filtros.fecha) {
-            // fecha en formato YYYY-MM-DD
             query.andWhere("DATE(historial.createdAt) = :fecha", { fecha: filtros.fecha });
         }
         if (filtros.buscar && filtros.buscar.trim()) {
@@ -100,5 +99,18 @@ export async function eliminarRegistroHistorialService(id) {
     }
     catch (error) {
         return [null, error.message || "Error al eliminar registro"];
+    }
+}
+export async function eliminarLoteHistorialService(ids) {
+    try {
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return [null, "Debe proporcionar una lista válida de IDs para eliminar."];
+        }
+        const repo = AppDataSource.getRepository(HistorialActividadEntity);
+        const resultado = await repo.delete({ id: In(ids) });
+        return [resultado, null];
+    }
+    catch (error) {
+        return [null, error.message || "Error al eliminar registros por lote"];
     }
 }

@@ -1,7 +1,6 @@
 import Swal from "sweetalert2";
 import { createPublicacionService } from "../../services/publicacion.service.js";
 
-// El service pisa `status` con el código HTTP (200, 201...), por eso se valida como número.
 const isOk = (res) => res?.status >= 200 && res?.status < 300;
 
 export function useCreatePublicacion(onSuccess) {

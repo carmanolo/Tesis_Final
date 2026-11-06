@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getHistorial, deleteHistorialItem } from "../controllers/historialActividad.controller.js";
+import { getHistorial, deleteHistorialItem, deleteHistorialLote } from "../controllers/historialActividad.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { authorizeRoles } from "../middleware/authorization.middleware.js";
 const router = Router();
@@ -7,5 +7,6 @@ router.use(authenticateJwt);
 // Estrictamente exclusivo para el Administrador
 router.use(authorizeRoles("administrador"));
 router.get("/", getHistorial);
+router.delete("/lote", deleteHistorialLote);
 router.delete("/:id", deleteHistorialItem);
 export default router;
