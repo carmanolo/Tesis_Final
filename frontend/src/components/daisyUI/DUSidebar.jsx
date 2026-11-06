@@ -54,6 +54,7 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       label: "Aportes",
       destination: "/aportes",
       iconColor: "text-[#16a34a]",
+      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee"]
     },
     {
       icon: FaClipboardCheck,
