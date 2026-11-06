@@ -354,17 +354,6 @@ const Home = () => {
 
               {/* Acciones de la reunión */}
               <div className="flex items-center gap-2 shrink-0 w-full md:w-auto justify-end">
-                {proximaReunion.ruta_archivo && (
-                  <button
-                    type="button"
-                    onClick={() => handleDescargarActa(proximaReunion)}
-                    className="btn btn-sm btn-outline btn-success gap-2"
-                    title="Descargar acta de reunión"
-                  >
-                    <FaFileDownload />
-                    <span>Descargar Acta</span>
-                  </button>
-                )}
 
                 <a href="/reuniones" className="btn btn-sm bg-[#2F4697] hover:bg-[#233575] text-white">
                   Ver en calendario
