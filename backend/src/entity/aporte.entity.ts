@@ -1,17 +1,14 @@
 import { EntitySchema } from "typeorm";
-import type { IUser } from "./user.entity.js";
 import type { Carrera } from "./carrera.entity.js";
 
 export interface Aporte {
     id_aporte: number;
     descripcion_aporte: string;
-    fecha_aporte: Date;
     procedencia: string;
     monto: number;
     fecha_recepcion?: Date | null;
-    creadorId?: number;
-    creador?: IUser;
-    carreraId?: number;
+    comprobante?: string | null;
+    carreraId: number;
     carrera?: Carrera;
 }
 
@@ -28,10 +25,6 @@ export const AporteEntity = new EntitySchema<Aporte>({
             type: String, 
             nullable: false 
         },
-        fecha_aporte: { 
-            type: "date", 
-            nullable: false 
-        },
         procedencia: { 
             type: String, 
             nullable: false 
@@ -44,9 +37,9 @@ export const AporteEntity = new EntitySchema<Aporte>({
             type: "timestamp", 
             nullable: true 
         },
-        creadorId: {
-            type: "int",
-            nullable: false,
+        comprobante: { 
+            type: String, 
+            nullable: true 
         },
         carreraId: {
             type: "int",
@@ -54,14 +47,6 @@ export const AporteEntity = new EntitySchema<Aporte>({
         },
     },
     relations: {
-        creador: {
-            type: "many-to-one",
-            target: "User",
-            joinColumn: { name: "creadorId", referencedColumnName: "id" },
-            inverseSide: "Aportes",
-            nullable: false,
-            onDelete: "RESTRICT",
-        },
         carrera: {
             type: "many-to-one",
             target: "Carrera",
