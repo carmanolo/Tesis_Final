@@ -11,7 +11,8 @@ import CarreraEntity from "../entity/carrera.entity.js";
 
 export async function createAporte(req: Request, res: Response): Promise<any> {
   try {
-    const { id, carreraId: userCarreraId } = (req.user as any) || {};
+    const { id, carreraId: userCarreraId, rol, role } = (req.user as any) || {};
+    const admin = ["admin", "administrador"].includes(String(rol || role).toLowerCase());
 
     if (!req.body) return handleErrorClient(res, 400, "datos no proporcionados");
 
@@ -21,11 +22,11 @@ export async function createAporte(req: Request, res: Response): Promise<any> {
     const result = createValidation.validate(req.body);
     if (result.error) return handleErrorClient(res, 400, "faltan parametros", result.error.message);
 
-    const { descripcion_aporte, fecha_aporte, procedencia, monto, carreraId, id_carrera } = req.body;
+    const { descripcion_aporte, fecha_aporte, procedencia, monto, tipo, comprobante, id_carrera } = req.body;
 
     // Asociar internamente la carrera del usuario creador
-    let targetCarreraId = userCarreraId || carreraId || id_carrera;
-    if (!targetCarreraId && id) {
+    let targetCarreraId = admin ? (id_carrera || userCarreraId) : userCarreraId;
+    if (!targetCarreraId && admin) {
       const userRepo = AppDataSource.getRepository(UserEntity as any);
       const user = await userRepo.findOne({ where: { id } });
       if (user?.carreraId) {
@@ -47,7 +48,7 @@ export async function createAporte(req: Request, res: Response): Promise<any> {
     }
 
     const { data, error: errSer } = await createAporteSer(
-       descripcion_aporte, fecha_aporte, procedencia, monto, id, Number(targetCarreraId)
+      descripcion_aporte, fecha_aporte, procedencia, monto, Number(targetCarreraId), tipo, comprobante ?? null,
     );
     if (errSer) return handleErrorClient(res, 400, errSer);
 
@@ -95,6 +96,8 @@ export async function patchAporteById(req: Request, res: Response): Promise<any>
   try {
     const { carreraId, rol, role } = (req.user as any) || {};
     const userRole = rol || role;
+    const esAdmin = ["admin", "administrador"].includes(String(userRole).toLowerCase());
+
     if (!req.body) return handleErrorClient(res, 400, "datos no proporcionados");
 
     const { id_aporte } = req.params;
@@ -111,10 +114,17 @@ export async function patchAporteById(req: Request, res: Response): Promise<any>
     if (!Aporte) return handleErrorClient(res, 404, "Aporte no encontrada");
 
     const { carreraId: newCarreraId, id_carrera: newIdCarrera, ...restData } = req.body;
+    const nuevaCarrera = newCarreraId || newIdCarrera;
+
+    // Solo un administrador puede mover un aporte a otra carrera
+    if (nuevaCarrera && !esAdmin && Number(nuevaCarrera) !== Number(carreraId)) {
+      return handleErrorClient(res, 403, "No tienes permiso para cambiar la carrera de un aporte");
+    }
+
     Object.assign(Aporte, restData);
 
-    if (newCarreraId || newIdCarrera) {
-      Aporte.carreraId = Number(newCarreraId || newIdCarrera);
+    if (nuevaCarrera && esAdmin) {
+      Aporte.carreraId = Number(nuevaCarrera);
       Aporte.carrera = { id_carrera: Aporte.carreraId };
     }
 
@@ -192,7 +202,7 @@ async function cargarDatosReporte(req: Request, res: Response,): Promise<{ aport
   const periodo =
     desde || hasta
       ? `Período: ${desde ? formatearFecha(desde as string) : "inicio"} al ${hasta ? formatearFecha(hasta as string) : "hoy"}`
-      : "Período: todos los aportes";
+      : "Período: todos los movimientos";
  
   return { aportes, periodo };
 }

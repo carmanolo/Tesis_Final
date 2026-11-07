@@ -2,14 +2,10 @@ import { AppDataSource } from "../config/configDb.js";
 import { Between, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import AporteEntity from "../entity/aporte.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
+import { isAdminRole } from "../utils/user.utils.js";
 
 
 const repo = () => AppDataSource.getRepository(AporteEntity as any);
-
-const isAdminRole = (role?: string) => {
-    const r = role?.toLowerCase();
-    return r === "admin" || r === "administrador";
-};
 
 export async function createAporteSer(
     descripcion_aporte: string,
@@ -51,9 +47,8 @@ export async function createAporteSer(
 export async function getAportesSer(carreraId?: number, role?: string): Promise<any[] | null> {
     try {
         const whereCondition: any = {};
-        if (!isAdminRole(role) || carreraId) {
-            whereCondition.carreraId = carreraId;
-        }
+        if (!isAdminRole(role) && !carreraId) return [];
+        if (carreraId) whereCondition.carreraId = carreraId;
 
         const Aportes = await repo().find({
             where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
@@ -72,6 +67,7 @@ export async function getAporteSer(id_aporte: number, carreraId?: number, role?:
     try {
         const whereCondition: any = { id_aporte };
         if (!isAdminRole(role)) {
+            if (!carreraId) return null;
             whereCondition.carreraId = carreraId;
         }
 
