@@ -16,8 +16,9 @@ export async function createAporteSer(
     fecha_aporte: Date,
     procedencia: string,
     monto: number,
-    creadorId: number,
     carreraId: number,
+    tipo: "ingreso" | "egreso" = "ingreso",
+    comprobante: string | null = null,
 ): Promise<{ data: any | null; error: string | null }> {
     try {
         const carreraRepo = AppDataSource.getRepository(CarreraEntity as any);
@@ -32,9 +33,9 @@ export async function createAporteSer(
             fecha_aporte,
             procedencia,
             monto,
-            creadorId,
+            tipo,
+            comprobante,
             carreraId,
-            creador: { id: creadorId },
             carrera: { id_carrera: carreraId },
         });
 

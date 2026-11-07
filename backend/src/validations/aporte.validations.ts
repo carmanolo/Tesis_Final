@@ -31,10 +31,6 @@ export const integrityValidation = Joi.object({
         "string.max": `La descripción del aporte no puede tener más de ${MAX_NOMBRE_APORTE} caracteres`,
     }),
 
-    fecha_aporte: Joi.date().custom(fechaNoPasadaValidation).messages({
-        "date.base": "La fecha del aporte debe ser una fecha válida",
-        "date.min": "La fecha del aporte no puede ser anterior a hoy",
-    }),
     procedencia: Joi.string().messages({
         "string.base": "La procedencia debe ser un string",
         "string.empty": "La procedencia no puede ser vacía", 
@@ -44,6 +40,18 @@ export const integrityValidation = Joi.object({
         "number.integer": ERROR_CANTIDAD_INVALIDA,
         "number.min": `El monto del aporte debe ser al menos ${MONTO_MINIMO}`,
     }),
+    fecha_recepcion: Joi.date().messages({
+        "date.base": "La fecha del aporte debe ser una fecha válida",
+        "date.min": "La fecha del aporte no puede ser anterior a hoy",
+    }),
+    tipo: Joi.string().valid("ingreso", "egreso").messages({
+        "any.only": "El tipo debe ser 'ingreso' o 'egreso'",
+        "string.base": "El tipo debe ser un string",
+    }),
+    comprobante: Joi.string().allow(null, "").messages({
+        "string.base": "El comprobante debe ser un string",
+    }),
+    
     carreraId: Joi.number().integer().positive().messages({
         "number.base": "El id de la carrera debe ser un número",
         "number.positive": "El id de la carrera debe ser un número positivo",
@@ -71,6 +79,8 @@ export const createValidation = Joi.object({
     monto: Joi.any().required().messages({
         "any.required": MONTO_OBLIGATORIA
     }),
+    tipo: Joi.any(),
+    comprobante: Joi.any(),
     carreraId: Joi.any(),
     id_carrera: Joi.any(),
 
@@ -86,6 +96,8 @@ export const updateValidation = Joi.object({
     fecha_aporte: Joi.any(),
     procedencia: Joi.any(),
     monto: Joi.any(),
+    tipo: Joi.any(),
+    comprobante: Joi.any(),
     carreraId: Joi.any(),
     id_carrera: Joi.any(),
 

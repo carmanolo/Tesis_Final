@@ -7,6 +7,7 @@ export interface Aporte {
     procedencia: string;
     monto: number;
     fecha_recepcion?: Date | null;
+    tipo: "ingreso" | "egreso";
     comprobante?: string | null;
     carreraId: number;
     carrera?: Carrera;
@@ -36,6 +37,11 @@ export const AporteEntity = new EntitySchema<Aporte>({
         fecha_recepcion: { 
             type: "timestamp", 
             nullable: true 
+        },
+        tipo: {
+            type: "varchar",
+            nullable: false,
+            default: "ingreso",
         },
         comprobante: { 
             type: String, 
