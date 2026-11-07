@@ -1,3 +1,11 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Raíz del proyecto (backend/) – funciona tanto en src/ (dev) como en dist/ (prod)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const PROJECT_ROOT = path.resolve(__dirname, "../../");
+
 // Validaciones de texto
 export const MIN_DESCRIPCION = 5;
 export const MAX_DESCRIPCION = 500;
@@ -24,4 +32,5 @@ export const ACTA_MIME_TYPES = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document" // .docx
 ];
 
-export const ACTA_UPLOAD_DIR = "uploads/actas";
+// Ruta ABSOLUTA al directorio de actas (evita problemas con cwd al reiniciar el servicio)
+export const ACTA_UPLOAD_DIR = path.join(PROJECT_ROOT, "uploads", "actas");
