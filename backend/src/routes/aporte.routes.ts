@@ -1,18 +1,21 @@
 import { Router } from "express";
-import { createAporte, patchAporteById, getAporteById, getAportes, deleteAporteById, getSaldoAportes, descargarReportePdf, descargarReporteExcel } from "../controllers/aporte.controller.js";
+import { createAporte, patchAporteById, getAporteById, getAportes, deleteAporteById, getSaldoAportes, descargarReportePdf, descargarReporteExcel, getComprobante } from "../controllers/aporte.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { authorizeRoles } from "../middleware/authorization.middleware.js";
+import { subirComprobante } from "../middleware/aporte.middleware.js";
 
 const router = Router();
 
 router.use(authenticateJwt);
 
 router.get("/", authorizeRoles("administrador","presidente cee", "vicepresidente cee", "tesorero cee"), getAportes);
+router.get("/:id_aporte/comprobante", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), getComprobante);
 router.get("/saldo", authorizeRoles("administrador","presidente cee", "vicepresidente cee", "tesorero cee"), getSaldoAportes);
 router.get("/reporte/pdf", authorizeRoles("administrador","presidente cee", "vicepresidente cee", "tesorero cee"), descargarReportePdf);
 router.get("/reporte/excel", authorizeRoles("administrador","presidente cee", "vicepresidente cee", "tesorero cee"), descargarReporteExcel);
 router.get("/:id_aporte", authorizeRoles("administrador","presidente cee", "secretario cee", "tesorero cee", "vocal cee"), getAporteById);
 router.post("/crear/", authorizeRoles("administrador", "presidente cee" , "vicepresidente cee", "tesorero cee"), createAporte);
+router.post("/crear/", authorizeRoles("administrador", "presidente cee" , "vicepresidente cee", "tesorero cee"), subirComprobante, createAporte);
 router.patch("/editar/:id_aporte", authorizeRoles("administrador","presidente cee", "vicepresidente cee", "tesorero cee"), patchAporteById);
 router.delete("/eliminar/:id_aporte", authorizeRoles("administrador","presidente cee", "vicepresidente cee", "tesorero cee"), deleteAporteById);
 
