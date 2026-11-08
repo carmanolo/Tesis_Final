@@ -1,6 +1,6 @@
 # Tesis_Final
 
-FACECORE - Sistema de Gestión Documental y AdministrativaFACECORE (Facultad de Ciencias Empresariales - Centro de Organización y Registro Estudiantil)
+FACECORE - Sistema de Gestión Documental y Administrativa FACECORE (Facultad de Ciencias Empresariales - Centro de Organización y Registro Estudiantil)
 
 Es una aplicación web orientada a la centralización y digitalización de la gestión documental y administrativa de los Centros de Estudiantes (CEE) de la Facultad de Ciencias Empresariales de la Universidad del Bío-Bío.  
 El sistema resuelve la vulnerabilidad asociada al uso de plataformas informales (como Discord o correo electrónico), la pérdida de trazabilidad en los aportes financieros y los problemas de comunicación entre estudiantes, directivas estudiantiles y jefaturas de carrera.  
