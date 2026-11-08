@@ -23,10 +23,10 @@ async function confirmAlert() {
     });
 }
 
-async function confirmError() {
+async function confirmError(mensaje) {
     await Swal.fire({
         title: "Error",
-        text: "No se pudo eliminar el aporte",
+        text: mensaje || "No se pudo eliminar el aporte",
         icon: "error",
         confirmButtonText: "Aceptar",
     });
@@ -48,7 +48,7 @@ export const useDeleteAporte = (fetchAportes) => {
             return true;
         } catch (error) {
             console.error("Error al eliminar aporte:", error);
-            confirmError();
+            confirmError(error?.response?.data?.message);
             return false;
         }
     };
