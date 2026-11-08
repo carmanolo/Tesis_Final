@@ -2,6 +2,10 @@
 
 Distribución de proyecto:
 
+# Nota
+
+REPOSITORIO EXCLUSIVO PARA TESIS
+
 # Backend
 
 Backend de la aplicación desarrollado con Node.js, TypeScript, Express y TypeORM.
