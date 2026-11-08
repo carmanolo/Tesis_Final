@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import { formatearFechaDDMMAAAA } from "../../utils/calendar.utils.js";
-import { APORTE_DESCRIPCION_MIN, APORTE_DESCRIPCION_MAX, OPCIONES_PROCEDENCIA, OPCIONES_DESCRIPCION} from "../../constants/aporte.constants.jsx";
+import {
+    APORTE_DESCRIPCION_MIN,
+    APORTE_DESCRIPCION_MAX,
+    MONTO_MINIMO,
+    OPCIONES_PROCEDENCIA,
+    OPCIONES_DESCRIPCION,
+    OPCIONES_TIPO,
+} from "../../constants/aporte.constants.jsx";
+import { formatoCLP, valoresIniciales } from "../../utils/aporte.utils.js";
 
-import { formatoCLP,  valoresIniciales } from "../../utils/aporte.utils.js";
-
-
-const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedencia, otra_procedencia, monto }) => {
+const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedencia, otra_procedencia, monto, tipo }) => {
     const errores = {};
 
     if (!descripcion_aporte) {
@@ -20,12 +25,19 @@ const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedenc
     }
 
     if (!fecha_aporte) errores.fecha_aporte = "Selecciona una fecha";
+    if (!tipo) errores.tipo = "Selecciona un tipo";
+
     if (!procedencia) {
         errores.procedencia = "Selecciona una procedencia";
     } else if (procedencia.toLowerCase() === "otro" && !otra_procedencia?.trim()) {
         errores.procedencia = "Debes ingresar la nueva procedencia";
     }
-    if (!(Number(monto) > 0)) errores.monto = "El monto debe ser mayor a 0";
+
+    // El backend exige un entero >= MONTO_MINIMO
+    const numero = Number(monto);
+    if (!Number.isInteger(numero) || numero < MONTO_MINIMO) {
+        errores.monto = `El monto debe ser un número entero de al menos ${formatoCLP.format(MONTO_MINIMO)}`;
+    }
 
     return errores;
 };
@@ -82,11 +94,13 @@ export const DetalleAporte = ({
                 ? form.otra_procedencia.trim()
                 : form.procedencia.trim();
 
+        // Solo campos que el backend acepta (cualquier otro devuelve 400)
         const datos = {
             descripcion_aporte: descripcionFinal,
-            fecha_aporte: form.fecha_aporte,
+            fecha_aporte: form.fecha_aporte, // YYYY-MM-DD
             procedencia: procedenciaFinal,
             monto: Number(form.monto),
+            tipo: form.tipo,
         };
 
         setGuardando(true);
@@ -121,6 +135,8 @@ export const DetalleAporte = ({
         </div>
     );
 
+    const etiquetaTipo = OPCIONES_TIPO.find((t) => t.id === (aporte?.tipo || "ingreso"))?.etiqueta;
+
     return (
         <div
             className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
@@ -144,6 +160,22 @@ export const DetalleAporte = ({
 
                 <div className="space-y-4 mb-6">
                     {campoTexto(
+                        "Tipo:",
+                        "tipo",
+                        etiquetaTipo,
+                        <select
+                            className="select select-bordered w-full"
+                            value={form.tipo}
+                            onChange={cambiar("tipo")}
+                        >
+                            {OPCIONES_TIPO.map((t) => (
+                                <option key={t.id} value={t.id}>
+                                    {t.etiqueta}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+                    {campoTexto(
                         "Descripción:",
                         "descripcion_aporte",
                         aporte?.descripcion_aporte,
@@ -165,6 +197,7 @@ export const DetalleAporte = ({
                             {form.descripcion_aporte?.toLowerCase() === "otro" && (
                                 <input
                                     type="text"
+                                    maxLength={APORTE_DESCRIPCION_MAX}
                                     className={`input input-bordered w-full ${errores.descripcion_aporte && (!form.otra_descripcion?.trim() || form.otra_descripcion.trim().length < APORTE_DESCRIPCION_MIN) ? "input-error" : ""}`}
                                     placeholder="Ingresa la nueva descripción *"
                                     value={form.otra_descripcion}
@@ -180,7 +213,7 @@ export const DetalleAporte = ({
                         aporte && formatearFechaDDMMAAAA(aporte.fecha_aporte),
                         <input
                             type="date"
-                            className="input input-bordered w-full"
+                            className={`input input-bordered w-full ${errores.fecha_aporte ? "input-error" : ""}`}
                             value={form.fecha_aporte}
                             onChange={cambiar("fecha_aporte")}
                         />
@@ -222,9 +255,9 @@ export const DetalleAporte = ({
                         aporte && formatoCLP.format(Number(aporte.monto) || 0),
                         <input
                             type="number"
-                            min="1"
+                            min={MONTO_MINIMO}
                             step="1"
-                            className="input input-bordered w-full"
+                            className={`input input-bordered w-full ${errores.monto ? "input-error" : ""}`}
                             value={form.monto}
                             onChange={cambiar("monto")}
                         />

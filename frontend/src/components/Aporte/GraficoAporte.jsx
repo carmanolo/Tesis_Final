@@ -1,22 +1,23 @@
 import { useMemo, useState } from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import { formatoCLP, formatoCompacto, agruparPorTexto, agruparPorMes, aMonto} from "../../utils/aporte.utils.js";
+import { formatoCLP, formatoCompacto, agruparPorTexto, agruparPorMes, aMonto, esEgreso } from "../../utils/aporte.utils.js";
 import { CRITERIOS, COLOR_BASE, COLOR_DESTACADO } from "../../constants/aporte.constants.jsx";
 
-
-
+// El gráfico muestra solo ingresos (aportes recibidos); los egresos se ven en el balance y en el reporte
 export const GraficoAportes = ({ aportes = [] }) => {
     const [criterio, setCriterio] = useState("procedencia");
 
+    const ingresos = useMemo(() => aportes.filter((aporte) => !esEgreso(aporte)), [aportes]);
+
     const datos = useMemo(() => {
-        if (criterio === "procedencia") return agruparPorTexto(aportes, "procedencia");
-        if (criterio === "actividad") return agruparPorTexto(aportes, "descripcion_aporte");
-        return agruparPorMes(aportes);
-    }, [aportes, criterio]);
+        if (criterio === "procedencia") return agruparPorTexto(ingresos, "procedencia");
+        if (criterio === "actividad") return agruparPorTexto(ingresos, "descripcion_aporte");
+        return agruparPorMes(ingresos);
+    }, [ingresos, criterio]);
 
     const total = useMemo(
-        () => aportes.reduce((suma, aporte) => suma + aMonto(aporte.monto), 0),
-        [aportes]
+        () => ingresos.reduce((suma, aporte) => suma + aMonto(aporte.monto), 0),
+        [ingresos]
     );
 
     const esPorMes = criterio === "mes";
