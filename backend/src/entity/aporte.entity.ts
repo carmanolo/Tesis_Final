@@ -14,7 +14,7 @@ export interface Aporte {
 
 export const AporteEntity = new EntitySchema<Aporte>({
     name: "Aporte",
-    tableName: "Aportes",
+    tableName: "aportes",
     columns: {
         id_aporte: { 
             type: Number, 
