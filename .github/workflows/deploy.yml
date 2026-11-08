@@ -31,6 +31,12 @@ jobs:
       - name: Inyectar variables de entorno Frontend
         run: cp ~/frontend.env ./frontend/.env
 
+      - name: Enlazar carpeta persistente de uploads
+        run: |
+          mkdir -p "$HOME/uploads_persistentes/publicaciones"
+          rm -rf ./backend/uploads
+          ln -sfn "$HOME/uploads_persistentes" ./backend/uploads
+
       - name: Detener servidor antiguo
         run: |
           source ~/.nvm/nvm.sh
