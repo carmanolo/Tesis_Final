@@ -14,7 +14,7 @@ export interface AporteReporte {
     monto: number;
     tipo?: TipoMovimiento | string | null;
     comprobante?: string | null;
-    fecha_recepcion?: Date | string | null;
+    //fecha_recepcion?: Date | string | null;
 }
 
 export interface ResumenProcedencia {
@@ -261,7 +261,7 @@ export async function generarExcelAportes(
             tipo: etiquetaTipo(a),
             descripcion: a.descripcion_aporte,
             procedencia: a.procedencia,
-            recepcion: egreso ? "-" : a.fecha_recepcion ? formatearFecha(a.fecha_recepcion) : "Pendiente",
+            //recepcion: egreso ? "-" : a.fecha_recepcion ? formatearFecha(a.fecha_recepcion) : "Pendiente",
             monto: Number(a.monto) || 0,
         });
         fila.eachCell((celda) => {
@@ -511,7 +511,7 @@ export function generarPdfAportes(
                         etiquetaTipo(a),
                         a.descripcion_aporte ?? "",
                         a.procedencia ?? "",
-                        egreso ? "-" : a.fecha_recepcion ? formatearFecha(a.fecha_recepcion) : "Pendiente",
+                        //egreso ? "-" : a.fecha_recepcion ? formatearFecha(a.fecha_recepcion) : "Pendiente",
                         formatearMonto(Number(a.monto) || 0),
                     ];
 
