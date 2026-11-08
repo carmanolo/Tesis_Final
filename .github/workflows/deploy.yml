@@ -10,6 +10,12 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Rescatar uploads existentes
+        run: |
+          mkdir -p "$HOME/uploads_persistentes"
+          if [ -d "$GITHUB_WORKSPACE/backend/uploads" ] && [ ! -L "$GITHUB_WORKSPACE/backend/uploads" ]; then
+            cp -a "$GITHUB_WORKSPACE/backend/uploads/." "$HOME/uploads_persistentes/"
+          fi
       - name: Descargar el código
         uses: actions/checkout@v4
 
