@@ -16,27 +16,27 @@ export const AporteEntity = new EntitySchema<Aporte>({
     name: "Aporte",
     tableName: "aportes",
     columns: {
-        id_aporte: { 
-            type: Number, 
-            primary: true, 
-            generated: true 
+        id_aporte: {
+            type: Number,
+            primary: true,
+            generated: true
         },
-        descripcion_aporte: { 
-            type: String, 
-            nullable: false 
+        descripcion_aporte: {
+            type: String,
+            nullable: false
         },
-        procedencia: { 
-            type: String, 
-            nullable: false 
+        procedencia: {
+            type: String,
+            nullable: false
         },
-        monto: { 
-            type: Number, 
-            nullable: false 
+        monto: {
+            type: Number,
+            nullable: false
         },
         // Fecha elegida por el usuario al registrar el aporte
-        fecha_aporte: { 
-            type: "date", 
-            nullable: false 
+        fecha_aporte: {
+            type: "date",
+            nullable: false
         },
         tipo: {
             type: "varchar",
@@ -53,7 +53,7 @@ export const AporteEntity = new EntitySchema<Aporte>({
             type: "many-to-one",
             target: "Carrera",
             joinColumn: { name: "carreraId", referencedColumnName: "id_carrera" },
-            inverseSide: "Aportes",
+            inverseSide: "aportes",
             nullable: false,
             onDelete: "CASCADE",
         },
