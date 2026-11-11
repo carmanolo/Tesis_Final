@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { logout } from "@services/auth.service.js";
 import { FaHome, FaUsers, FaSignOutAlt, FaSearch,FaAngleDoubleLeft, FaGraduationCap, FaCalendarAlt, FaUserCircle,FaMoneyBillWave, FaClipboardCheck} from "react-icons/fa";
 import { MdArticle, MdOutlineHistory } from "react-icons/md";
+import { GoVerified } from "react-icons/go";
 import { DUSidebarItem } from "./DUSidebarItem";
 import marcaUbb from "../../assets/escudo-color-gradiente.svg";
 
@@ -55,7 +56,14 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       label: "Aportes",
       destination: "/aportes",
       iconColor: "text-[#16a34a]",
-      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "estudiante"]
+      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee"]
+    },
+    {
+      icon: GoVerified,
+      label: "Compromisos",
+      destination: "/compromisos",
+       iconColor: "text-[#1e40af]",
+      roles: ["presidente cee", "vicepresidente cee", "tesorero cee", "secretario cee","vocal cee"]
     },
     {
       icon: FaClipboardCheck,
@@ -69,7 +77,7 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       label: "Publicaciones",
       destination: "/publicaciones",
       iconColor: "text-[#000000]",
-      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee", "estudiante"]
+      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee","estudiante"]
     },
     {
       icon: MdOutlineHistory,
