@@ -145,11 +145,27 @@ export async function patchCompromisoSer(
     }
 }
 
-// Las asignaciones de aportes se eliminan en cascada
+// Las asignaciones de aportes se eliminan y se reintegra el monto a cada aporte
 export async function deleteCompromisoSer(id_compromiso: number): Promise<any> {
     try {
-        const result = await repo().delete({ id_compromiso });
-        return { result, message: "Compromiso eliminado exitosamente" };
+        return await AppDataSource.transaction(async (manager) => {
+            const asignaciones = (await manager.find(CompromisoAporteEntity as any, {
+                where: { compromisoId: id_compromiso },
+            })) as any[];
+
+            for (const asig of asignaciones) {
+                const aporte: any = await manager.findOne(AporteEntity as any, {
+                    where: { id_aporte: asig.aporteId },
+                });
+                if (aporte) {
+                    aporte.monto = Number(aporte.monto) + (Number(asig.monto_asignado) || 0);
+                    await manager.save(AporteEntity as any, aporte);
+                }
+            }
+
+            const result = await manager.delete(CompromisoEntity as any, { id_compromiso });
+            return { result, message: "Compromiso eliminado exitosamente" };
+        });
     } catch (error) {
         console.error(error);
         return { result: null, message: "Error al eliminar el compromiso" };
@@ -182,9 +198,6 @@ export async function asignarAporteSer(
             const delCompromiso = (await manager.find(CompromisoAporteEntity as any, {
                 where: { compromisoId },
             })) as any[];
-            const delAporte = (await manager.find(CompromisoAporteEntity as any, {
-                where: { aporteId },
-            })) as any[];
 
             const existente = delCompromiso.find((a) => a.aporteId === aporteId);
 
@@ -197,14 +210,20 @@ export async function asignarAporteSer(
                 };
             }
 
-            const disponibleAporte =
-                Number(aporte.monto) - sumaAsignada(delAporte.filter((a) => a.compromisoId !== compromisoId));
+            // Lo disponible del aporte es su monto actual libre en BD más lo que este compromiso ya tenía asignado
+            const asignadoAnteriormente = existente ? Number(existente.monto_asignado) || 0 : 0;
+            const disponibleAporte = Number(aporte.monto) + asignadoAnteriormente;
             if (montoAsignado > disponibleAporte) {
                 return {
                     data: null,
                     error: `El monto excede lo disponible del aporte (${formatearMonto(Math.max(disponibleAporte, 0))})`,
                 };
             }
+
+            // Ajustar el monto libre del aporte en la BD para que los ingresos se reduzcan
+            const diferencia = montoAsignado - asignadoAnteriormente;
+            aporte.monto = Number(aporte.monto) - diferencia;
+            await manager.save(AporteEntity as any, aporte);
 
             const guardado = await manager.save(
                 CompromisoAporteEntity as any,
@@ -222,8 +241,24 @@ export async function asignarAporteSer(
 
 export async function desasignarAporteSer(compromisoId: number, aporteId: number): Promise<any> {
     try {
-        const result = await asignacionRepo().delete({ compromisoId, aporteId });
-        return { result, message: "Aporte quitado del compromiso" };
+        return await AppDataSource.transaction(async (manager) => {
+            const asignacion: any = await manager.findOne(CompromisoAporteEntity as any, {
+                where: { compromisoId, aporteId },
+            });
+            if (!asignacion) return { result: null, message: "Aporte no asignado a este compromiso" };
+
+            // Reintegrar el monto asignado de vuelta al aporte
+            const aporte: any = await manager.findOne(AporteEntity as any, {
+                where: { id_aporte: aporteId },
+            });
+            if (aporte) {
+                aporte.monto = Number(aporte.monto) + (Number(asignacion.monto_asignado) || 0);
+                await manager.save(AporteEntity as any, aporte);
+            }
+
+            const result = await manager.delete(CompromisoAporteEntity as any, { compromisoId, aporteId });
+            return { result, message: "Aporte quitado del compromiso" };
+        });
     } catch (error) {
         console.error(error);
         return { result: null, message: "Error al quitar el aporte del compromiso" };

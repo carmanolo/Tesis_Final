@@ -64,22 +64,17 @@ export const obtenerProximoCompromiso = (compromisos: any[]) => {
 
 // Aportes que se pueden asignar a este compromiso, con lo que le queda disponible a cada uno.
 export const aportesAsignables = (aportes: any[], compromisos: any[], compromiso: any) => {
-    const asignadoTotal = new Map<number, number>();
-    compromisos.forEach((c: any) =>
-        (c.aportes ?? []).forEach((a: any) =>
-            asignadoTotal.set(a.aporteId, (asignadoTotal.get(a.aporteId) || 0) + (Number(a.monto_asignado) || 0))
-        )
-    );
     const propios = new Map<number, number>(
-        (compromiso.aportes ?? []).map((a: any) => [a.aporteId, Number(a.monto_asignado) || 0])
+        (compromiso?.aportes ?? []).map((a: any) => [a.aporteId, Number(a.monto_asignado) || 0])
     );
 
     return aportes
-        .filter((a: any) => a.tipo !== "egreso" && a.carreraId === compromiso.carreraId)
+        .filter((a: any) => a.tipo !== "egreso" && a.carreraId === compromiso?.carreraId)
         .map((aporte: any) => {
             const asignadoAqui = propios.get(aporte.id_aporte) ?? 0;
-            const asignadoOtros = (asignadoTotal.get(aporte.id_aporte) ?? 0) - asignadoAqui;
-            return { aporte, asignadoAqui, disponible: Math.max((Number(aporte.monto) || 0) - asignadoOtros, 0) };
+            // aporte.monto ya refleja el saldo libre en la cuenta
+            const disponible = (Number(aporte.monto) || 0) + asignadoAqui;
+            return { aporte, asignadoAqui, disponible };
         })
         .filter((x) => x.disponible > 0)
         .sort((a, b) => String(b.aporte.fecha_aporte).localeCompare(String(a.aporte.fecha_aporte)));

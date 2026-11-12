@@ -106,7 +106,7 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
         <input id="my-drawer-4" type="checkbox" className="drawer-toggle" />
 
         {/* Main Content Area */}
-        <div className="drawer-content flex flex-col">
+        <div className="drawer-content flex flex-col min-w-0 max-w-full overflow-x-hidden">
           {/* Header / Navbar */}
           <nav className="navbar w-full bg-[#2F4697] text-white shadow-sm px-4 py-2 flex items-center justify-between">
             <div className="flex items-center gap-3">

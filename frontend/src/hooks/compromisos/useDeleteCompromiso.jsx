@@ -13,7 +13,7 @@ async function confirmDelete() {
     return result.isConfirmed;
 }
 
-export const useDeleteCompromiso = (fetchCompromisos) => {
+export const useDeleteCompromiso = (fetchCompromisos, fetchAportes) => {
     // Devuelve true solo si el compromiso se eliminó, para que el modal se cierre
     const handleDeleteCompromiso = async (compromisoId) => {
         try {
@@ -23,6 +23,9 @@ export const useDeleteCompromiso = (fetchCompromisos) => {
 
             if (typeof fetchCompromisos === "function") {
                 await fetchCompromisos();
+            }
+            if (typeof fetchAportes === "function") {
+                await fetchAportes();
             }
             Swal.fire({
                 title: "Compromiso eliminado",

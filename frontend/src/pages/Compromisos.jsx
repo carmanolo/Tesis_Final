@@ -32,8 +32,8 @@ const Compromiso = () => {
 
     const { handleCreateCompromiso } = useCreateCompromiso(fetchCompromiso);
     const { handleEditCompromiso } = usePatchCompromiso(fetchCompromiso);
-    const { handleDeleteCompromiso } = useDeleteCompromiso(fetchCompromiso);
-    const { handleAsignarAporte, handleQuitarAporte } = useAsignarAporte(fetchCompromiso);
+    const { handleDeleteCompromiso } = useDeleteCompromiso(fetchCompromiso, fetchAporte);
+    const { handleAsignarAporte, handleQuitarAporte } = useAsignarAporte(fetchCompromiso, fetchAporte);
     const { handleDownloadSolicitud, descargando } = useDownloadSolicitud();
 
     const [creando, setCreando] = useState(false);

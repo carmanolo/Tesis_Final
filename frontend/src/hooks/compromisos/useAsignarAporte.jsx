@@ -2,9 +2,10 @@ import Swal from "sweetalert2";
 import { asignarAporteService, quitarAporteService } from "../../services/compromiso.service.js";
 import { fireDynamicSwal } from "../utils/dynamicSwal.jsx";
 
-export const useAsignarAporte = (fetchCompromisos) => {
+export const useAsignarAporte = (fetchCompromisos, fetchAportes) => {
     const refrescar = async () => {
         if (typeof fetchCompromisos === "function") await fetchCompromisos();
+        if (typeof fetchAportes === "function") await fetchAportes();
     };
 
     // datos: { aporteId, monto_asignado }

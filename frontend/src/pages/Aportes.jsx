@@ -85,7 +85,7 @@ const Aporte = () => {
     const modalAbierto = creando || Boolean(aporteSeleccionado);
 
     return (
-        <div className="Clase-page">
+        <div className="Clase-page w-full max-w-full overflow-x-hidden">
             <div className="flex gap-4 mb-4">
                 <h2 className="text-xl font-semibold">Aportes</h2>
                 {canCrudAportes && (
@@ -116,20 +116,22 @@ const Aporte = () => {
 
             <GraficoAportes aportes={aportes} />
 
-            <div className="flex flex-wrap items-center gap-3 mt-6 mb-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-6 mb-3">
                 <h3 className="text-lg font-semibold">Lista de aportes</h3>
-                <input
-                    type="text"
-                    className="input input-bordered input-sm ml-auto w-64"
-                    placeholder="Buscar por descripción o procedencia"
-                    value={buscar}
-                    onChange={handleBuscar}
-                />
-                {buscar && (
-                    <button className="btn btn-sm" onClick={limpiarFiltros}>
-                        Limpiar
-                    </button>
-                )}
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <input
+                        type="text"
+                        className="input input-bordered input-sm w-full sm:w-64"
+                        placeholder="Buscar por descripción o procedencia"
+                        value={buscar}
+                        onChange={handleBuscar}
+                    />
+                    {buscar && (
+                        <button className="btn btn-sm" onClick={limpiarFiltros}>
+                            Limpiar
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="overflow-x-auto rounded-box border border-base-content/10 bg-base-100">

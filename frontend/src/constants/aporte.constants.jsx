@@ -24,7 +24,7 @@ export const COLOR_DESTACADO = "#EE820F"; // arreglar y colocar más colores
 export const TOP_N = 10;
 
 export const CRITERIOS = [
-    { id: "procedencia", etiqueta: "Procedencia con más aportes" },
-    { id: "actividad", etiqueta: "Actividad con mayor monto" },
-    { id: "mes", etiqueta: "Aportes por mes" },
+    { id: "procedencia", etiqueta: "Procedencia con más aportes", corta: "Procedencia" },
+    { id: "actividad", etiqueta: "Actividad con mayor monto", corta: "Actividad" },
+    { id: "mes", etiqueta: "Aportes por mes", corta: "Por mes" },
 ];
