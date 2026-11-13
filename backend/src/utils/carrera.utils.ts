@@ -8,7 +8,7 @@ export const processCarreras = (carreras: Carrera[] | unknown): string[] => {
   const DEFAULT_CARRERAS: string[] = [];
 
   if (!Array.isArray(carreras)) {
-    console.error("¡Los profesores deben ser un arreglo!");
+    console.error("¡Las carreas deben ser un arreglo!");
     return DEFAULT_CARRERAS;
   }
 

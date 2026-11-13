@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { getCompromisosSer, getCompromisoSer, createCompromisoSer, patchCompromisoSer,
-        deleteCompromisoSer, asignarAporteSer, desasignarAporteSer, getCompromisoReporteSer,} from "../services/compromiso.service.js";
+        deleteCompromisoSer, asignarAporteSer, desasignarAporteSer, getCompromisoReporteSer,
+        obtenerListaCompromiso,} from "../services/compromiso.service.js";
 import { createValidation, integrityValidation, updateValidation, asignarAporteValidation,} from "../validations/compromiso.validations.js";
-import { generarExcelSolicitud, generarPdfSolicitud } from "../utils/compromiso.utils.js";
+import { generarExcelSolicitud, generarPdfSolicitud, processCompromisos } from "../utils/compromiso.utils.js";
 import { idValidation } from "../validations/modules/id.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 import { AppDataSource } from "../config/configDb.js";
@@ -270,5 +271,18 @@ export async function descargarSolicitudExcel(req: Request, res: Response): Prom
     return res.status(200).send(buffer);
   } catch (error: any) {
     return handleErrorServer(res, 500, "Error al generar la solicitud Excel", error.message);
+  }
+}
+
+//esto es para procesar la lista de compromisos al colocar
+export async function getCompromisoList(req: Request, res: Response): Promise<any> {
+  const DEFAULT_ARRAY: any[] = [];
+  try {
+      let compromisoList: any = await obtenerListaCompromiso();
+      compromisoList = processCompromisos;
+      return handleSuccess(res, 200, "Lista de compromisos obtenida exitosamente");
+  } catch (error) {
+    console.error(error);
+        return handleSuccess(res, 200, "Error al obtener compromisos; disimular", DEFAULT_ARRAY);
   }
 }

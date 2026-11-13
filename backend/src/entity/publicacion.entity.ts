@@ -1,17 +1,19 @@
 import { EntitySchema } from "typeorm";
 import type { IUser } from "./user.entity.js";
 import type { Carrera } from "./carrera.entity.js";
+import type { Compromiso } from "./compromiso.entity.js";
 import { imagenesTransformer } from "../utils/publicacion.utils.js";
 
 export interface Publicacion {
     id_publicacion: number;
-    titulo: string;
+    compromisoId: number;
     descripcion: string;
     imagenes: string[];
     creadorId?: number | null;
     creador?: IUser;
     carreraId?: number;
     carrera?: Carrera;
+    compromiso?: Compromiso;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -25,8 +27,8 @@ export const PublicacionEntity = new EntitySchema<Publicacion>({
             primary: true,
             generated: true,
         },
-        titulo: {
-            type: String,
+        compromisoId: {
+            type: Number,
             nullable: false,
         },
         descripcion: {
@@ -71,6 +73,13 @@ export const PublicacionEntity = new EntitySchema<Publicacion>({
             nullable: false,
             onDelete: "CASCADE",
         },
+        compromiso: {
+            type: "many-to-one",
+            target: "Compromiso",
+            joinColumn: { name: "compromisoId", referencedColumnName: "id_compromiso" },
+            nullable:false,
+            onDelete: "CASCADE",
+        }
     },
 });
 

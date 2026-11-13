@@ -4,6 +4,12 @@ import { formatearFecha, formatearMonto } from "./aporte.utils.js";
 
 // Tipos
 
+export interface Compromiso {
+  id_compromiso?: string | number;
+  descripcion_compromiso?: string;
+}
+
+
 export interface AporteAsignado {
     id_aporte: number;
     descripcion_aporte: string;
@@ -31,12 +37,6 @@ export interface ResumenCompromiso {
 }
 
 // Cálculo de financiamiento
-
-/**
- * Saldo por financiar = monto total del compromiso - suma de los montos
- * asignados desde aportes. Nunca es negativo.
- * El monto_total original no se modifica: cada aporte asignado hace bajar el saldo.
- */
 export function calcularResumenCompromiso(montoTotal: number, montosAsignados: number[]): ResumenCompromiso {
     const total = Number(montoTotal) || 0;
     const totalFinanciado = montosAsignados.reduce((suma, m) => suma + (Number(m) || 0), 0);
@@ -284,4 +284,22 @@ export function generarPdfSolicitud(compromiso: CompromisoReporte): Promise<Buff
             reject(error);
         }
     });
+}
+
+export const processCompromisos = (compromisos: Compromiso[] | unknown): string[] => {
+    const DEFAULT_COMPROMISOS: string[] = [];
+
+    if(!Array.isArray(compromisos)){
+        console.error("Los compromisos deben ser un arreglo!");
+        return DEFAULT_COMPROMISOS;
+    }
+
+    const processedCompromisos = compromisos.map((compromiso: Compromiso) => {
+        const id_compromiso = compromiso?.id_compromiso ?? "0";
+        const descripcion_compromiso = compromiso?.descripcion_compromiso || "Donar a la teletón";
+
+        return `${id_compromiso}. ${descripcion_compromiso}`;
+    });
+
+    return processedCompromisos;
 }

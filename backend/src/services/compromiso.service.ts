@@ -1,5 +1,5 @@
 import { AppDataSource } from "../config/configDb.js";
-import CompromisoEntity from "../entity/compromiso.entity.js";
+import CompromisoEntity, { Compromiso } from "../entity/compromiso.entity.js";
 import CompromisoAporteEntity from "../entity/compromisoAporte.entity.js";
 import AporteEntity from "../entity/aporte.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
@@ -301,4 +301,17 @@ export async function getCompromisoReporteSer(
         },
         aportes,
     };
+}
+
+//listas para procesamiento en respaldos
+
+export async function obtenerListaCompromiso(): Promise<Compromiso[]> {
+  try {
+    const compromisoRepository = AppDataSource.getRepository(CompromisoEntity);
+    const compromisos = await compromisoRepository.find();
+    return compromisos;
+  } catch (error) {
+    console.error("Error al obtener la lista de compromiso:", error);
+    return [];
+  }
 }
