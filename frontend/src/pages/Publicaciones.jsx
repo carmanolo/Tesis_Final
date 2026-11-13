@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useGetPublicaciones } from "../hooks/publicaciones/useGetPublicaciones.jsx";
 import { useGetPublicacionById } from "../hooks/publicaciones/UseGetPublicacionbyid.jsx";
+import { useGetCompromisoList } from "../hooks/listas/useGetCompromisoList.jsx";
 import { useCreatePublicacion } from "../hooks/publicaciones/useCreatePublicacion.jsx";
 import { useEditPublicacion } from "../hooks/publicaciones/useEditPublicacion.jsx";
 import { useDeletePublicacion } from "../hooks/publicaciones/useDeletePublicacion.jsx";
 import { useDeleteImagenPublicacion } from "../hooks/publicaciones/UseDeleteImagenPublicacion.jsx";
+
 import { ModalPublicacion } from "../components/Publicacion/ModalPublicacion.jsx";
 import { ModalPublicacionDetalle } from "../components/Publicacion/PublicacionDetalle.jsx";
 import { TarjetaPublicacion } from "../components/Publicacion/TarjetaPublicacion.jsx";
@@ -17,6 +19,9 @@ const POSTS_PER_PAGE = 6;
 const Publicaciones = () => {
     const userRole = getUserRole();
     const canGestionar = PUEDE_GESTIONAR_PUBLICACION.includes(userRole);
+
+    const [compromisos, setCompromisos] = useState([]);
+    const [compromisoList, fetchCompromisoList] = useGetCompromisoList(compromisos, setCompromisos);
 
     const [modalAbierto, setModalAbierto] = useState(false);
     const [publicacionSeleccionada, setPublicacionSeleccionada] = useState(null);
@@ -41,6 +46,10 @@ const Publicaciones = () => {
 
     useEffect(() => {
         fetchPublicaciones();
+
+        if (typeof fetchCarreraList === "function") {
+            fetchCompromisoList();
+        }
     }, [fetchPublicaciones]);
 
     const abrirCrear = () => {

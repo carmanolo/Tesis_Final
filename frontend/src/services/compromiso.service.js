@@ -72,3 +72,13 @@ export async function descargarSolicitudService(compromisoId, formato) {
         throw error;
     }
 }
+
+export const getCompromisoList = async () => {
+    try {
+        const response = await axios.get("/compromisos/compromisoList");
+        return response?.data?.data || [];
+    } catch (error) {
+        console.error(error);
+        return [];
+    }        
+}
