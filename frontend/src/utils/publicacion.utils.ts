@@ -1,42 +1,46 @@
 import { API_URL } from "../config/env.config.js";
 
 const baseUrl = (API_URL || "").replace(/\/api\/?$/, "");
-// console.log("BASEURL: " + (baseUrl || "(vacío)"));
 
 // Construye la URL completa para MOSTRAR una imagen.
 export const getImageUrl = (imgPath: any) => {
     if (!imgPath) {
-        // console.log("IMGPATH: (vacío)");
         return "";
     }
     if (/^(https?:|blob:|data:)/i.test(imgPath)) {
-        // console.log(`IMGPATH: ${imgPath}`);
         return imgPath;
     } 
 
     const clean = String(imgPath).replace(/\\/g, "/").replace(/^\/+/, "");
     const encoded = clean.split("/").map(encodeURIComponent).join("/");
-    // console.log(`IMGPATH: ` + `${baseUrl}/${encoded}`);
     return `${baseUrl}/${encoded}`;
+};
+
+export const getCompromisoId = (compromiso: unknown): number | null => {
+    if (typeof compromiso !== "string") return null;
+    const [idPart] = compromiso.split(". ");
+    const id = Number(idPart?.trim());
+    return isNaN(id) ? null : id;
 };
 
 export const getCompromisoTitulo = (compromiso: unknown): string => {
     const DEFAULT_TITULO = "No hay noticias";
-    if(typeof compromiso !== "string"){
+    if (typeof compromiso !== "string") {
         return DEFAULT_TITULO;
     }
 
     try {
         const splitCompromiso = compromiso.split("(")[0];
         const nameCompromiso = splitCompromiso ? splitCompromiso.trim() : "";
-        const nameCompromisoWithouthId = nameCompromiso.split(". ")[1];
+        const parts = nameCompromiso.split(". ");
+        const nameCompromisoWithoutId = parts.length > 1 ? parts.slice(1).join(". ") : parts[0];
 
-        return nameCompromisoWithouthId?.trim() || DEFAULT_TITULO;
+        return nameCompromisoWithoutId?.trim() || DEFAULT_TITULO;
     } catch (error) {
         console.error(error);
         return DEFAULT_TITULO;
     }
-}
+};
 
 export const processCompromisos = (compromisos: unknown): string[] => {
   const DEFAULT_COMPROMISO = "NO EXISTE COMPROMISOS";
@@ -52,7 +56,7 @@ export const processCompromisos = (compromisos: unknown): string[] => {
         return DEFAULT_COMPROMISO;
       }
 
-      return compromiso.split(". ")[1]?.trim() || DEFAULT_COMPROMISO;
+      return getCompromisoTitulo(compromiso);
     } catch (error) {
       console.error(error);
       return DEFAULT_COMPROMISO;
@@ -61,4 +65,3 @@ export const processCompromisos = (compromisos: unknown): string[] => {
 
   return newCompromisos;
 };
-

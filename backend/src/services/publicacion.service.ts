@@ -1,12 +1,21 @@
 import { AppDataSource } from "../config/configDb.js";
 import PublicacionEntity from "../entity/publicacion.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
+import CompromisoEntity from "../entity/compromiso.entity.js";
 import { isAdminRole } from "../utils/publicacion.utils.js";
 
 const repo = () => AppDataSource.getRepository(PublicacionEntity as any);
 
+const withTitulo = (pub: any) => {
+    if (!pub) return pub;
+    return {
+        ...pub,
+        titulo: pub.compromiso?.descripcion_compromiso ?? "",
+    };
+};
+
 export async function createPublicacionSer(
-    titulo: string,
+    compromisoId: number,
     descripcion: string,
     imagenes: string[],
     creadorId: number,
@@ -20,20 +29,33 @@ export async function createPublicacionSer(
             return { data: null, error: "La carrera especificada no existe" };
         }
 
+        const compromisoRepo = AppDataSource.getRepository(CompromisoEntity as any);
+        const compromiso = await compromisoRepo.findOneBy({ id_compromiso: compromisoId });
+
+        if (!compromiso) {
+            return { data: null, error: "El compromiso especificado no existe" };
+        }
+
         const nueva = repo().create({
-            titulo,
+            compromisoId,
             descripcion,
             imagenes,
             creadorId,
             carreraId,
             creador: { id: creadorId },
             carrera: { id_carrera: carreraId },
+            compromiso: { id_compromiso: compromisoId },
         });
 
         const saved = await repo().save(nueva);
-        return { data: saved, error: null };
+        const completada = await repo().findOne({
+            where: { id_publicacion: saved.id_publicacion },
+            relations: { carrera: true, creador: true, compromiso: true },
+        });
+
+        return { data: withTitulo(completada ?? saved), error: null };
     } catch (error) {
-        console.error(error);
+        console.error("Error al crear la Publicación:", error);
         return { data: null, error: "Error interno al crear la Publicación" };
     }
 }
@@ -48,12 +70,13 @@ export async function getPublicacionesSer(carreraId?: number, role?: string): Pr
             whereCondition.carreraId = carreraId;
         }
 
-        const Publicaciones = await repo().find({
+        const publicaciones = await repo().find({
             where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
-            relations: { carrera: true, creador: true },
+            relations: { carrera: true, creador: true, compromiso: true },
             order: { createdAt: "DESC" },
         });
-        return Publicaciones;
+
+        return publicaciones.map(withTitulo);
     } catch (error) {
         console.error("error al obtener Publicaciones: ", error);
         return null;
@@ -69,11 +92,12 @@ export async function getPublicacionSer(id_publicacion: number, carreraId?: numb
             whereCondition.carreraId = carreraId;
         }
 
-        const Publicacion = await repo().findOne({
+        const publicacion = await repo().findOne({
             where: whereCondition,
-            relations: { carrera: true, creador: true },
+            relations: { carrera: true, creador: true, compromiso: true },
         });
-        return Publicacion;
+
+        return publicacion ? withTitulo(publicacion) : null;
     } catch (error) {
         console.error("Error al obtener la Publicación", error);
         throw error;
@@ -83,7 +107,15 @@ export async function getPublicacionSer(id_publicacion: number, carreraId?: numb
 export async function patchPublicacionSer(publicacion: any): Promise<any> {
     try {
         const saved = await repo().save(publicacion);
-        return { data: saved, message: "Publicación actualizada con éxito" };
+        const completada = await repo().findOne({
+            where: { id_publicacion: saved.id_publicacion },
+            relations: { carrera: true, creador: true, compromiso: true },
+        });
+
+        return {
+            data: withTitulo(completada ?? saved),
+            message: "Publicación actualizada con éxito",
+        };
     } catch (error) {
         console.error("Error al actualizar Publicación", error);
         return { data: null, message: "Error interno del servidor" };

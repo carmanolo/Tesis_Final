@@ -278,11 +278,13 @@ export async function descargarSolicitudExcel(req: Request, res: Response): Prom
 export async function getCompromisoList(req: Request, res: Response): Promise<any> {
   const DEFAULT_ARRAY: any[] = [];
   try {
-      let compromisoList: any = await obtenerListaCompromiso();
-      compromisoList = processCompromisos;
-      return handleSuccess(res, 200, "Lista de compromisos obtenida exitosamente");
+    const { carreraId, rol, role } = (req.user as any) || {};
+    const userRole = rol || role;
+    const compromisos: any = await obtenerListaCompromiso(carreraId, userRole);
+    const compromisoList = processCompromisos(compromisos);
+    return handleSuccess(res, 200, "Lista de compromisos obtenida exitosamente", compromisoList);
   } catch (error) {
-    console.error(error);
-        return handleSuccess(res, 200, "Error al obtener compromisos; disimular", DEFAULT_ARRAY);
+    console.error("Error al obtener lista de compromisos:", error);
+    return handleSuccess(res, 200, "Error al obtener compromisos; disimular", DEFAULT_ARRAY);
   }
 }

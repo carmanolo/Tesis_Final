@@ -13,6 +13,7 @@ import { TarjetaPublicacion } from "../components/Publicacion/TarjetaPublicacion
 import { DUPageBrowser } from "../components/daisyUI/DUPageBrowser.jsx";
 import { getUserRole } from "../services/user.service.js";
 import { PUEDE_GESTIONAR_PUBLICACION } from "../constants/publicacion.constants.jsx";
+import { getCompromisoId, getCompromisoTitulo } from "../utils/publicacion.utils.js";
 
 const POSTS_PER_PAGE = 6;
 
@@ -26,6 +27,7 @@ const Publicaciones = () => {
     const [modalAbierto, setModalAbierto] = useState(false);
     const [publicacionSeleccionada, setPublicacionSeleccionada] = useState(null);
     const [buscar, setBuscar] = useState("");
+    const [compromisoFiltro, setCompromisoFiltro] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [detalle, setDetalle] = useState(null);
 
@@ -46,11 +48,22 @@ const Publicaciones = () => {
 
     useEffect(() => {
         fetchPublicaciones();
-
-        if (typeof fetchCarreraList === "function") {
+        if (typeof fetchCompromisoList === "function") {
             fetchCompromisoList();
         }
     }, [fetchPublicaciones]);
+
+    const opcionesCompromiso = useMemo(() => {
+        const lista = Array.isArray(compromisoList) ? compromisoList : [];
+        return lista
+            .filter((c) => typeof c === "string" && c.trim().length > 0)
+            .map((c) => ({
+                id: getCompromisoId(c),
+                titulo: getCompromisoTitulo(c),
+                raw: c,
+            }))
+            .filter((o) => o.id !== null);
+    }, [compromisoList]);
 
     const abrirCrear = () => {
         setPublicacionSeleccionada(null);
@@ -69,17 +82,29 @@ const Publicaciones = () => {
         setPublicacionSeleccionada(null);
     };
 
-    // Filtra por búsqueda de texto
+    // Filtra por búsqueda de texto y por selector de compromiso
     const publicacionesFiltradas = useMemo(() => {
         const lista = Array.isArray(publicaciones) ? publicaciones : [];
         const q = buscar.trim().toLowerCase();
-        if (!q) return lista;
-        return lista.filter(p =>
-            [p.titulo, p.descripcion, p.carrera?.nombre_carrera].some(
-                campo => String(campo ?? "").toLowerCase().includes(q)
-            )
-        );
-    }, [publicaciones, buscar]);
+        const cFiltroId = compromisoFiltro ? Number(compromisoFiltro) : null;
+
+        return lista.filter((p) => {
+            const coincideCompromiso =
+                !cFiltroId ||
+                Number(p.compromisoId) === cFiltroId ||
+                Number(p.compromiso?.id_compromiso) === cFiltroId;
+
+            if (!coincideCompromiso) return false;
+
+            if (!q) return true;
+            return [
+                p.titulo,
+                p.descripcion,
+                p.carrera?.nombre_carrera,
+                p.compromiso?.descripcion_compromiso,
+            ].some((campo) => String(campo ?? "").toLowerCase().includes(q));
+        });
+    }, [publicaciones, buscar, compromisoFiltro]);
 
     const lastIdx = currentPage * POSTS_PER_PAGE;
     const firstIdx = lastIdx - POSTS_PER_PAGE;
@@ -94,15 +119,49 @@ const Publicaciones = () => {
                     <h2 className="text-xl font-semibold">Publicaciones del Centro de Estudiantes</h2>
                     <div className="join">
                         <input
-                            className="input input-bordered input-sm join-item w-[280px]"
+                            className="input input-bordered input-sm join-item w-[240px] sm:w-[280px]"
                             placeholder="Buscar publicación..."
                             value={buscar}
-                            onChange={e => { setBuscar(e.target.value); setCurrentPage(1); }}
+                            onChange={(e) => {
+                                setBuscar(e.target.value);
+                                setCurrentPage(1);
+                            }}
                         />
-                        <button className="btn btn-sm join-item" onClick={() => setCurrentPage(1)}>Buscar</button>
+                        <button className="btn btn-sm join-item" onClick={() => setCurrentPage(1)}>
+                            Buscar
+                        </button>
                     </div>
-                    {buscar && (
-                        <button className="btn btn-sm btn-outline" onClick={() => { setBuscar(""); setCurrentPage(1); }}>Limpiar</button>
+
+                    {/* Selector de filtro por compromiso */}
+                    {opcionesCompromiso.length > 0 && (
+                        <select
+                            className="select select-bordered select-sm max-w-xs"
+                            value={compromisoFiltro}
+                            onChange={(e) => {
+                                setCompromisoFiltro(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                        >
+                            <option value="">Todos los compromisos</option>
+                            {opcionesCompromiso.map((opt) => (
+                                <option key={opt.id} value={opt.id}>
+                                    {opt.titulo}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+
+                    {(buscar || compromisoFiltro) && (
+                        <button
+                            className="btn btn-sm btn-outline"
+                            onClick={() => {
+                                setBuscar("");
+                                setCompromisoFiltro("");
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Limpiar
+                        </button>
                     )}
                 </div>
                 {canGestionar && (
@@ -120,17 +179,30 @@ const Publicaciones = () => {
                     </div>
                 ) : currentPageContent.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-base-content/50">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-16 w-16 mb-4 opacity-30"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.5}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
                         </svg>
                         <p className="text-lg font-medium">No hay publicaciones</p>
                         <p className="text-sm">
-                            {canGestionar ? "Crea la primera publicación para tu carrera." : "Aún no hay publicaciones para tu carrera."}
+                            {canGestionar
+                                ? "Crea la primera publicación para tu carrera."
+                                : "Aún no hay publicaciones para tu carrera."}
                         </p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {currentPageContent.map(pub => (
+                        {currentPageContent.map((pub) => (
                             <TarjetaPublicacion
                                 key={pub.id_publicacion}
                                 publicacion={pub}
@@ -158,12 +230,17 @@ const Publicaciones = () => {
             <ModalPublicacion
                 abierto={modalAbierto}
                 publicacion={publicacionSeleccionada}
+                compromisoList={compromisoList}
                 onCrear={handleCreatePublicacion}
                 onEditar={handleEditPublicacion}
                 onEliminarImagen={handleDeleteImagen}
                 onCerrar={cerrarModal}
             />
-            <ModalPublicacionDetalle abierto={!!detalle} publicacion={detalle} onCerrar={() => setDetalle(null)} />
+            <ModalPublicacionDetalle
+                abierto={!!detalle}
+                publicacion={detalle}
+                onCerrar={() => setDetalle(null)}
+            />
         </div>
     );
 };

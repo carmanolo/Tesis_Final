@@ -305,11 +305,18 @@ export async function getCompromisoReporteSer(
 
 //listas para procesamiento en respaldos
 
-export async function obtenerListaCompromiso(): Promise<Compromiso[]> {
+export async function obtenerListaCompromiso(carreraId?: number, role?: string): Promise<Compromiso[]> {
   try {
     const compromisoRepository = AppDataSource.getRepository(CompromisoEntity);
-    const compromisos = await compromisoRepository.find();
-    return compromisos;
+    const whereCondition: any = {};
+    if (!isAdminRole(role) && carreraId) {
+      whereCondition.carreraId = carreraId;
+    }
+    const compromisos = await compromisoRepository.find({
+      where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
+      order: { fecha_compromiso: "DESC", id_compromiso: "DESC" },
+    });
+    return compromisos as any;
   } catch (error) {
     console.error("Error al obtener la lista de compromiso:", error);
     return [];

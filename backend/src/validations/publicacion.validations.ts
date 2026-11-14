@@ -5,7 +5,7 @@ import {
     MAX_TITULO,
     MIN_DESCRIPCION,
     MAX_DESCRIPCION,
-    TITULO_OBLIGATORIO,
+    COMPROMISO_OBLIGATORIO,
     DESCRIPCION_OBLIGATORIA,
     CAMPOS_ADICIONALES,
 } from "../constants/publicacion.constants.js";
@@ -13,9 +13,18 @@ import {
 export const integrityValidation = Joi.object({
     id_publicacion: Joi.any().custom(idValidationFunction),
 
-    titulo: Joi.string().min(MIN_TITULO).max(MAX_TITULO).messages({
+    compromisoId: Joi.number().integer().positive().messages({
+        "number.base": "El id del compromiso debe ser un número",
+        "number.positive": "El id del compromiso debe ser un número positivo",
+    }),
+
+    id_compromiso: Joi.number().integer().positive().messages({
+        "number.base": "El id del compromiso debe ser un número",
+        "number.positive": "El id del compromiso debe ser un número positivo",
+    }),
+
+    titulo: Joi.string().min(MIN_TITULO).max(MAX_TITULO).allow(null, "").messages({
         "string.base": "El título debe ser un texto",
-        "string.empty": "El título no puede estar vacío",
         "string.min": `El título debe tener al menos ${MIN_TITULO} caracteres`,
         "string.max": `El título no puede tener más de ${MAX_TITULO} caracteres`,
     }),
@@ -42,9 +51,9 @@ export const integrityValidation = Joi.object({
 });
 
 export const createValidation = Joi.object({
-    titulo: Joi.any().required().messages({
-        "any.required": TITULO_OBLIGATORIO,
-    }),
+    compromisoId: Joi.any(),
+    id_compromiso: Joi.any(),
+    titulo: Joi.any(),
     descripcion: Joi.any().required().messages({
         "any.required": DESCRIPCION_OBLIGATORIA,
     }),
@@ -61,6 +70,8 @@ export const createValidation = Joi.object({
 // Sin .min(1): al actualizar se puede enviar solo imágenes (multipart) sin campos de texto.
 // El controlador valida que venga al menos un campo o una imagen.
 export const updateValidation = Joi.object({
+    compromisoId: Joi.any(),
+    id_compromiso: Joi.any(),
     titulo: Joi.any(),
     descripcion: Joi.any(),
     carreraId: Joi.any(),
