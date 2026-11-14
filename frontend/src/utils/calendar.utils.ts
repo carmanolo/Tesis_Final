@@ -98,3 +98,11 @@ export function normalizarFechaISO(fecha?: Date | string | null): string {
     return "";
   }
 }
+
+// "YYYY-MM-DD" de hoy en hora local 
+export function hoyISOLocal() {
+    const d = new Date();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${d.getFullYear()}-${mm}-${dd}`;
+}

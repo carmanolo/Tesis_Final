@@ -156,10 +156,6 @@ export const DetalleReunion = ({
                                     </button>
                                 </>
                             )}
-
-                            <button className="btn btn-neutral" onClick={onCerrar}>
-                                Cerrar
-                            </button>
                         </>
                     )}
                 </div>

@@ -67,7 +67,7 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
     },
     {
       icon: FaClipboardCheck,
-      label: "Materiales",
+      label: "Materiales y Préstamos",
       destination: "/materiales",
       iconColor: "text-[#000000]",
       roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee", "estudiante"]
