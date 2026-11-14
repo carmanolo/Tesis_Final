@@ -5,9 +5,10 @@ const isOk = (res) => res?.status >= 200 && res?.status < 300;
 
 export function useEditPublicacion(onSuccess) {
     // Devuelve true si se editó correctamente, false en caso contrario.
-    const handleEditPublicacion = async (id, { titulo, descripcion, nuevasImagenes = [] }) => {
+    const handleEditPublicacion = async (id, { compromisoId, titulo, descripcion, nuevasImagenes = [] }) => {
         try {
             const formData = new FormData();
+            if (compromisoId) formData.append("compromisoId", compromisoId);
             if (titulo) formData.append("titulo", titulo);
             if (descripcion) formData.append("descripcion", descripcion);
             nuevasImagenes.forEach((img) => formData.append("imagenes", img));

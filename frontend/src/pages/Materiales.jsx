@@ -11,7 +11,7 @@ import { ModalPrestarMaterial } from "../components/Material/ModalPrestarMateria
 import { usePrestamo } from "../hooks/materiales/usePrestamo.jsx";
 import { useGetUsers } from "../hooks/users/useGetUsers.jsx";
 
-import { getUserRole } from "../services/user.service.js";
+import { getUserRole, getUserCarreraId } from "../services/user.service.js";
 import { PUEDE_EDITAR_MATERIAL, TIPO_MATERIAL } from "../constants/material.constants.jsx";
 
 const POSTS_PER_PAGE = 4;
@@ -108,6 +108,18 @@ const Material = () => {
     const currentPageContent = materialesFiltrados.slice(firstPostIndex, lastPostIndex);
     const pageAmount = Math.ceil(materialesFiltrados.length / POSTS_PER_PAGE) || 0;
 
+    const userCarreraId = getUserCarreraId();
+    const carreraMaterial = materialAPrestar?.carreraId ?? materialAPrestar?.carrera?.id_carrera ?? userCarreraId;
+
+    const usuariosCarrera = useMemo(() => {
+        const lista = Array.isArray(usuariosList) ? usuariosList : [];
+        if (!carreraMaterial) return lista;
+        return lista.filter((u) => {
+            const uCarrera = u.carreraId ?? u.carrera?.id_carrera ?? u.carreras?.id_carrera;
+            return Number(uCarrera) === Number(carreraMaterial);
+        });
+    }, [usuariosList, carreraMaterial]);
+
     return (
         <div className="Clase-page">
             <div className="flex flex-wrap gap-4 mb-4 items-center justify-between">
@@ -203,7 +215,7 @@ const Material = () => {
                 material={materialAPrestar}
                 onPrestar={handleCreatePrestamo}
                 onCerrar={cerrarPrestar}
-                usuarios={Array.isArray(usuariosList) ? usuariosList : []}
+                usuarios={usuariosCarrera}
             />
         </div>
     );
