@@ -5,10 +5,10 @@ import { formatearFechaDDMMAAAA } from "../../utils/calendar.utils.js";
 const EstadoActa = ({ reunion }) => (
     <span
         className={`badge badge-sm text-white border-none ${
-            reunion.ruta_archivo ? "bg-[#014898]" : "bg-[#EE820F]"
+            reunion.ruta_archivo || reunion.acta_estado === "finalizada" ? "bg-[#014898]" : "bg-[#EE820F]"
         }`}
     >
-        {reunion.ruta_archivo ? "Acta subida" : "Acta pendiente"}
+        {reunion.ruta_archivo || reunion.acta_estado === "finalizada" ? "Acta publicada" : "Acta pendiente"}
     </span>
 );
 

@@ -167,9 +167,7 @@ export const EditorActa = ({ reunion, onCerrar, onActualizado }) => {
         if (editor.isEmpty) return;
         const { isConfirmed } = await Swal.fire({
             title: "¿Finalizar y publicar acta?",
-            text: reunion.ruta_archivo
-                ? "Se generará el PDF oficial y reemplazará el acta actual de esta reunión."
-                : "Se generará el PDF oficial y quedará disponible para descarga.",
+            text: "El acta quedará publicada inmediatamente en la plataforma para todos los estudiantes.",
             icon: "question",
             showCancelButton: true,
             confirmButtonText: "Sí, publicar",

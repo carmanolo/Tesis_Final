@@ -11,8 +11,6 @@ import { useGetReuniones } from "@hooks/reuniones/useGetReuniones.jsx";
 import { useCreateReunion } from "@hooks/reuniones/useCreateReunion.jsx";
 import { usePatchReunion } from "@hooks/reuniones/usePatchReunion.jsx";
 import { useDeleteReunion } from "@hooks/reuniones/useDeleteReunion.jsx";
-import { useSubirActa } from "@hooks/reuniones/useSubirActa.jsx";
-import { useDescargarActa } from "@hooks/reuniones/useDescargarActa.jsx";
 import { normalizarFechaISO } from "../utils/calendar.utils.js";
 import { hoyISOLocal } from "../utils/calendar.utils.js";
 
@@ -55,8 +53,6 @@ const Reunion = () => {
     const { handleCreateReunion } = useCreateReunion(fetchReuniones);
     const { handleEditReunion } = usePatchReunion(fetchReuniones);
     const { handleDeleteReunion } = useDeleteReunion(fetchReuniones);
-    const { handleSubirActa } = useSubirActa(fetchReuniones);
-    const { handleDescargarActa } = useDescargarActa();
 
     useEffect(() => {
         if (typeof fetchReuniones === "function") {
@@ -101,10 +97,8 @@ const Reunion = () => {
             <DetalleReunion
                 reunion={reunionSeleccionada}
                 puedeGestionarActas={puedeGestionarActas}
-                onSubirActa={handleSubirActa}
                 onEditar={handleEditReunion}
                 onEliminar={handleEliminarSeleccionada}
-                onDescargar={handleDescargarActa}
                 onCerrar={() => setReunionSeleccionada(null)}
                 onRedactarActa={(r) => setReunionEditando(r)}
                 onVerActa={(r) => setReunionViendo(r)}

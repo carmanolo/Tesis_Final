@@ -123,25 +123,21 @@ const Material = () => {
     return (
         <div className="Clase-page">
             <div className="flex flex-wrap gap-4 mb-4 items-center justify-between">
-                <div className="flex flex-wrap gap-3 items-center">
-                    <h2 className="text-xl font-semibold">Lista de materiales</h2>
+                <div className="flex flex-wrap gap-3 items-center w-full sm:w-auto">
+                    <h2 className="text-xl font-semibold w-full sm:w-auto">Lista de materiales</h2>
 
-                    <div className="join">
-                        <div>
-                            <div>
-                                <input
-                                    className="input input-bordered input-sm join-item w-[300px]"
-                                    placeholder="Buscar material o prestatario..."
-                                    value={buscar}
-                                    onChange={(e) => {
-                                        setBuscar(e.target.value);
-                                        setCurrentPage(1);
-                                    }}
-                                />
-                            </div>
-                        </div>
+                    <div className="join join-vertical sm:join-horizontal w-full sm:w-auto">
+                        <input
+                            className="input input-bordered input-sm join-item w-full sm:w-[260px] md:w-[300px]"
+                            placeholder="Buscar material o prestatario..."
+                            value={buscar}
+                            onChange={(e) => {
+                                setBuscar(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                        />
                         <select
-                            className="select select-bordered select-sm join-item"
+                            className="select select-bordered select-sm join-item w-full sm:w-auto"
                             value={tipoFiltro}
                             onChange={(e) => {
                                 setTipoFiltro(e.target.value);
@@ -155,19 +151,17 @@ const Material = () => {
                                 </option>
                             ))}
                         </select>
-                        <div className="indicator">
-                            <button
-                                type="button"
-                                className="btn btn-sm join-item"
-                                onClick={() => setCurrentPage(1)}
-                            >
-                                Buscar
-                            </button>
-                        </div>
+                        <button
+                            type="button"
+                            className="btn btn-sm join-item w-full sm:w-auto"
+                            onClick={() => setCurrentPage(1)}
+                        >
+                            Buscar
+                        </button>
                     </div>
 
                     {(buscar || tipoFiltro) && (
-                        <button className="solicitud-limpiar-btn btn btn-sm btn-outline" onClick={limpiarFiltros}>
+                        <button className="solicitud-limpiar-btn btn btn-sm btn-outline w-full sm:w-auto" onClick={limpiarFiltros}>
                             Limpiar
                         </button>
                     )}

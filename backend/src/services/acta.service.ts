@@ -92,7 +92,16 @@ function documentoHtml(reunion: any, contenido: string): string {
 export async function generarActaPdf(reunion: any, contenido: string): Promise<Buffer> {
     const browser = await puppeteer.launch({
         headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+            "--no-first-run",
+            "--no-zygote",
+            "--single-process",
+            "--disable-extensions",
+        ],
     });
     try {
         const page = await browser.newPage();
@@ -168,30 +177,55 @@ export async function finalizarActaSer(id_reunion: number) {
             return { data: null, message: "El acta está vacía" };
         }
 
-        const pdf = await generarActaPdf(reunion, reunion.contenido_acta);
+        // Marcar inmediatamente como finalizada en la BD para respuesta instantánea
+        reunion.acta_estado = "finalizada";
+        reunion.fecha_subida = new Date();
+        const saved = await repo().save(reunion);
+
+        // Generar y archivar el PDF en segundo plano (asíncrono) sin demorar al usuario
+        generarYGuardarPdfAsync(reunion, reunion.contenido_acta).catch((err) => {
+            console.error("Error al generar PDF en segundo plano:", err);
+        });
+
+        return { data: saved, message: "Acta finalizada y publicada" };
+    } catch (error) {
+        console.error("Error al finalizar el acta", error);
+        return { data: null, message: "Error interno al generar el acta" };
+    }
+}
+
+async function generarYGuardarPdfAsync(reunion: any, contenido: string) {
+    try {
+        const id_reunion = reunion.id_reunion;
+        const pdf = await generarActaPdf(reunion, contenido);
 
         fs.mkdirSync(ACTA_UPLOAD_DIR, { recursive: true });
         const nombreArchivo = `acta_${id_reunion}_${Date.now()}.pdf`;
         const ruta = path.join(ACTA_UPLOAD_DIR, nombreArchivo);
         fs.writeFileSync(ruta, pdf);
 
-        // Reemplaza el acta anterior (subida a mano o generada antes)
+        // Reemplaza el acta anterior si existía
         if (reunion.ruta_archivo) {
             const anterior = resolverRutaActa(reunion.ruta_archivo);
-            if (anterior && anterior !== ruta) fs.unlinkSync(anterior);
+            if (anterior && anterior !== ruta && fs.existsSync(anterior)) {
+                try {
+                    fs.unlinkSync(anterior);
+                } catch {
+                    // ignorar si no se pudo eliminar archivo previo
+                }
+            }
         }
 
-        reunion.nombre_archivo = nombreArchivo;
-        reunion.nombre_original = `Acta_reunion_${fechaDDMMAAAA(reunion.fecha_reunion)}.pdf`;
-        reunion.tipo_archivo = "application/pdf";
-        reunion.ruta_archivo = ruta;
-        reunion.fecha_subida = new Date();
-        reunion.acta_estado = "finalizada";
-
-        const saved = await repo().save(reunion);
-        return { data: saved, message: "Acta finalizada y publicada" };
-    } catch (error) {
-        console.error("Error al finalizar el acta", error);
-        return { data: null, message: "Error interno al generar el acta" };
+        await repo().update(
+            { id_reunion },
+            {
+                nombre_archivo: nombreArchivo,
+                nombre_original: `Acta_reunion_${fechaDDMMAAAA(reunion.fecha_reunion)}.pdf`,
+                tipo_archivo: "application/pdf",
+                ruta_archivo: ruta,
+            }
+        );
+    } catch (err) {
+        console.error("Error en generarYGuardarPdfAsync:", err);
     }
 }
