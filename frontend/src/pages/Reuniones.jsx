@@ -4,6 +4,8 @@ import { ACCESO_GESTION_ACTAS } from "../constants/reunion.constants.jsx";
 
 import { ReunionesLista } from "../components/Reunion/ReunionesLista.jsx";
 import { DetalleReunion } from "../components/Reunion/Detallereunion.jsx";
+import { EditorActa } from "../components/Reunion/EditorActa.jsx";
+import { VisorActa } from "../components/Reunion/VisorActa.jsx";
 
 import { useGetReuniones } from "@hooks/reuniones/useGetReuniones.jsx";
 import { useCreateReunion } from "@hooks/reuniones/useCreateReunion.jsx";
@@ -16,10 +18,13 @@ import { hoyISOLocal } from "../utils/calendar.utils.js";
 
 
 
+
 const Reunion = () => {
     const [reunionData, setReunionData] = useState([]);
     const [reuniones, fetchReuniones] = useGetReuniones(reunionData, setReunionData);
     const [reunionSeleccionada, setReunionSeleccionada] = useState(null);
+    const [reunionEditando, setReunionEditando] = useState(null);
+    const [reunionViendo, setReunionViendo] = useState(null);
 
     const userRole = getUserRole();
     const puedeGestionarActas = ACCESO_GESTION_ACTAS.includes(userRole);
@@ -101,7 +106,22 @@ const Reunion = () => {
                 onEliminar={handleEliminarSeleccionada}
                 onDescargar={handleDescargarActa}
                 onCerrar={() => setReunionSeleccionada(null)}
+                onRedactarActa={(r) => setReunionEditando(r)}
+                onVerActa={(r) => setReunionViendo(r)}
             />
+            {reunionEditando && (
+                <EditorActa
+                    reunion={reunionEditando}
+                    onCerrar={() => setReunionEditando(null)}
+                    onActualizado={fetchReuniones}
+                />
+            )}
+            {reunionViendo && (
+                <VisorActa
+                    reunion={reunionViendo}
+                    onCerrar={() => setReunionViendo(null)}
+                />
+            )}
         </div>
     );
 };

@@ -89,3 +89,28 @@ export async function descargarActaService(idReunion, nombreSugerido) {
     }
 }
 
+export async function getContenidoActaService(idReunion) {
+    const response = await axios.get(`/reuniones/${idReunion}/acta/contenido`);
+    return response.data.data; // { contenido, acta_estado }
+}
+
+export async function guardarContenidoActaService(idReunion, contenido) {
+    const response = await axios.patch(`/reuniones/${idReunion}/acta/contenido`, { contenido });
+    return Object.assign(response.data, { status: response.status });
+}
+
+export async function finalizarActaService(idReunion) {
+    const response = await axios.post(`/reuniones/${idReunion}/acta/finalizar`);
+    return Object.assign(response.data, { status: response.status });
+}
+
+// Devuelve un Blob (pdf o docx) generado a partir del borrador guardado
+export async function exportarActaService(idReunion, formato = "pdf") {
+    const response = await axios.get(`/reuniones/${idReunion}/acta/exportar`, {
+        params: { formato },
+        responseType: "blob",
+    });
+    const contentType = response.headers["content-type"] || "application/octet-stream";
+    return new Blob([response.data], { type: contentType });
+}
+

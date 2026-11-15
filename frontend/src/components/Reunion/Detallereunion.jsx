@@ -7,8 +7,9 @@ export const DetalleReunion = ({
     onSubirActa,
     onEditar,
     onEliminar,
-    onDescargar,
     onCerrar,
+    onRedactarActa,
+    onVerActa
 }) => {
     const [editando, setEditando] = useState(false);
     const [fecha, setFecha] = useState("");
@@ -27,6 +28,7 @@ export const DetalleReunion = ({
     if (!reunion) return null;
 
     const tieneActa = Boolean(reunion.ruta_archivo);
+    const tieneActaRedactada = Boolean(reunion.acta_estado === "finalizada" || reunion.contenido_acta);
 
     const handleGuardar = async () => {
         if (!fecha || !descripcion.trim()) return;
@@ -37,15 +39,6 @@ export const DetalleReunion = ({
         setEditando(false);
     };
 
-    const handleCancelarEdicion = () => {
-        setFecha(normalizarFechaISO(reunion.fecha_reunion));
-        setDescripcion(reunion.descripcion || "");
-        setEditando(false);
-    };
-
-    const handleTriggerFileInput = () => {
-        fileInputRef.current?.click();
-    };
 
     const handleFileChange = (e) => {
         const file = e.target.files?.[0];
@@ -54,6 +47,7 @@ export const DetalleReunion = ({
         }
         e.target.value = "";
     };
+
 
     return (
         <div
@@ -116,20 +110,17 @@ export const DetalleReunion = ({
                             <button className="btn btn-primary" onClick={handleGuardar}>
                                 Guardar
                             </button>
-                            <button className="btn btn-neutral" onClick={handleCancelarEdicion}>
-                                Cancelar
-                            </button>
                         </>
                     ) : (
                         <>
-                            {/* Disponible para todos los roles (estudiantes incluidos) */}
+
+                            {/* Ver acta redactada en plataforma — visible para todos cuando está publicada */}
                             <button
-                                className="btn btn-success"
-                                onClick={() => onDescargar(reunion)}
-                                disabled={!tieneActa}
-                                title={tieneActa ? "Descargar acta" : "Aún no hay acta subida"}
+                                className="btn btn-info"
+                                onClick={() => onVerActa(reunion)}
+                                title="Ver el acta redactada en la plataforma"
                             >
-                                Descargar acta
+                                Ver acta
                             </button>
 
                             {/* Solo miembros del CEE / admin */}
@@ -142,9 +133,6 @@ export const DetalleReunion = ({
                                         accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.pdf,.doc,.docx"
                                         onChange={handleFileChange}
                                     />
-                                    <button className="btn btn-primary" onClick={handleTriggerFileInput}>
-                                        {tieneActa ? "Reemplazar acta" : "Subir acta"}
-                                    </button>
                                     <button className="btn btn-primary" onClick={() => setEditando(true)}>
                                         Editar
                                     </button>
@@ -154,8 +142,13 @@ export const DetalleReunion = ({
                                     >
                                         Eliminar
                                     </button>
+
+                                    <button className="btn btn-primary" onClick={() => onRedactarActa(reunion)}>
+                                        Redactar acta
+                                    </button>
                                 </>
                             )}
+                            
                         </>
                     )}
                 </div>
