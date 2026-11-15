@@ -1,31 +1,18 @@
 import { Request, Response } from "express";
-import Joi from "joi";
 import { getReunionSer } from "../services/reunion.service.js";
-import {
-    obtenerContenidoActaSer,
-    guardarContenidoActaSer,
-    finalizarActaSer,
-    generarActaPdf,
-    generarActaDocx,
-} from "../services/acta.service.js"
+import { contenidoValidation } from "../validations/reunion.validations.js";
+import { obtenerContenidoActaSer, guardarContenidoActaSer, finalizarActaSer, generarActaPdf, generarActaDocx} from "../services/acta.service.js"
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 
-const ROLES_GESTION_ACTAS = ["presidente cee", "vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee"];
+const ROLES_GESTION_ACTAS = ["presidente cee", "vicepresidente cee", "secretario cee"];
 
-const contenidoValidation = Joi.object({
-    contenido: Joi.string().allow("").max(1_000_000).required().messages({
-        "string.base": "El contenido debe ser texto",
-        "string.max": "El contenido del acta es demasiado largo",
-        "any.required": "El contenido es obligatorio",
-    }),
-}).unknown(false);
 
 function parseId(req: Request): number | null {
     const n = Number(req.params.id_reunion);
     return Number.isInteger(n) && n > 0 ? n : null;
 }
 
-// Verifica que la reunión exista y pertenezca a la carrera del usuario (o sea admin)
+// Verifica que la reunión exista y pertenezca a la carrera del usuario
 async function reunionPermitida(req: Request, id: number) {
     const { carreraId, rol, role } = (req.user as any) || {};
     return getReunionSer(id, carreraId, rol || role);
@@ -75,7 +62,6 @@ export async function guardarContenidoActa(req: Request, res: Response): Promise
     }
 }
 
-// GET /:id_reunion/acta/exportar?formato=pdf|docx  (usa el borrador guardado)
 export async function exportarActa(req: Request, res: Response): Promise<any> {
     try {
         const id = parseId(req);
@@ -114,7 +100,7 @@ export async function exportarActa(req: Request, res: Response): Promise<any> {
     }
 }
 
-// POST /:id_reunion/acta/finalizar  -> genera el PDF oficial y lo publica como acta de la reunión
+// genera el PDF oficial y lo publica como acta de la reunión
 export async function finalizarActa(req: Request, res: Response): Promise<any> {
     try {
         const id = parseId(req);

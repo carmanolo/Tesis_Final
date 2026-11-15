@@ -5,44 +5,17 @@ import puppeteer from "puppeteer";
 import HTMLtoDOCX from "@turbodocx/html-to-docx";
 import { AppDataSource } from "../config/configDb.js";
 import { ReunionEntity } from "../entity/reunion.entity.js";
-import { ACTA_UPLOAD_DIR } from "../constants/reunion.constants.js";
-import { resolverRutaActa } from "./reunion.service.js"; // exporta esta función en reunion.service.ts
+import { ACTA_UPLOAD_DIR, SANITIZE_OPTIONS, ESTILOS_PDF } from "../constants/reunion.constants.js";
+import { resolverRutaActa } from "./reunion.service.js";
 
 const repo = () => AppDataSource.getRepository(ReunionEntity as any);
 
-// ---------------------------------------------------------------------------
-// Sanitización: solo se permite el HTML que produce el editor
-// ---------------------------------------------------------------------------
-const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
-    allowedTags: [
-        "p", "br", "hr", "h1", "h2", "h3",
-        "strong", "em", "u", "s", "code", "pre", "blockquote",
-        "ul", "ol", "li",
-        "table", "thead", "tbody", "tr", "th", "td",
-        "a",
-    ],
-    allowedAttributes: {
-        a: ["href", "target", "rel"],
-        th: ["colspan", "rowspan"],
-        td: ["colspan", "rowspan"],
-        p: ["style"],
-        h1: ["style"],
-        h2: ["style"],
-        h3: ["style"],
-    },
-    allowedStyles: {
-        "*": { "text-align": [/^(left|right|center|justify)$/] },
-    },
-    allowedSchemes: ["http", "https", "mailto"],
-};
 
 export function sanitizarContenido(html: string): string {
     return sanitizeHtml(html || "", SANITIZE_OPTIONS);
 }
 
-// ---------------------------------------------------------------------------
 // Helpers de plantilla
-// ---------------------------------------------------------------------------
 function escapeHtml(s: any): string {
     return String(s ?? "")
         .replace(/&/g, "&amp;")
@@ -67,28 +40,13 @@ function encabezadoHtml(reunion: any): string {
     `;
 }
 
-const ESTILOS_PDF = `
-    body { font-family: "Times New Roman", Georgia, serif; font-size: 12pt; line-height: 1.5; color: #111; }
-    h1 { font-size: 20pt; margin: 0 0 8pt; }
-    h2 { font-size: 15pt; margin: 14pt 0 6pt; }
-    h3 { font-size: 13pt; margin: 12pt 0 4pt; }
-    p { margin: 0 0 8pt; }
-    ul, ol { margin: 0 0 8pt 18pt; padding: 0; }
-    blockquote { border-left: 3px solid #bbb; margin: 8pt 0; padding-left: 10pt; color: #444; }
-    table { border-collapse: collapse; width: 100%; margin: 8pt 0; }
-    th, td { border: 1px solid #777; padding: 4pt 6pt; vertical-align: top; }
-    th { background: #eee; }
-    hr { border: 0; border-top: 1px solid #999; margin: 10pt 0; }
-`;
 
 function documentoHtml(reunion: any, contenido: string): string {
     return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8" /><style>${ESTILOS_PDF}</style></head>
         <body>${encabezadoHtml(reunion)}${contenido}</body></html>`;
 }
 
-// ---------------------------------------------------------------------------
 // Generadores
-// ---------------------------------------------------------------------------
 export async function generarActaPdf(reunion: any, contenido: string): Promise<Buffer> {
     const browser = await puppeteer.launch({
         headless: true,
@@ -123,14 +81,14 @@ export async function generarActaPdf(reunion: any, contenido: string): Promise<B
 }
 
 export async function generarActaDocx(reunion: any, contenido: string): Promise<Buffer> {
-    // html-to-docx respeta mejor estilos en línea que <style>, por eso aquí va sin hoja de estilos
+    // html-to-docx respeta mejor estilos en línea que <style>
     const html = `<!DOCTYPE html><html><body>${encabezadoHtml(reunion)}${contenido}</body></html>`;
     const out: any = await HTMLtoDOCX(html, null, {
         table: { row: { cantSplit: true } },
         footer: true,
         pageNumber: true,
         font: "Times New Roman",
-        fontSize: 24, // half-points => 12pt
+        fontSize: 24, 
     });
     // Según el entorno la librería devuelve Buffer, ArrayBuffer o Blob
     if (Buffer.isBuffer(out)) return out;
@@ -138,11 +96,8 @@ export async function generarActaDocx(reunion: any, contenido: string): Promise<
     return Buffer.from(await out.arrayBuffer());
 }
 
-// ---------------------------------------------------------------------------
 // Persistencia
-// ---------------------------------------------------------------------------
 
-// contenido_acta es select:false, por eso se pide explícitamente
 export async function obtenerContenidoActaSer(id_reunion: number): Promise<any | null> {
     return repo()
         .createQueryBuilder("r")
@@ -211,7 +166,6 @@ async function generarYGuardarPdfAsync(reunion: any, contenido: string) {
                 try {
                     fs.unlinkSync(anterior);
                 } catch {
-                    // ignorar si no se pudo eliminar archivo previo
                 }
             }
         }
