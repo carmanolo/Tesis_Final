@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getReuniones, getReunionById, createReunion, patchReunionById, deleteReunionById, subirActa, descargarActa} from "../controllers/reunion.controller.js";
+import { getContenidoActa, guardarContenidoActa, exportarActa, finalizarActa } from "../controllers/acta.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { authorizeRoles } from "../middleware/authorization.middleware.js";
 import { uploadActaMiddleware } from "../middleware/reunion.upload.middleware.js";
@@ -10,12 +11,16 @@ router.use(authenticateJwt);
 
 router.get("/", getReuniones);
 router.get("/:id_reunion", getReunionById);
-router.post("/crear", authorizeRoles("administrador", "presidente cee", "vicepresidente cee", "secretario cee"), createReunion);
+router.get("/:id_reunion/acta/contenido", getContenidoActa);
+router.get("/:id_reunion/acta/exportar",  authorizeRoles("presidente cee", "vicepresidente cee", "secretario cee"), exportarActa);
+router.post("/crear", authorizeRoles( "presidente cee", "vicepresidente cee", "secretario cee"), createReunion);
+router.post("/:id_reunion/acta/finalizar", authorizeRoles("presidente cee", "vicepresidente cee", "secretario cee"), finalizarActa);
 router.patch("/editar/:id_reunion", authorizeRoles("administrador", "presidente cee", "secretario cee", "vicepresidente cee"), patchReunionById);
-router.delete("/eliminar/:id_reunion", authorizeRoles("administrador", "presidente cee", "secretario cee", "vicepresidente cee"), deleteReunionById);
+router.patch("/:id_reunion/acta/contenido", authorizeRoles("presidente cee", "secretario cee", "vicepresidente cee"), guardarContenidoActa);
+router.delete("/eliminar/:id_reunion", authorizeRoles( "presidente cee", "secretario cee", "vicepresidente cee"), deleteReunionById);
 
 // Gestión de actas (importación/exportación de archivos PDF y Word)
-router.post("/:id_reunion/acta", authorizeRoles("administrador", "presidente cee", "vicepresidente cee", "secretario cee"), uploadActaMiddleware, subirActa);
+router.post("/:id_reunion/acta", authorizeRoles( "presidente cee", "vicepresidente cee", "secretario cee"), uploadActaMiddleware, subirActa);
 router.get("/:id_reunion/acta/descargar", descargarActa);
 
 export default router; 
