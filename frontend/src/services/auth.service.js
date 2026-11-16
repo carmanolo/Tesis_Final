@@ -1,6 +1,6 @@
-import axios from './root.service.js';
-import cookies from 'js-cookie';
-import { jwtDecode } from 'jwt-decode';
+import axios from "./root.service.js";
+import cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
 export async function registerService(datauser) {
     try {
@@ -20,7 +20,7 @@ export async function registerService(datauser) {
 
 export async function loginService(datauser) {
     try {
-        const response = await axios.post('/auth/login', {
+        const response = await axios.post("/auth/login", {
             email: datauser.email,
             password: datauser.password
         });
@@ -30,8 +30,8 @@ export async function loginService(datauser) {
             const { username, email, rut, role, carreraId, id } = jwtDecode(data.accessToken);
             const userData = { username, email, rut, role, carreraId, id };
             sessionStorage.setItem("usuario", JSON.stringify(userData));
-            axios.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
-            cookies.set('jwt-auth', data.accessToken, { path: '/' });
+            axios.defaults.headers.common["Authorization"] = `Bearer ${data.accessToken}`;
+            cookies.set("jwt-auth", data.accessToken, { path: "/" });
             return response;
         }
     } catch (error) {
@@ -42,11 +42,51 @@ export async function loginService(datauser) {
 
 export async function logout() {
     try {
-        await axios.post('/auth/logout');
-        sessionStorage.removeItem('usuario');
-        cookies.remove('jwt');
-        cookies.remove('jwt-auth');
+        await axios.post("/auth/logout");
+        sessionStorage.removeItem("usuario");
+        cookies.remove("jwt");
+        cookies.remove("jwt-auth");
     } catch (error) {
-        console.error('Error al cerrar sesión', error)
+        console.error("Error al cerrar sesión", error)
+    }
+}
+
+export async function requestRecoveryService(email) {
+    try {
+        return await axios.post("/auth/recovery/request", { email });
+    } catch (error) {
+        return error.response;
+    }
+}
+
+export async function resetPasswordService({ email, code, newPassword }) {
+    try {
+        return await axios.post("/auth/recovery/reset", { email, code, newPassword });
+    } catch (error) {
+        return error.response;
+    }
+}
+
+export async function getPendingRecoveriesService() {
+    try {
+        return await axios.get("/auth/recovery/pending");
+    } catch (error) {
+        return error.response;
+    }
+}
+
+export async function generateRecoveryCodeService(id) {
+    try {
+        return await axios.post(`/auth/recovery/${id}/code`);
+    } catch (error) {
+        return error.response;
+    }
+}
+
+export async function rejectRecoveryService(id) {
+    try {
+        return await axios.post(`/auth/recovery/${id}/reject`);
+    } catch (error) {
+        return error.response;
     }
 }
