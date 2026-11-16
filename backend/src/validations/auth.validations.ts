@@ -87,3 +87,28 @@ export const loginValidation = Joi.object({
   .messages({
     "object.unknown": "No se permiten campos adicionales",
   });
+
+export const recoveryRequestValidation = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "El correo electrónico debe ser válido.",
+    "string.empty": "El correo electrónico es obligatorio.",
+    "any.required": "El correo electrónico es obligatorio.",
+  }),
+})
+  .unknown(false)
+  .messages({ "object.unknown": "No se permiten campos adicionales" });
+
+export const resetPasswordValidation = Joi.object({
+  email: Joi.string().email().required(),
+  code: Joi.string().length(8).required().messages({
+    "string.length": "El código debe tener 8 caracteres.",
+    "string.empty": "El código es obligatorio.",
+  }),
+  newPassword: Joi.string().min(4).max(100).required().messages({
+    "string.min": "La contraseña debe tener al menos 4 caracteres.",
+    "string.max": "La contraseña no puede exceder los 100 caracteres.",
+    "string.empty": "La contraseña no puede estar vacía.",
+  }),
+})
+  .unknown(false)
+  .messages({ "object.unknown": "No se permiten campos adicionales" });
