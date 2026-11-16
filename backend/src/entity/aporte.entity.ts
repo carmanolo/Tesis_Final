@@ -1,52 +1,47 @@
 import { EntitySchema } from "typeorm";
-import type { IUser } from "./user.entity.js";
 import type { Carrera } from "./carrera.entity.js";
 
 export interface Aporte {
     id_aporte: number;
     descripcion_aporte: string;
-    fecha_aporte: Date;
     procedencia: string;
     monto: number;
-    fecha_recepcion?: Date | null;
-    creadorId?: number;
-    creador?: IUser;
-    carreraId?: number;
+    fecha_aporte: Date | string;
+    tipo: "ingreso" | "egreso";
+    carreraId: number;
     carrera?: Carrera;
 }
 
 export const AporteEntity = new EntitySchema<Aporte>({
     name: "Aporte",
-    tableName: "Aportes",
+    tableName: "aportes",
     columns: {
-        id_aporte: { 
-            type: Number, 
-            primary: true, 
-            generated: true 
+        id_aporte: {
+            type: Number,
+            primary: true,
+            generated: true
         },
-        descripcion_aporte: { 
-            type: String, 
-            nullable: false 
+        descripcion_aporte: {
+            type: String,
+            nullable: false
         },
-        fecha_aporte: { 
-            type: "date", 
-            nullable: false 
+        procedencia: {
+            type: String,
+            nullable: false
         },
-        procedencia: { 
-            type: String, 
-            nullable: false 
+        monto: {
+            type: Number,
+            nullable: false
         },
-        monto: { 
-            type: Number, 
-            nullable: false 
+        // Fecha elegida por el usuario al registrar el aporte
+        fecha_aporte: {
+            type: "date",
+            nullable: false
         },
-        fecha_recepcion: { 
-            type: "timestamp", 
-            nullable: true 
-        },
-        creadorId: {
-            type: "int",
+        tipo: {
+            type: "varchar",
             nullable: false,
+            default: "ingreso",
         },
         carreraId: {
             type: "int",
@@ -54,19 +49,11 @@ export const AporteEntity = new EntitySchema<Aporte>({
         },
     },
     relations: {
-        creador: {
-            type: "many-to-one",
-            target: "User",
-            joinColumn: { name: "creadorId", referencedColumnName: "id" },
-            inverseSide: "Aportes",
-            nullable: false,
-            onDelete: "RESTRICT",
-        },
         carrera: {
             type: "many-to-one",
             target: "Carrera",
             joinColumn: { name: "carreraId", referencedColumnName: "id_carrera" },
-            inverseSide: "Aportes",
+            inverseSide: "aportes",
             nullable: false,
             onDelete: "CASCADE",
         },

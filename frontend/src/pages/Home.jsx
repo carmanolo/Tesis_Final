@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import {
   FaCalendarAlt,
-  FaFileDownload,
   FaClock,
   FaGraduationCap,
   FaInfoCircle,
@@ -13,7 +12,6 @@ import {
 import { DUStats } from "../components/daisyUI/DUStats";
 import useGetStats from "../hooks/profile/useGetStats";
 import { useGetReuniones } from "../hooks/reuniones/useGetReuniones.jsx";
-import { useDescargarActa } from "../hooks/reuniones/useDescargarActa.jsx";
 import { useGetMateriales } from "../hooks/materiales/useGetMaterial.jsx";
 import { getUserRole, getUserCarreraId } from "../services/user.service.js";
 import { getEstadoStyle } from "../constants/material.constants.jsx";
@@ -54,7 +52,6 @@ const Home = () => {
 
   const [reunionData, setReunionData] = useState([]);
   const [reuniones, fetchReuniones] = useGetReuniones(reunionData, setReunionData);
-  const { handleDescargarActa } = useDescargarActa();
 
   // Materiales para consultar préstamos
   const [materialData, setMaterialData] = useState([]);

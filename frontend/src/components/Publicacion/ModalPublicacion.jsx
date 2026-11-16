@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { FORMATOS_ACEPTADOS, MAX_IMAGENES, TAMANO_MAX_MB } from "../../constants/publicacion.constants.jsx";
-import { getImageUrl } from "../../utils/publicacion.utils.js";
+import { getImageUrl, getCompromisoId, getCompromisoTitulo } from "../../utils/publicacion.utils.js";
 
 const TIPOS_VALIDOS = ["image/jpeg", "image/png", "image/jpg"];
 
-export function ModalPublicacion({ abierto, publicacion, onCrear, onEditar, onEliminarImagen, onCerrar }) {
+export function ModalPublicacion({ abierto, publicacion, compromisoList = [], onCrear, onEditar, onEliminarImagen, onCerrar }) {
+    const [compromisoId, setCompromisoId] = useState("");
     const [titulo, setTitulo] = useState("");
     const [descripcion, setDescripcion] = useState("");
     const [nuevasImagenes, setNuevasImagenes] = useState([]);
@@ -13,6 +14,23 @@ export function ModalPublicacion({ abierto, publicacion, onCrear, onEditar, onEl
     const [guardando, setGuardando] = useState(false);
     const fileInputRef = useRef(null);
     const previewsRef = useRef([]);
+
+    // Opciones sacadas del listado de compromisos procesados ("1. Descripción")
+    const opcionesCompromiso = useMemo(() => {
+        const lista = Array.isArray(compromisoList) ? compromisoList : [];
+        return lista
+            .filter((c) => typeof c === "string" && c.trim().length > 0)
+            .map((c) => {
+                const id = getCompromisoId(c);
+                const tit = getCompromisoTitulo(c);
+                return {
+                    id,
+                    titulo: tit,
+                    raw: c,
+                };
+            })
+            .filter((o) => o.id !== null);
+    }, [compromisoList]);
 
     // Imágenes ya guardadas en el backend (rutas tal cual vienen en la respuesta)
     const existentes = Array.isArray(publicacion?.imagenes) ? publicacion.imagenes : [];
@@ -26,11 +44,12 @@ export function ModalPublicacion({ abierto, publicacion, onCrear, onEditar, onEl
     useEffect(() => () => previewsRef.current.forEach(URL.revokeObjectURL), []);
 
     // Al abrir (o cambiar de publicación) reinicia el formulario.
-    // Depende solo del id para no borrar lo escrito cuando la publicación se refresca
     useEffect(() => {
         if (abierto) {
             previewsRef.current.forEach(URL.revokeObjectURL);
-            setTitulo(publicacion?.titulo || "");
+            const initialCompromisoId = publicacion?.compromisoId || publicacion?.compromiso?.id_compromiso || "";
+            setCompromisoId(initialCompromisoId ? String(initialCompromisoId) : "");
+            setTitulo(publicacion?.titulo || publicacion?.compromiso?.descripcion_compromiso || "");
             setDescripcion(publicacion?.descripcion || "");
             setNuevasImagenes([]);
             setPreviews([]);
@@ -40,9 +59,26 @@ export function ModalPublicacion({ abierto, publicacion, onCrear, onEditar, onEl
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [abierto, publicacion?.id_publicacion]);
 
+    const handleCompromisoChange = (e) => {
+        const val = e.target.value;
+        setCompromisoId(val);
+        const opt = opcionesCompromiso.find((o) => String(o.id) === String(val));
+        if (opt) {
+            setTitulo(opt.titulo);
+        } else {
+            setTitulo("");
+        }
+        if (errores.compromisoId) {
+            setErrores((prev) => {
+                const { compromisoId: _, ...resto } = prev;
+                return resto;
+            });
+        }
+    };
+
     const validar = () => {
         const errs = {};
-        if (!titulo.trim() || titulo.trim().length < 3) errs.titulo = "El título debe tener al menos 3 caracteres";
+        if (!compromisoId) errs.compromisoId = "Debes seleccionar un compromiso";
         if (!descripcion.trim() || descripcion.trim().length < 5) errs.descripcion = "La descripción debe tener al menos 5 caracteres";
         if (existentes.length + nuevasImagenes.length === 0) errs.imagenes = "Debes subir al menos una imagen";
         setErrores(errs);
@@ -82,8 +118,8 @@ export function ModalPublicacion({ abierto, publicacion, onCrear, onEditar, onEl
         setGuardando(true);
         try {
             const ok = publicacion
-                ? await onEditar(publicacion.id_publicacion, { titulo, descripcion, nuevasImagenes })
-                : await onCrear({ titulo, descripcion, imagenes: nuevasImagenes });
+                ? await onEditar(publicacion.id_publicacion, { compromisoId: Number(compromisoId), titulo, descripcion, nuevasImagenes })
+                : await onCrear({ compromisoId: Number(compromisoId), titulo, descripcion, imagenes: nuevasImagenes });
             if (ok) onCerrar();
         } finally {
             setGuardando(false);
@@ -99,18 +135,34 @@ export function ModalPublicacion({ abierto, publicacion, onCrear, onEditar, onEl
                     {publicacion ? "Editar publicación" : "Nueva publicación"}
                 </h3>
                 <form onSubmit={handleSubmit} encType="multipart/form-data">
-                    {/* Título */}
+                    {/* Selector de Compromiso (Título) */}
                     <div className="form-control mb-3">
-                        <label className="label"><span className="label-text font-medium">Título *</span></label>
-                        <input
-                            type="text"
-                            className={`input input-bordered input-sm w-full ${errores.titulo ? "input-error" : ""}`}
-                            value={titulo}
-                            onChange={e => setTitulo(e.target.value)}
-                            maxLength={200}
-                            placeholder="Título de la publicación"
-                        />
-                        {errores.titulo && <span className="text-error text-xs mt-1">{errores.titulo}</span>}
+                        <label className="label">
+                            <span className="label-text font-medium">Título (Compromiso asociado) *</span>
+                        </label>
+                        <select
+                            className={`select select-bordered select-sm w-full ${errores.compromisoId ? "select-error" : ""}`}
+                            value={compromisoId}
+                            onChange={handleCompromisoChange}
+                        >
+                            <option value="">-- Selecciona un compromiso para el título --</option>
+                            {opcionesCompromiso.map((opt) => (
+                                <option key={opt.id} value={opt.id}>
+                                    {opt.titulo}
+                                </option>
+                            ))}
+                            {compromisoId && !opcionesCompromiso.some(o => String(o.id) === String(compromisoId)) && (
+                                <option value={compromisoId}>
+                                    {titulo || `Compromiso #${compromisoId}`}
+                                </option>
+                            )}
+                        </select>
+                        {errores.compromisoId && <span className="text-error text-xs mt-1">{errores.compromisoId}</span>}
+                        {opcionesCompromiso.length === 0 && (
+                            <span className="text-warning text-xs mt-1">
+                                No se encontraron compromisos disponibles para asociar.
+                            </span>
+                        )}
                     </div>
 
                     {/* Descripción */}
@@ -144,7 +196,6 @@ export function ModalPublicacion({ abierto, publicacion, onCrear, onEditar, onEl
                                             alt="imagen actual"
                                             className="w-full h-full object-cover rounded-md border"
                                         />
-                                        {/* Se envía `img` tal cual: el backend compara por igualdad exacta */}
                                         <button
                                             type="button"
                                             className="absolute -top-1.5 -right-1.5 btn btn-circle btn-xs btn-error text-white"

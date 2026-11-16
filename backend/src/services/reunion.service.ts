@@ -9,7 +9,7 @@ import { crearEventoReunion, actualizarEventoReunion, eliminarEventoReunion } fr
 import { getEmailsCarrera } from "../helpers/emailCarrera.helper.js";
 
 //Resuelve la ruta real del archivo de acta
-function resolverRutaActa(rutaGuardada: string): string | null {
+export function resolverRutaActa(rutaGuardada: string): string | null {
     // 1. Si la ruta guardada ya es absoluta y existe, usarla directamente
     if (path.isAbsolute(rutaGuardada) && fs.existsSync(rutaGuardada)) {
         return rutaGuardada;

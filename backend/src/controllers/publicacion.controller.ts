@@ -5,6 +5,7 @@ import { idValidation } from "../validations/modules/id.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 import { AppDataSource } from "../config/configDb.js";
 import UserEntity from "../entity/user.entity.js";
+import CompromisoEntity from "../entity/compromiso.entity.js";
 import { PUBLICACION_NO_ENCONTRADA } from "../constants/publicacion.constants.js";
 import {
   isAdminRole,
@@ -34,7 +35,8 @@ export async function createPublicacion(req: Request, res: Response): Promise<an
     const result = createValidation.validate(req.body);
     if (result.error) return rechazar(400, "faltan parametros", result.error.message);
 
-    const { titulo, descripcion, carreraId, id_carrera } = req.body;
+    const { compromisoId, id_compromiso, descripcion, carreraId, id_carrera } = req.body;
+    let targetCompromisoId = Number(compromisoId || id_compromiso);
 
     // Asociar internamente la carrera del usuario creador
     let targetCarreraId = userCarreraId || carreraId || id_carrera;
@@ -50,10 +52,26 @@ export async function createPublicacion(req: Request, res: Response): Promise<an
       return rechazar(400, "No se encontró ninguna carrera disponible para asociar a la publicación");
     }
 
+    // Si no se proporcionó compromisoId, asociar al último compromiso disponible para la carrera
+    if (!targetCompromisoId || isNaN(targetCompromisoId)) {
+      const compromisoRepo = AppDataSource.getRepository(CompromisoEntity as any);
+      const ultimoCompromiso = await compromisoRepo.findOne({
+        where: { carreraId: targetCarreraId },
+        order: { id_compromiso: "DESC" },
+      });
+      if (ultimoCompromiso) {
+        targetCompromisoId = ultimoCompromiso.id_compromiso;
+      }
+    }
+
+    if (!targetCompromisoId || isNaN(targetCompromisoId)) {
+      return rechazar(400, "El compromiso asociado es obligatorio. Debe existir al menos un compromiso para asociar a la publicación.");
+    }
+
     const imagenes = files ? files.map((f) => f.path) : [];
 
     const { data, error: errSer } = await createPublicacionSer(
-      titulo, descripcion, imagenes, id, Number(targetCarreraId)
+      targetCompromisoId, descripcion, imagenes, id, Number(targetCarreraId)
     );
     if (errSer) return rechazar(400, errSer);
 
@@ -133,8 +151,17 @@ export async function patchPublicacionById(req: Request, res: Response): Promise
     const Publicacion = await getPublicacionSer(Number(id_publicacion), carreraId, userRole);
     if (!Publicacion) return rechazar(404, PUBLICACION_NO_ENCONTRADA);
 
-    const { carreraId: newCarreraId, id_carrera: newIdCarrera, ...restData } = req.body;
+    const { carreraId: newCarreraId, id_carrera: newIdCarrera, compromisoId, id_compromiso, ...restData } = req.body;
     Object.assign(Publicacion, restData);
+
+    const targetCompromisoId = compromisoId || id_compromiso;
+    if (targetCompromisoId !== undefined) {
+      const parsedCompromisoId = Number(targetCompromisoId);
+      if (!isNaN(parsedCompromisoId) && parsedCompromisoId > 0) {
+        Publicacion.compromisoId = parsedCompromisoId;
+        Publicacion.compromiso = { id_compromiso: parsedCompromisoId };
+      }
+    }
 
     if (isAdminRole(userRole) && (newCarreraId || newIdCarrera)) {
       Publicacion.carreraId = Number(newCarreraId || newIdCarrera);

@@ -12,6 +12,8 @@ export interface Reunion {
     tipo_archivo?: string | null,
     ruta_archivo?: string | null,
     fecha_subida?: Date | null
+    contenido_acta?: string | null,
+    acta_estado?: string | null,
     carreraId?: number | null,
     creadorId?: number | null,
     carrera?: any,
@@ -55,6 +57,15 @@ export const ReunionEntity = new EntitySchema<Reunion>({
         fecha_subida: {
             type: "timestamp",
             nullable: true,
+        },
+        contenido_acta: { 
+            type: "text", 
+            nullable: true, 
+            select: false 
+        },
+        acta_estado: { 
+            type: String, 
+            nullable: true 
         },
         google_event_id: {
             type: String,

@@ -25,7 +25,7 @@ async function setupServer(): Promise<void> {
     })
   );
 
-  app.use(express.json());
+  app.use(express.json({ limit: "2mb" }));
 
   /*app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`);
@@ -37,7 +37,10 @@ async function setupServer(): Promise<void> {
   app.use(auditMiddleware);
 
   // Servir archivos estáticos (uploads: actas, publicaciones, etc.)
-  //const uploadsDir = path.resolve(__dirname, "../../uploads");
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
+  app.use("/uploads", express.static(path.resolve(__dirname, "../../uploads")));
   app.use("/uploads", express.static(path.resolve("uploads")));
 
   app.use("/api", indexRoutes);

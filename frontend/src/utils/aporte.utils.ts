@@ -1,28 +1,33 @@
 import { normalizarFechaISO, MESES } from "./calendar.utils.js";
-import { APORTE_DESCRIPCION_MIN, APORTE_DESCRIPCION_MAX, OPCIONES_PROCEDENCIA, OPCIONES_DESCRIPCION,TOP_N } from "../constants/aporte.constants.jsx"
+import { OPCIONES_PROCEDENCIA, OPCIONES_DESCRIPCION, TOP_N } from "../constants/aporte.constants.jsx";
 
-
-//detalleAporte component
+// ---------- Formatos ----------
 export const formatoCLP = new Intl.NumberFormat("es-CL", {
     style: "currency",
     currency: "CLP",
     maximumFractionDigits: 0,
 });
 
+// Pasar moneda a valor chileno en formato corto (ejes del gráfico)
+export const formatoCompacto = new Intl.NumberFormat("es-CL", { notation: "compact" });
+
+export const aMonto = (valor: any) => Number(valor) || 0;
+
 const hoyISO = () => new Date().toLocaleDateString("en-CA");
 
-export const obtenerEstadoProcedencia = (procedencia:string) => {
+// Los registros sin tipo se consideran ingresos (igual que el backend)
+export const esEgreso = (aporte: any) => aporte?.tipo === "egreso";
+
+// ---------- Formulario (DetalleAporte) ----------
+export const obtenerEstadoProcedencia = (procedencia: string) => {
     if (!procedencia) {
         return { procedencia: "", otra_procedencia: "" };
     }
-    const existeEnLista = OPCIONES_PROCEDENCIA.some(
+    const opcionExacta = OPCIONES_PROCEDENCIA.find(
         (op) => op.toLowerCase() !== "otro" && op.toLowerCase() === procedencia.toLowerCase()
     );
-    if (existeEnLista) {
-        const opcionExacta = OPCIONES_PROCEDENCIA.find(
-            (op) => op.toLowerCase() === procedencia.toLowerCase()
-        );
-        return { procedencia: opcionExacta || procedencia, otra_procedencia: "" };
+    if (opcionExacta) {
+        return { procedencia: opcionExacta, otra_procedencia: "" };
     }
     return {
         procedencia: "Otro",
@@ -30,18 +35,15 @@ export const obtenerEstadoProcedencia = (procedencia:string) => {
     };
 };
 
-export const obtenerEstadoDescripcion = (descripcion:string) => {
+export const obtenerEstadoDescripcion = (descripcion: string) => {
     if (!descripcion) {
         return { descripcion_aporte: "", otra_descripcion: "" };
     }
-    const existeEnLista = OPCIONES_DESCRIPCION.some(
+    const opcionExacta = OPCIONES_DESCRIPCION.find(
         (op) => op.toLowerCase() !== "otro" && op.toLowerCase() === descripcion.toLowerCase()
     );
-    if (existeEnLista) {
-        const opcionExacta = OPCIONES_DESCRIPCION.find(
-            (op) => op.toLowerCase() === descripcion.toLowerCase()
-        );
-        return { descripcion_aporte: opcionExacta || descripcion, otra_descripcion: "" };
+    if (opcionExacta) {
+        return { descripcion_aporte: opcionExacta, otra_descripcion: "" };
     }
     return {
         descripcion_aporte: "Otro",
@@ -49,7 +51,7 @@ export const obtenerEstadoDescripcion = (descripcion:string) => {
     };
 };
 
-export const valoresIniciales = (aporte:any) => {
+export const valoresIniciales = (aporte: any) => {
     const estadoProcedencia = obtenerEstadoProcedencia(aporte?.procedencia);
     const estadoDescripcion = obtenerEstadoDescripcion(aporte?.descripcion_aporte);
     return {
@@ -59,21 +61,26 @@ export const valoresIniciales = (aporte:any) => {
         procedencia: estadoProcedencia.procedencia,
         otra_procedencia: estadoProcedencia.otra_procedencia,
         monto: aporte?.monto ?? "",
+        tipo: aporte?.tipo === "egreso" ? "egreso" : "ingreso",
     };
 };
 
-//graficoAportes
+// ---------- Balance (misma lógica que calcularResumen del backend) ----------
+export const calcularBalance = (aportes: any[]) => {
+    let totalIngresos = 0;
+    let totalEgresos = 0;
+    aportes.forEach((aporte) => {
+        if (esEgreso(aporte)) totalEgresos += aMonto(aporte.monto);
+        else totalIngresos += aMonto(aporte.monto);
+    });
+    return { totalIngresos, totalEgresos, balance: totalIngresos - totalEgresos };
+};
 
-
-// Pasar moneda a valor chileno
-export const formatoCompacto = new Intl.NumberFormat("es-CL", { notation: "compact" });
-
-export const aMonto = (valor:number) => Number(valor) || 0;
-
+// ---------- Gráfico (GraficoAporte) ----------
 // Suma los montos por texto y ordena de mayor a menor
-export const agruparPorTexto = (aportes:any, campo:any) => {
+export const agruparPorTexto = (aportes: any[], campo: string) => {
     const grupos = new Map();
-    aportes.forEach((aporte:any) => {
+    aportes.forEach((aporte: any) => {
         const texto = String(aporte[campo] ?? "").trim() || "Sin dato";
         const clave = texto.toLowerCase();
         const actual = grupos.get(clave) || { categoria: texto, monto: 0 };
@@ -88,9 +95,9 @@ export const agruparPorTexto = (aportes:any, campo:any) => {
 };
 
 // Suma los montos por mes, en orden cronológico
-export const agruparPorMes = (aportes:any) => {
+export const agruparPorMes = (aportes: any[]) => {
     const grupos = new Map();
-    aportes.forEach((aporte:any) => {
+    aportes.forEach((aporte: any) => {
         const iso = normalizarFechaISO(aporte.fecha_aporte);
         if (!iso) return;
         const [anio, mes] = iso.split("-");
@@ -105,5 +112,4 @@ export const agruparPorMes = (aportes:any) => {
         .sort((a, b) => a.clave.localeCompare(b.clave))
         .map(({ categoria, monto }) => ({ categoria, monto, destacado: false }));
 };
-
 

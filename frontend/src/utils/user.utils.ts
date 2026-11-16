@@ -58,7 +58,7 @@ export const processCarreras = (carreras: unknown): string[] => {
   const newCarreras: string[] = carreras.map((carrera: unknown) => {
     try {
       if (typeof carrera !== "string") {
-        console.error("El profesor debe ser un string: ", carrera);
+        console.error("La carrera debe ser un string: ", carrera);
         return DEFAULT_CARRERA;
       }
 

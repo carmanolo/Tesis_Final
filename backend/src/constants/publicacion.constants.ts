@@ -5,6 +5,8 @@ export const MAX_DESCRIPCION = 5000;
 
 export const PUBLICACION_NO_ENCONTRADA = "Publicación no encontrada";
 export const TITULO_OBLIGATORIO = "El título es obligatorio";
+export const COMPROMISO_OBLIGATORIO = "El compromiso es obligatorio";
+export const COMPROMISO_NO_ENCONTRADO = "El compromiso especificado no existe";
 export const DESCRIPCION_OBLIGATORIA = "La descripción es obligatoria";
 export const CAMPOS_ADICIONALES = "No se permiten campos adicionales";
 export const UNKNOWN_ERROR = "Error desconocido";
