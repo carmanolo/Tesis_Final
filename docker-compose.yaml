@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: futmers
+      POSTGRES_DB: centroEstudiantesUBB 
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d centroEstudiantesUBB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/src/config/.env
+    environment:
+      HOST: db
+      DB_HOST: db
+      PORT: "3000"
+      DB_PORT: "5432"
+      DB_USERNAME: postgres
+      PASSWORD: futmers
+      DATABASE: centroEstudiantesUBB
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api
+        API_URL: /api
+    environment:
+      VITE_PROXY_TARGET: http://backend:3000
+    ports:
+      - "5173:5173"
+
+volumes:
+  postgres_data:

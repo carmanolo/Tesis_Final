@@ -6,6 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const proxyTarget = process.env.VITE_PROXY_TARGET || 'http://localhost:3000';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -43,13 +44,13 @@ export default defineConfig({
     cors: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: proxyTarget,
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
+      target: proxyTarget,
+      changeOrigin: true,
       }
-    }
+    },
   }
 })
