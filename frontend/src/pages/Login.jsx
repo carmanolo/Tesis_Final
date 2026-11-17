@@ -2,10 +2,13 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { loginService } from "@services/auth.service.js";
-import { DULoginCard } from "../components/daisyUI/DULoginCard.jsx";
+import { DULoginCard } from "../components/Login/DULoginCard.jsx"
+import { DUForgotCard } from "../components/Login/DUForgotCard.jsx";
+import { DUResetCard } from "../components/Login/DUResetCard.jsx";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [view, setView] = useState("login");
   const [loginError, setLoginError] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,16 +38,35 @@ const Login = () => {
       <div className="pointer-events-none absolute -bottom-28 -right-20 h-80 w-80 rounded-full bg-secondary/10" />
 
       <div className="relative grid min-h-screen place-items-center px-4">
-        <DULoginCard
-          onSubmit={loginSubmit}
-          loginError={loginError}
-          setLoginError={setLoginError}
-          className="flex flex-col items-center w-full"
-          email={email}
-          password={password}
-          setPassword={setPassword}
-          setEmail={setEmail}
-        />
+        {view === "login" && (
+          <DULoginCard
+            onSubmit={loginSubmit}
+            onForgot={() => setView("forgot")}
+            loginError={loginError}
+            setLoginError={setLoginError}
+            className="flex flex-col items-center w-full"
+            email={email}
+            password={password}
+            setPassword={setPassword}
+            setEmail={setEmail}
+          />
+        )}
+
+        {view === "forgot" && (
+          <DUForgotCard
+            initialEmail={email}
+            onBack={() => setView("login")}
+            onHaveCode={() => setView("reset")}
+          />
+        )}
+
+        {view === "reset" && (
+          <DUResetCard
+            initialEmail={email}
+            onBack={() => setView("login")}
+            onDone={() => { setPassword(""); setView("login"); }}
+          />
+        )}
       </div>
     </main>
   );

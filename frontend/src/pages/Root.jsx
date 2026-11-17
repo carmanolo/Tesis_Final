@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { AuthProvider } from "@context/AuthContext";
 import { DUSidebar } from "../components/daisyUI/DUSidebar.jsx";
 import DUGenericCard from "../components/daisyUI/DUGenericCard.jsx";
+import RecoveryNotifier from "../components/Login/RecoveryNotifier.jsx";
 
 function Root() {
   return (
@@ -15,7 +16,13 @@ function PageRoot() {
   const pageContent = () => {
     return (
       <div className="page-content h-screen">
-        {DUGenericCard(<Outlet></Outlet>, "")}
+        {DUGenericCard(
+          <>
+            <RecoveryNotifier />
+            <Outlet />
+          </>,
+          ""
+        )}
       </div>
     )
   }
