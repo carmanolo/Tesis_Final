@@ -298,6 +298,61 @@ export async function getProfile(req: Request, res: Response): Promise<any> {
   }
 }
 
+export async function updateProfile(req: Request, res: Response): Promise<any> {
+  try {
+    const userRepository = AppDataSource.getRepository(User as any);
+    const userEmail = req.user?.email;
+
+    if (!req.body || !req.body.username) {
+      return handleErrorClient(res, 400, "El nombre de usuario es obligatorio");
+    }
+
+    const { username } = req.body;
+    const { error } = integrityValidation.validate({ username });
+    if (error) {
+      return handleErrorClient(res, 400, "Nombre de usuario inválido", error.message);
+    }
+
+    const user = await userRepository.findOne({
+      where: { email: userEmail },
+      relations: { carreras: true }
+    });
+
+    if (!user) {
+      return handleErrorClient(res, 404, "Perfil no encontrado");
+    }
+
+    // Verificar si el username ya está tomado por otro usuario
+    const existente = await userRepository.findOne({ where: { username } });
+    if (existente && existente.id !== user.id) {
+      return handleErrorClient(res, 400, "El nombre de usuario ya está en uso");
+    }
+
+    user.username = username.trim();
+    const updated = await userRepository.save(user);
+
+    const formattedUser = {
+      id: updated.id,
+      username: updated.username,
+      email: updated.email,
+      rut: updated.rut,
+      role: updated.role,
+      carrera: updated.carreras
+        ? {
+            id_carrera: updated.carreras.id_carrera,
+            nombre_carrera: updated.carreras.nombre_carrera,
+            sigla: updated.carreras.sigla,
+          }
+        : null,
+    };
+
+    return handleSuccess(res, 200, "Perfil actualizado con éxito", formattedUser);
+  } catch (error: any) {
+    console.error("Error en user.controller -> updateProfile(): ", error);
+    return handleErrorServer(res, 500, "Error interno del servidor", error.message);
+  }
+}
+
 export async function getUserStats(req: Request, res: Response): Promise<any> {
   try {
     const userRepository = AppDataSource.getRepository(User as any);

@@ -2,13 +2,68 @@ import { useState } from "react";
 import profilePic from "@assets/profilePic.jpg";
 import college from "@assets/college.jpg";
 import { AiFillStar } from "react-icons/ai";
-import { FaUserShield, FaUserTie, FaGraduationCap, FaEdit, FaCheck, FaTimes } from "react-icons/fa";
+import { FaUserShield, FaUserTie, FaGraduationCap, FaEdit, FaCheck, FaTimes, FaUser } from "react-icons/fa";
+import { updateProfileService } from "../../services/user.service.js";
+import { fireDynamicSwal } from "../../hooks/utils/dynamicSwal.jsx";
 
-export const DUProfileCard = ({ user }) => {
+export const DUProfileCard = ({ user, onProfileUpdated }) => {
   const roleLower = String(user?.role || "").trim().toLowerCase();
   const esVocal = roleLower.includes("vocal");
   const esAdmin = roleLower === "administrador" || roleLower === "admin";
   const nombreCarrera = user?.carrera?.nombre_carrera || (user?.carrera?.sigla ? `Carrera (${user.carrera.sigla})` : "");
+
+  // Edición de username
+  const [editandoUsername, setEditandoUsername] = useState(false);
+  const [tempUsername, setTempUsername] = useState("");
+  const [guardandoUsername, setGuardandoUsername] = useState(false);
+
+  const handleIniciarEdicionUsername = () => {
+    setTempUsername(user?.username || "");
+    setEditandoUsername(true);
+  };
+
+  const handleGuardarUsername = async () => {
+    const nuevoUsername = tempUsername.trim();
+    if (!nuevoUsername) {
+      fireDynamicSwal(400, "Nombre requerido", "El nombre de usuario no puede estar vacío");
+      return;
+    }
+    if (nuevoUsername.length < 3) {
+      fireDynamicSwal(400, "Nombre muy corto", "El nombre de usuario debe tener al menos 3 caracteres");
+      return;
+    }
+    if (nuevoUsername === user?.username) {
+      setEditandoUsername(false);
+      return;
+    }
+
+    try {
+      setGuardandoUsername(true);
+      const res = await updateProfileService({ username: nuevoUsername });
+      
+      // Actualizar en sessionStorage para mantener consistencia en navbar/sidebar
+      try {
+        const storedUser = JSON.parse(sessionStorage.getItem("usuario") || "{}");
+        if (storedUser) {
+          storedUser.username = nuevoUsername;
+          sessionStorage.setItem("usuario", JSON.stringify(storedUser));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+
+      fireDynamicSwal(200, "Éxito", res?.message || "Nombre de usuario actualizado con éxito");
+      setEditandoUsername(false);
+      if (typeof onProfileUpdated === "function") {
+        await onProfileUpdated();
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Error al actualizar nombre de usuario";
+      fireDynamicSwal(err?.response?.status || 400, "Error", msg);
+    } finally {
+      setGuardandoUsername(false);
+    }
+  };
 
   // Clave única por usuario en localStorage (NO se envía ni registra en el backend)
   const storageKey = `vocalia_desc_${user?.id || user?.rut || user?.email || "vocal"}`;
@@ -73,7 +128,54 @@ export const DUProfileCard = ({ user }) => {
         </div>
 
         <div className="flex-row flex flex-wrap gap-2 align-middle items-center mt-2">
-            <h2 className="text-2xl font-bold">{user.username}</h2>
+            {!editandoUsername ? (
+                <div className="flex items-center gap-2">
+                    <h2 className="text-2xl font-bold">{user.username}</h2>
+                    <button
+                        type="button"
+                        className="btn btn-ghost btn-circle btn-xs text-base-content/60 hover:text-primary"
+                        onClick={handleIniciarEdicionUsername}
+                        title="Editar nombre de usuario"
+                        aria-label="Editar nombre de usuario"
+                    >
+                        <FaEdit />
+                    </button>
+                </div>
+            ) : (
+                <div className="flex items-center gap-2">
+                    <input
+                        type="text"
+                        className="input input-bordered input-sm font-bold text-lg max-w-xs"
+                        value={tempUsername}
+                        onChange={(e) => setTempUsername(e.target.value)}
+                        placeholder="Nombre de usuario"
+                        autoFocus
+                        disabled={guardandoUsername}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") handleGuardarUsername();
+                            if (e.key === "Escape") setEditandoUsername(false);
+                        }}
+                    />
+                    <button
+                        type="button"
+                        className="btn btn-success btn-xs text-white"
+                        onClick={handleGuardarUsername}
+                        disabled={guardandoUsername}
+                        title="Guardar nombre de usuario"
+                    >
+                        <FaCheck />
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-ghost btn-xs"
+                        onClick={() => setEditandoUsername(false)}
+                        disabled={guardandoUsername}
+                        title="Cancelar"
+                    >
+                        <FaTimes />
+                    </button>
+                </div>
+            )}
             
             {/* Rol institucional */}
             <div className="badge badge-secondary font-semibold">
