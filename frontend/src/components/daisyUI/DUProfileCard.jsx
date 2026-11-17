@@ -7,6 +7,8 @@ import { FaUserShield, FaUserTie, FaGraduationCap, FaEdit, FaCheck, FaTimes } fr
 export const DUProfileCard = ({ user }) => {
   const roleLower = String(user?.role || "").trim().toLowerCase();
   const esVocal = roleLower.includes("vocal");
+  const esAdmin = roleLower === "administrador" || roleLower === "admin";
+  const nombreCarrera = user?.carrera?.nombre_carrera || (user?.carrera?.sigla ? `Carrera (${user.carrera.sigla})` : "");
 
   // Clave única por usuario en localStorage (NO se envía ni registra en el backend)
   const storageKey = `vocalia_desc_${user?.id || user?.rut || user?.email || "vocal"}`;
@@ -94,6 +96,16 @@ export const DUProfileCard = ({ user }) => {
                     <span>{etiqueta.texto}</span>
                 </div>
             </div>
+
+            {/* Carrera del usuario (no se muestra para administradores) */}
+            {!esAdmin && nombreCarrera && (
+                <div className="badge badge-outline border-primary/40 text-primary font-medium">
+                    <div className="flex flex-row align-middle items-center">
+                        <FaGraduationCap className="mr-1.5" />
+                        <span>{nombreCarrera}</span>
+                    </div>
+                </div>
+            )}
 
             {/* Botón para editar descripción en caso de ser vocal */}
             {esVocal && !editando && (

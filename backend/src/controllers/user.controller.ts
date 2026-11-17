@@ -267,7 +267,10 @@ export async function getProfile(req: Request, res: Response): Promise<any> {
     const userRepository = AppDataSource.getRepository(User as any);
     const userEmail = req.user?.email; // Tipado gracias a tu archivo types/express.d.ts
 
-    const user = await userRepository.findOne({ where: { email: userEmail } });
+    const user = await userRepository.findOne({ 
+      where: { email: userEmail },
+      relations: { carreras: true } 
+    });
 
     if (!user) {
       return res.status(404).json({ message: "Perfil no encontrado." });
@@ -278,7 +281,14 @@ export async function getProfile(req: Request, res: Response): Promise<any> {
       username: user.username,
       email: user.email,
       rut: user.rut,
-      role: user.role
+      role: user.role,
+      carrera: user.carreras
+        ? {
+            id_carrera: user.carreras.id_carrera,
+            nombre_carrera: user.carreras.nombre_carrera,
+            sigla: user.carreras.sigla,
+          }
+        : null,
     };
 
     return res.status(200).json({ message: "Perfil encontrado: ", data: formattedUser });

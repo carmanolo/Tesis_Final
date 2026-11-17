@@ -4,7 +4,6 @@ import { useCreateCompromiso } from "../hooks/compromisos/useCreateCompromiso.js
 import { usePatchCompromiso } from "../hooks/compromisos/usePatchCompromiso.jsx";
 import { useDeleteCompromiso } from "../hooks/compromisos/useDeleteCompromiso.jsx";
 import { useGetCompromiso } from "../hooks/compromisos/useGetCompromiso.jsx";
-import { useAsignarAporte } from "../hooks/compromisos/useAsignarAporte.jsx";
 import { useDownloadSolicitud } from "../hooks/compromisos/useDownloadSolicitud.jsx";
 import { useGetAporte } from "../hooks/aportes/useGetAporte.jsx";
 import { ProximoCompromiso } from "../components/Compromiso/ProximoCompromiso.jsx";
@@ -33,7 +32,6 @@ const Compromiso = () => {
     const { handleCreateCompromiso } = useCreateCompromiso(fetchCompromiso);
     const { handleEditCompromiso } = usePatchCompromiso(fetchCompromiso);
     const { handleDeleteCompromiso } = useDeleteCompromiso(fetchCompromiso, fetchAporte);
-    const { handleAsignarAporte, handleQuitarAporte } = useAsignarAporte(fetchCompromiso, fetchAporte);
     const { handleDownloadSolicitud, descargando } = useDownloadSolicitud();
 
     const [creando, setCreando] = useState(false);
@@ -215,8 +213,6 @@ const Compromiso = () => {
                 onCrear={handleCreateCompromiso}
                 onEditar={handleEditCompromiso}
                 onEliminar={handleDeleteCompromiso}
-                onAsignarAporte={handleAsignarAporte}
-                onQuitarAporte={handleQuitarAporte}
                 onDescargar={handleDownloadSolicitud}
                 descargando={descargando}
                 onCerrar={cerrarModal}

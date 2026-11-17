@@ -4,8 +4,8 @@ import { formatoCLP } from "../../utils/aporte.utils.js";
 import { resumenDe } from "../../utils/compromiso.utils.js";
 
 // Sección del detalle: cuánto está financiado y qué aportes lo financian (vista de lectura).
-// La asignación de aportes se gestiona desde la sección Aportes.
-export const FinanciamientoCompromiso = ({ compromiso, aportes, puedeGestionar, onQuitar, onDescargar, descargando}) => {
+// La asignación y desasignación de aportes se gestiona desde la sección Aportes.
+export const FinanciamientoCompromiso = ({ compromiso, aportes, puedeGestionar, onDescargar, descargando}) => {
     const resumen = resumenDe(compromiso);
     const requiereSolicitud = resumen.saldoPorFinanciar > 0;
 
@@ -57,14 +57,6 @@ export const FinanciamientoCompromiso = ({ compromiso, aportes, puedeGestionar, 
                                 )}
                             </div>
                             <p className="font-semibold">{formatoCLP.format(Number(asignacion.monto_asignado) || 0)}</p>
-                            {puedeGestionar && (
-                                <button
-                                    className="btn btn-ghost btn-xs text-error ml-auto"
-                                    onClick={() => onQuitar(compromiso.id_compromiso, asignacion.aporteId)}
-                                >
-                                    Quitar
-                                </button>
-                            )}
                         </li>
                     );
                 })}
@@ -72,7 +64,7 @@ export const FinanciamientoCompromiso = ({ compromiso, aportes, puedeGestionar, 
 
             {puedeGestionar && (
                 <p className="mt-4 text-xs text-base-content/50">
-                    Para asignar aportes a este compromiso, ve a la sección <strong>Aportes</strong> y selecciona un ingreso.
+                    Para asignar o quitar aportes de este compromiso, ve a la sección <strong>Aportes</strong> y selecciona el ingreso correspondiente.
                 </p>
             )}
 
