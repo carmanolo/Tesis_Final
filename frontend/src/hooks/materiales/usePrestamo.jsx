@@ -21,16 +21,6 @@ export const usePrestamo = (fetchMateriales) => {
     };
 
     const handleDevolverPrestamo = async (prestamoId) => {
-        const confirmacion = await Swal.fire({
-            title: "¿Confirmar devolución?",
-            text: "El artículo será reincorporado al stock disponible.",
-            icon: "question",
-            showCancelButton: true,
-            confirmButtonText: "Sí, marcar devuelto",
-            cancelButtonText: "Cancelar",
-        });
-
-        if (!confirmacion.isConfirmed) return false;
 
         let response = null;
         try {
@@ -49,17 +39,6 @@ export const usePrestamo = (fetchMateriales) => {
     };
 
     const handleDeletePrestamo = async (prestamoId) => {
-        const confirmacion = await Swal.fire({
-            title: "¿Eliminar registro de préstamo?",
-            text: "Si el artículo estaba prestado, su unidad será restaurada al stock.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Sí, eliminar",
-            cancelButtonText: "Cancelar",
-            confirmButtonColor: "#d33",
-        });
-
-        if (!confirmacion.isConfirmed) return false;
 
         let response = null;
         try {

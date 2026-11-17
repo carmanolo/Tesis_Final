@@ -94,23 +94,15 @@ export const DetalleReunion = ({
                 <div className="flex flex-wrap justify-center gap-3">
                     {editando ? (
                         <>
-                            <button className="btn btn-primary" onClick={handleGuardar}>
-                                Guardar
-                            </button>
                             <button className="btn btn-primary" onClick={() => onRedactarActa(reunion)}>
                                 Redactar acta
+                            </button>
+                            <button className="btn btn-primary" onClick={handleGuardar}>
+                                Guardar
                             </button>
                         </>
                     ) : (
                         <>
-                            {/* Ver acta redactada en plataforma — visible para todos */}
-                            <button
-                                className="btn btn-info"
-                                onClick={() => onVerActa(reunion)}
-                                title="Ver el acta redactada en la plataforma"
-                            >
-                                Ver acta
-                            </button>
 
                             {/* Solo miembros del CEE / admin */}
                             {puedeGestionarActas && (
@@ -126,6 +118,15 @@ export const DetalleReunion = ({
                                     </button>
                                 </>
                             )}
+
+                            {/* Ver acta redactada en plataforma — visible para todos */}
+                            <button
+                                className="btn btn-info"
+                                onClick={() => onVerActa(reunion)}
+                                title="Ver el acta redactada en la plataforma"
+                            >
+                                Ver acta
+                            </button>
                         </>
                     )}
                 </div>

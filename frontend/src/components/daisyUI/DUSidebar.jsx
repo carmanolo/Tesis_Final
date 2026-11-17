@@ -182,8 +182,8 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
                   iconColor={item.iconColor}
                 />
               ))}
-
-              {/* Cerrar Sesión */}
+            </ul>
+            {/* Cerrar Sesión */}
               <DUSidebarItem
                 icon={FaSignOutAlt}
                 label="Cerrar Sesión"
@@ -191,8 +191,6 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
                 logoutSubmit={logoutSubmit}
                 iconColor="text-[#dc2626]"
               />
-            </ul>
-
             {/* Bottom Collapse Toggle Button */}
             <div className="mt-auto w-full py-2.5 bg-[#f8f9fa] border-t border-[#e2e8f0] flex items-center justify-center relative">
               <div className="absolute inset-x-0 top-1/2 h-[1px] bg-[#e2e8f0] -z-0"></div>
