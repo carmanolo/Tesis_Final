@@ -1,11 +1,11 @@
-import { DUTextInput } from "./DUTextInput.jsx";
+import { DUTextInput } from "../daisyUI/DUTextInput.jsx";
 import { VscError } from "react-icons/vsc";
 import { useEffect, useState } from "react";
 import { isValidEmail } from "../../validations/isValidEmail.js";
 import { isValidPassword } from "../../validations/isValidPassword.js";
-import escudoUBB from "../../assets/escudo-color-gradiente.svg";
+import escudoUBB from "../../assets/escudo-color-gradiente.svg"
 
-export const DULoginCard = ({ onSubmit, loginError, setLoginError, className, email, setEmail, password, setPassword }) => {
+export const DULoginCard = ({ onSubmit, onForgot, loginError, setLoginError, className, email, setEmail, password, setPassword }) => {
   const [error, setError] = useState("Debe ingresar datos");
 
   useEffect(() => {
@@ -56,6 +56,12 @@ export const DULoginCard = ({ onSubmit, loginError, setLoginError, className, em
           >
             Entrar
           </button>
+
+          <div className="w-full flex justify-end mt-2">
+            <button type="button" className="link link-primary text-sm" onClick={onForgot}>
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
         </div>
       </div>
     </div>

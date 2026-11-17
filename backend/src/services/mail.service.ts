@@ -27,3 +27,26 @@ export async function enviarCorreoRegistroCEE(to: string, nombre: string, cargo:
         `El alumno ${nombre} se ha registrado exitosamente como ${cargo} del CEE.`
     );
 }
+
+export async function enviarCorreoRecuperacion(
+    to: string,
+    nombre: string,
+    codigo: string,
+    minutos: number
+): Promise<boolean> {
+    return enviarCorreo(
+        to,
+        "Código de recuperación de contraseña",
+        `Hola ${nombre},
+
+El administrador aprobó tu solicitud de recuperación de cuenta.
+
+Tu código de recuperación es: ${codigo}
+
+Vence en ${minutos} minutos. Ingresa a la pantalla de inicio de sesión, elige "¿Olvidaste tu contraseña?" > "Ya tengo un código" y escribe tu correo, este código y tu clave nueva.
+
+Si no solicitaste este cambio, ignora este mensaje.
+
+Centro de Estudiantes.`
+    );
+}

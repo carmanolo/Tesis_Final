@@ -3,10 +3,7 @@ import { getContenidoActaService } from "@services/reunion.service.js";
 import { formatearFechaDDMMAAAA } from "../../utils/calendar.utils.js";
 import "./editorActa.css";
 
-/**
- * Modal de solo lectura que muestra el contenido HTML del acta finalizada.
- * Recibe la reunión y un callback onCerrar.
- */
+//Modal de Lectura que muestra el contenido HTML del acta finalizada.
 export const VisorActa = ({ reunion, onCerrar }) => {
     const [contenido, setContenido] = useState("");
     const [cargando, setCargando] = useState(true);
@@ -57,20 +54,16 @@ export const VisorActa = ({ reunion, onCerrar }) => {
                         </div>
                     ) : error ? (
                         <div className="flex flex-col items-center justify-center h-full gap-3 text-base-content/60">
-                            <span className="text-4xl">📄</span>
                             <p className="text-sm">{error}</p>
                         </div>
                     ) : !contenido.trim() ? (
                         <div className="flex flex-col items-center justify-center h-full gap-3 text-base-content/60">
-                            <span className="text-4xl">📄</span>
                             <p className="text-sm">Esta reunión aún no tiene acta redactada.</p>
                         </div>
                     ) : (
-                        /* Renderiza el HTML sanitizado en solo lectura */
+                        // Renderiza el HTML sanitizado en solo lectura
                         <div
                             className="tiptap"
-                            // El backend ya sanitizó el HTML con sanitize-html
-                            // eslint-disable-next-line react/no-danger
                             dangerouslySetInnerHTML={{ __html: contenido }}
                         />
                     )}

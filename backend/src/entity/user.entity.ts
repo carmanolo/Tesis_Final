@@ -10,9 +10,14 @@ export interface IUser {
     role: string;
     carreraId: number;
     carreras?: any;
-    Aportes?: Aporte[];      // NUEVO
+    Aportes?: Aporte[];      
     createdAt: Date;
     updatedAt: Date;
+    recoveryStatus?: string | null;         
+    recoveryRequestedAt?: Date | null;
+    recoveryCodeHash?: string | null;
+    recoveryCodeExpires?: Date | null;
+    recoveryAttempts?: number;
 }
 
 export const UserEntity = new EntitySchema<IUser>({
@@ -55,6 +60,30 @@ export const UserEntity = new EntitySchema<IUser>({
             type: "timestamp",
             default: () => "CURRENT_TIMESTAMP",
             onUpdate: "CURRENT_TIMESTAMP",
+        },
+        recoveryStatus: { 
+            type: String, nullable: true, 
+            select: false 
+        },
+        recoveryRequestedAt: { 
+            type: "timestamp", 
+            nullable: true, 
+            select: false 
+        },
+        recoveryCodeHash: { 
+            type: String, 
+            nullable: true, 
+            select: false 
+        },
+        recoveryCodeExpires: { 
+            type: "timestamp", 
+            nullable: true, 
+            select: false 
+        },
+        recoveryAttempts: { 
+            type: "int", 
+            default: 0, 
+            select: false 
         },
     },
     relations: {

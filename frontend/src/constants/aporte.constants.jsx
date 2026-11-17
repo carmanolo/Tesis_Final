@@ -20,7 +20,7 @@ export const APORTE_DESCRIPCION_MIN = 10;
 export const APORTE_DESCRIPCION_MAX = 100;
 
 export const COLOR_BASE = "#014898";
-export const COLOR_DESTACADO = "#EE820F"; // arreglar y colocar más colores
+export const COLOR_DESTACADO = "#EE820F"; 
 export const TOP_N = 10;
 
 export const CRITERIOS = [

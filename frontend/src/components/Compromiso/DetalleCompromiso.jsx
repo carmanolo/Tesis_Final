@@ -29,7 +29,7 @@ const validar = ({ descripcion_compromiso, fecha_compromiso, monto_total }, fina
 
 
 export const DetalleCompromiso = ({ abierto, compromiso, compromisos, aportes, puedeGestionar, onCrear, 
-    onEditar,  onEliminar, onAsignarAporte, onQuitarAporte, onDescargar, descargando, onCerrar,}) => {
+    onEditar,  onEliminar, onDescargar, descargando, onCerrar,}) => {
     const esNuevo = !compromiso;
     const [editando, setEditando] = useState(false);
     const [form, setForm] = useState(valoresIniciales(null));
@@ -186,8 +186,6 @@ export const DetalleCompromiso = ({ abierto, compromiso, compromisos, aportes, p
                         compromisos={compromisos}
                         aportes={aportes}
                         puedeGestionar={puedeGestionar}
-                        onAsignar={onAsignarAporte}
-                        onQuitar={onQuitarAporte}
                         onDescargar={onDescargar}
                         descargando={descargando}
                     />
