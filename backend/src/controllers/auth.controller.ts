@@ -16,6 +16,7 @@ import { registrarActividad } from "../services/historialActividad.service.js";
 import { obtenerIp, obtenerDispositivo } from "../utils/audit.utils.js";
 import { auditBase, generarCodigo } from "../utils/user.utils.js";
 import { CAMPOS_RECUPERACION,MINUTOS_VIGENCIA, MAX_INTENTOS, LIMPIAR } from "../constants/ajustes.constants.js";
+import { enviarCorreoRecuperacion } from "../services/mail.service.js";
 
 export async function register(req: Request, res: Response): Promise<any> {
   const ip = obtenerIp(req);
@@ -312,7 +313,7 @@ export async function listPending(_req: Request, res: Response): Promise<any> {
   }
 }
 
-/** ADMIN: genera el código de recuperación (se muestra una sola vez) */
+// ADMIN: genera el código de recuperación
 export async function generateCode(req: Request, res: Response): Promise<any> {
   try {
     const admin = (req as any).user;
@@ -337,6 +338,10 @@ export async function generateCode(req: Request, res: Response): Promise<any> {
       recoveryAttempts: 0,
     });
 
+    const emailSent = await enviarCorreoRecuperacion(
+      user.email, user.username, code, MINUTOS_VIGENCIA
+    );
+
     await registrarActividad({
       usuarioId: admin.id,
       usuarioEmail: admin.email,
@@ -350,14 +355,25 @@ export async function generateCode(req: Request, res: Response): Promise<any> {
       ...auditBase(req),
     });
 
-    return res.status(200).json({ message: "Código generado", data: { code, expiresAt } });
+    if (emailSent) {
+      return res.status(200).json({
+        message: "Código enviado al correo del usuario",
+        data: { emailSent: true, email: user.email, expiresAt },
+      });
+    }
+
+    //El correo falló, el admin entrega el código manualmente
+    return res.status(200).json({
+      message: "No se pudo enviar el correo. Entrega el código manualmente.",
+      data: { emailSent: false, code, expiresAt },
+    });
   } catch (error) {
     console.error("Error en recovery.controller.ts -> generateCode(): ", error);
     return res.status(500).json({ message: "Error al generar el código" });
   }
 }
 
-/** ADMIN: rechaza la solicitud */
+// ADMIN: rechaza la solicitud
 export async function rejectRequest(req: Request, res: Response): Promise<any> {
   try {
     const admin = (req as any).user;
@@ -394,7 +410,7 @@ export async function rejectRequest(req: Request, res: Response): Promise<any> {
   }
 }
 
-/** PÚBLICO: el usuario cambia su clave con el código del administrador */
+ //El usuario cambia su clave con el código del administrador
 export async function resetWithCode(req: Request, res: Response): Promise<any> {
   const invalido = { message: "Código inválido o expirado" };
 
