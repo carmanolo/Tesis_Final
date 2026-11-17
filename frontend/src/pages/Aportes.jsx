@@ -4,6 +4,8 @@ import { useCreateAporte } from "../hooks/aportes/useCreateAporte.jsx";
 import { usePatchAporte } from "../hooks/aportes/usePatchAporte.jsx";
 import { useDeleteAporte } from "../hooks/aportes/useDeleteAporte.jsx";
 import { useGetAporte } from "../hooks/aportes/useGetAporte.jsx";
+import { useGetCompromiso } from "../hooks/compromisos/useGetCompromiso.jsx";
+import { useAsignarAporte } from "../hooks/compromisos/useAsignarAporte.jsx";
 import { GraficoAportes } from "../components/Aporte/GraficoAporte.jsx";
 import { DetalleAporte } from "../components/Aporte/DetalleAporte.jsx";
 import { ReporteAporte } from "../components/Aporte/ReporteAporte.jsx";
@@ -11,6 +13,7 @@ import { DUPageBrowser } from "../components/daisyUI/DUPageBrowser.jsx";
 
 import { getUserRole } from "../services/user.service.js";
 import { PUEDE_EDITAR_APORTE } from "../constants/aporte.constants.jsx";
+import { PUEDE_EDITAR_COMPROMISO } from "../constants/compromiso.constants.jsx";
 import { formatearFechaDDMMAAAA } from "../utils/calendar.utils.js";
 import { formatoCLP, calcularBalance, esEgreso } from "../utils/aporte.utils.js";
 
@@ -19,9 +22,14 @@ const POSTS_PER_PAGE = 5;
 const Aporte = () => {
     const userRole = String(getUserRole() ?? "").toLowerCase();
     const canCrudAportes = PUEDE_EDITAR_APORTE.includes(userRole);
+    const canGestionarCompromisos = PUEDE_EDITAR_COMPROMISO.includes(userRole);
 
     const [aporteData, setAporteData] = useState([]);
     const [aportes, fetchAporte] = useGetAporte(aporteData, setAporteData);
+
+    const [compromisoData, setCompromisoData] = useState([]);
+    const [compromisos, fetchCompromiso] = useGetCompromiso(compromisoData, setCompromisoData);
+    const { handleAsignarAporte, handleQuitarAporte } = useAsignarAporte(fetchCompromiso, fetchAporte);
 
     const { handleCreateAporte } = useCreateAporte(fetchAporte);
     const { handleEditAporte } = usePatchAporte(fetchAporte);
@@ -34,6 +42,7 @@ const Aporte = () => {
 
     useEffect(() => {
         fetchAporte();
+        fetchCompromiso();
     }, []);
 
     // El aporte abierto se busca en la lista para que el modal se actualice solo tras editar
@@ -195,10 +204,14 @@ const Aporte = () => {
             <DetalleAporte
                 abierto={modalAbierto}
                 aporte={aporteSeleccionado}
+                compromisos={compromisos}
                 puedeGestionar={canCrudAportes}
+                puedeAsignar={canGestionarCompromisos}
                 onCrear={handleCreateAporte}
                 onEditar={handleEditAporte}
                 onEliminar={handleDeleteAporte}
+                onAsignar={handleAsignarAporte}
+                onQuitar={handleQuitarAporte}
                 onCerrar={cerrarModal}
             />
         </div>

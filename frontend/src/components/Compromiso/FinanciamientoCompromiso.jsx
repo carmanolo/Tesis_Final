@@ -1,61 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { formatearFechaDDMMAAAA } from "../../utils/calendar.utils.js";
 import { formatoCLP } from "../../utils/aporte.utils.js";
-import { aportesAsignables, resumenDe } from "../../utils/compromiso.utils.js";
+import { resumenDe } from "../../utils/compromiso.utils.js";
 
-// Sección del detalle: cuánto está financiado, qué aportes lo financian y cómo asignar más.
-export const FinanciamientoCompromiso = ({ compromiso, compromisos, aportes, puedeGestionar, onAsignar, onQuitar, onDescargar, descargando}) => {
+// Sección del detalle: cuánto está financiado y qué aportes lo financian (vista de lectura).
+// La asignación de aportes se gestiona desde la sección Aportes.
+export const FinanciamientoCompromiso = ({ compromiso, aportes, puedeGestionar, onQuitar, onDescargar, descargando}) => {
     const resumen = resumenDe(compromiso);
     const requiereSolicitud = resumen.saldoPorFinanciar > 0;
-    const [aporteId, setAporteId] = useState("");
-    const [monto, setMonto] = useState("");
-    const [error, setError] = useState("");
-    const [guardando, setGuardando] = useState(false);
 
-    useEffect(() => {
-        setAporteId("");
-        setMonto("");
-        setError("");
-    }, [compromiso.id_compromiso]);
-
-    const asignables = useMemo(
-        () => aportesAsignables(aportes, compromisos, compromiso),
-        [aportes, compromisos, compromiso]
-    );
     const aportesPorId = useMemo(() => new Map(aportes.map((a) => [a.id_aporte, a])), [aportes]);
-
-    // Lo máximo que se puede asignar: el saldo del compromiso o lo que le queda al aporte
-    const maximoPara = (item) =>
-        item ? Math.min(resumen.saldoPorFinanciar + item.asignadoAqui, item.disponible) : 0;
-    const seleccionado = asignables.find((x) => String(x.aporte.id_aporte) === String(aporteId));
-    const maximo = maximoPara(seleccionado);
-
-    const elegirAporte = (id) => {
-        setAporteId(id);
-        setError("");
-        const item = asignables.find((x) => String(x.aporte.id_aporte) === String(id));
-        setMonto(item ? String(maximoPara(item)) : "");
-    };
-
-    const handleAsignar = async () => {
-        if (!seleccionado) return setError("Selecciona un aporte");
-        const valor = Number(monto);
-        if (!Number.isInteger(valor) || valor <= 0) return setError("El monto debe ser un entero mayor a 0");
-        if (valor > maximo) return setError(`El monto no puede superar ${formatoCLP.format(maximo)}`);
-
-        setGuardando(true);
-        const ok = await onAsignar(compromiso.id_compromiso, {
-            aporteId: seleccionado.aporte.id_aporte,
-            monto_asignado: valor,
-        });
-        setGuardando(false);
-
-        if (ok) {
-            setAporteId("");
-            setMonto("");
-            setError("");
-        }
-    };
 
     const asignaciones = compromiso.aportes ?? [];
 
@@ -104,20 +58,12 @@ export const FinanciamientoCompromiso = ({ compromiso, compromisos, aportes, pue
                             </div>
                             <p className="font-semibold">{formatoCLP.format(Number(asignacion.monto_asignado) || 0)}</p>
                             {puedeGestionar && (
-                                <div className="flex gap-1 ml-auto">
-                                    <button
-                                        className="btn btn-ghost btn-xs"
-                                        onClick={() => elegirAporte(String(asignacion.aporteId))}
-                                    >
-                                        Cambiar monto
-                                    </button>
-                                    <button
-                                        className="btn btn-ghost btn-xs text-error"
-                                        onClick={() => onQuitar(compromiso.id_compromiso, asignacion.aporteId)}
-                                    >
-                                        Quitar
-                                    </button>
-                                </div>
+                                <button
+                                    className="btn btn-ghost btn-xs text-error ml-auto"
+                                    onClick={() => onQuitar(compromiso.id_compromiso, asignacion.aporteId)}
+                                >
+                                    Quitar
+                                </button>
                             )}
                         </li>
                     );
@@ -125,60 +71,9 @@ export const FinanciamientoCompromiso = ({ compromiso, compromisos, aportes, pue
             </ul>
 
             {puedeGestionar && (
-                <div className="mt-5 rounded-lg bg-base-200/60 p-4">
-                    <h5 className="font-semibold mb-3">Asignar un aporte</h5>
-                    {asignables.length === 0 ? (
-                        <p className="text-base-content/60">
-                            No hay aportes con saldo disponible en esta carrera. Registra uno en la sección Aportes.
-                        </p>
-                    ) : (
-                        <div className="space-y-3">
-                            <select
-                                className="select select-bordered w-full"
-                                value={aporteId}
-                                onChange={(e) => elegirAporte(e.target.value)}
-                                aria-label="Aporte"
-                            >
-                                <option value="" disabled>
-                                    Selecciona un aporte
-                                </option>
-                                {asignables.map(({ aporte, disponible }) => (
-                                    <option key={aporte.id_aporte} value={aporte.id_aporte}>
-                                        {aporte.descripcion_aporte} ({aporte.procedencia}), disponible{" "}
-                                        {formatoCLP.format(disponible)}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <div>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    step="1"
-                                    className={`input input-bordered w-full ${error ? "input-error" : ""}`}
-                                    placeholder="Monto a asignar"
-                                    value={monto}
-                                    onChange={(e) => {
-                                        setMonto(e.target.value);
-                                        setError("");
-                                    }}
-                                    disabled={!seleccionado}
-                                    aria-label="Monto a asignar"
-                                />
-                                {seleccionado && !error && (
-                                    <p className="text-xs text-base-content/60 mt-1">
-                                        Máximo {formatoCLP.format(maximo)}
-                                    </p>
-                                )}
-                                {error && <p className="text-xs text-error mt-1">{error}</p>}
-                            </div>
-
-                            <button className="btn btn-primary btn-sm" onClick={handleAsignar} disabled={guardando}>
-                                Asignar aporte
-                            </button>
-                        </div>
-                    )}
-                </div>
+                <p className="mt-4 text-xs text-base-content/50">
+                    Para asignar aportes a este compromiso, ve a la sección <strong>Aportes</strong> y selecciona un ingreso.
+                </p>
             )}
 
             {puedeGestionar && !requiereSolicitud && (
