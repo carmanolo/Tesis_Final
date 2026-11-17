@@ -153,16 +153,7 @@ export async function deleteCompromisoSer(id_compromiso: number): Promise<any> {
                 where: { compromisoId: id_compromiso },
             })) as any[];
 
-            for (const asig of asignaciones) {
-                const aporte: any = await manager.findOne(AporteEntity as any, {
-                    where: { id_aporte: asig.aporteId },
-                });
-                if (aporte) {
-                    aporte.monto = Number(aporte.monto) + (Number(asig.monto_asignado) || 0);
-                    await manager.save(AporteEntity as any, aporte);
-                }
-            }
-
+            // No se modifica aporte.monto al eliminar: el disponible se calcula dinámicamente
             const result = await manager.delete(CompromisoEntity as any, { id_compromiso });
             return { result, message: "Compromiso eliminado exitosamente" };
         });
@@ -210,9 +201,20 @@ export async function asignarAporteSer(
                 };
             }
 
-            // Lo disponible del aporte es su monto actual libre en BD más lo que este compromiso ya tenía asignado
+            // Solo se pueden asignar ingresos a compromisos
+            if (aporte.tipo === "egreso") {
+                return { data: null, error: "Solo se pueden asignar aportes de tipo ingreso a compromisos" };
+            }
+
+            // Lo disponible del aporte = monto original - suma de lo asignado en TODOS los compromisos (excepto este)
+            const todasLasAsignaciones = (await manager.find(CompromisoAporteEntity as any, {
+                where: { aporteId },
+            })) as any[];
+            const asignadoEnOtros = todasLasAsignaciones
+                .filter((a) => a.compromisoId !== compromisoId)
+                .reduce((suma, a) => suma + (Number(a.monto_asignado) || 0), 0);
             const asignadoAnteriormente = existente ? Number(existente.monto_asignado) || 0 : 0;
-            const disponibleAporte = Number(aporte.monto) + asignadoAnteriormente;
+            const disponibleAporte = Number(aporte.monto) - asignadoEnOtros;
             if (montoAsignado > disponibleAporte) {
                 return {
                     data: null,
@@ -220,10 +222,7 @@ export async function asignarAporteSer(
                 };
             }
 
-            // Ajustar el monto libre del aporte en la BD para que los ingresos se reduzcan
-            const diferencia = montoAsignado - asignadoAnteriormente;
-            aporte.monto = Number(aporte.monto) - diferencia;
-            await manager.save(AporteEntity as any, aporte);
+            // No se modifica aporte.monto: el disponible se calcula dinámicamente desde compromiso_aportes
 
             const guardado = await manager.save(
                 CompromisoAporteEntity as any,
@@ -247,15 +246,7 @@ export async function desasignarAporteSer(compromisoId: number, aporteId: number
             });
             if (!asignacion) return { result: null, message: "Aporte no asignado a este compromiso" };
 
-            // Reintegrar el monto asignado de vuelta al aporte
-            const aporte: any = await manager.findOne(AporteEntity as any, {
-                where: { id_aporte: aporteId },
-            });
-            if (aporte) {
-                aporte.monto = Number(aporte.monto) + (Number(asignacion.monto_asignado) || 0);
-                await manager.save(AporteEntity as any, aporte);
-            }
-
+            // No se modifica aporte.monto: el disponible se calcula dinámicamente desde compromiso_aportes
             const result = await manager.delete(CompromisoAporteEntity as any, { compromisoId, aporteId });
             return { result, message: "Aporte quitado del compromiso" };
         });
