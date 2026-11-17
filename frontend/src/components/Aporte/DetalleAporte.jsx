@@ -1,11 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatearFechaDDMMAAAA } from "../../utils/calendar.utils.js";
-import { APORTE_DESCRIPCION_MIN, APORTE_DESCRIPCION_MAX, OPCIONES_PROCEDENCIA, OPCIONES_DESCRIPCION} from "../../constants/aporte.constants.jsx";
+import {
+    APORTE_DESCRIPCION_MIN,
+    APORTE_DESCRIPCION_MAX,
+    MONTO_MINIMO,
+    OPCIONES_PROCEDENCIA,
+    OPCIONES_DESCRIPCION,
+    OPCIONES_TIPO,
+} from "../../constants/aporte.constants.jsx";
+import { formatoCLP, valoresIniciales } from "../../utils/aporte.utils.js";
+import { compromisosAsignables } from "../../utils/compromiso.utils.js";
 
-import { formatoCLP,  valoresIniciales } from "../../utils/aporte.utils.js";
-
-
-const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedencia, otra_procedencia, monto }) => {
+const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedencia, otra_procedencia, monto, tipo }) => {
     const errores = {};
 
     if (!descripcion_aporte) {
@@ -20,12 +26,19 @@ const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedenc
     }
 
     if (!fecha_aporte) errores.fecha_aporte = "Selecciona una fecha";
+    if (!tipo) errores.tipo = "Selecciona un tipo";
+
     if (!procedencia) {
         errores.procedencia = "Selecciona una procedencia";
     } else if (procedencia.toLowerCase() === "otro" && !otra_procedencia?.trim()) {
         errores.procedencia = "Debes ingresar la nueva procedencia";
     }
-    if (!(Number(monto) > 0)) errores.monto = "El monto debe ser mayor a 0";
+
+    // El backend exige un entero >= MONTO_MINIMO
+    const numero = Number(monto);
+    if (!Number.isInteger(numero) || numero < MONTO_MINIMO) {
+        errores.monto = `El monto debe ser un número entero de al menos ${formatoCLP.format(MONTO_MINIMO)}`;
+    }
 
     return errores;
 };
@@ -34,23 +47,69 @@ const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedenc
 export const DetalleAporte = ({
     abierto,
     aporte,
+    compromisos = [],
     puedeGestionar,
+    puedeAsignar,
     onCrear,
     onEditar,
     onEliminar,
+    onAsignar,
+    onQuitar,
     onCerrar,
 }) => {
     const esNuevo = !aporte;
+    const esIngreso = aporte?.tipo !== "egreso";
     const [editando, setEditando] = useState(false);
     const [form, setForm] = useState(valoresIniciales(null));
     const [errores, setErrores] = useState({});
     const [guardando, setGuardando] = useState(false);
+
+    // Estado para asignación a compromisos
+    const [compromisoId, setCompromisoId] = useState("");
+    const [montoAsig, setMontoAsig] = useState("");
+    const [errorAsig, setErrorAsig] = useState("");
+    const [asignando, setAsignando] = useState(false);
+
+    const asignables = useMemo(
+        () => compromisosAsignables(compromisos, aporte),
+        [compromisos, aporte]
+    );
+    const seleccionadoComp = asignables.find((x) => String(x.compromiso.id_compromiso) === String(compromisoId));
+    const maximoAsig = seleccionadoComp
+        ? Math.min(seleccionadoComp.saldoCompromiso + seleccionadoComp.montoAqui, seleccionadoComp.maximo)
+        : 0;
+
+    const elegirCompromiso = (id) => {
+        setCompromisoId(id);
+        setErrorAsig("");
+        const item = asignables.find((x) => String(x.compromiso.id_compromiso) === String(id));
+        setMontoAsig(item ? String(item.maximo) : "");
+    };
+
+    const handleAsignar = async () => {
+        if (!seleccionadoComp) return setErrorAsig("Selecciona un compromiso");
+        const valor = Number(montoAsig);
+        if (!Number.isInteger(valor) || valor <= 0) return setErrorAsig("El monto debe ser un entero mayor a 0");
+        if (valor > maximoAsig) return setErrorAsig(`El monto no puede superar ${formatoCLP.format(maximoAsig)}`);
+        setAsignando(true);
+        const ok = await onAsignar(seleccionadoComp.compromiso.id_compromiso, {
+            aporteId: aporte.id_aporte,
+            monto_asignado: valor,
+        });
+        setAsignando(false);
+        if (ok) { setCompromisoId(""); setMontoAsig(""); setErrorAsig(""); }
+    };
+
+    const handleQuitar = (compromisoIdQ) => {
+        onQuitar(compromisoIdQ, aporte.id_aporte);
+    };
 
     // Reinicia el formulario cada vez que se abre o cambia el aporte seleccionado
     useEffect(() => {
         setForm(valoresIniciales(aporte));
         setErrores({});
         setEditando(!aporte);
+        setCompromisoId(""); setMontoAsig(""); setErrorAsig("");
     }, [aporte, abierto]);
 
     if (!abierto) return null;
@@ -82,11 +141,13 @@ export const DetalleAporte = ({
                 ? form.otra_procedencia.trim()
                 : form.procedencia.trim();
 
+        // Solo campos que el backend acepta (cualquier otro devuelve 400)
         const datos = {
             descripcion_aporte: descripcionFinal,
-            fecha_aporte: form.fecha_aporte,
+            fecha_aporte: form.fecha_aporte, // YYYY-MM-DD
             procedencia: procedenciaFinal,
             monto: Number(form.monto),
+            tipo: form.tipo,
         };
 
         setGuardando(true);
@@ -121,13 +182,15 @@ export const DetalleAporte = ({
         </div>
     );
 
+    const etiquetaTipo = OPCIONES_TIPO.find((t) => t.id === (aporte?.tipo || "ingreso"))?.etiqueta;
+
     return (
         <div
             className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
             onClick={onCerrar}
         >
             <div
-                className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 relative max-h-full overflow-y-auto"
+                className={`bg-white rounded-2xl shadow-xl w-full p-8 relative max-h-full overflow-y-auto ${!esNuevo && !editando && esIngreso ? "max-w-2xl" : "max-w-md"}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <button
@@ -143,6 +206,22 @@ export const DetalleAporte = ({
                 </h3>
 
                 <div className="space-y-4 mb-6">
+                    {campoTexto(
+                        "Tipo:",
+                        "tipo",
+                        etiquetaTipo,
+                        <select
+                            className="select select-bordered w-full"
+                            value={form.tipo}
+                            onChange={cambiar("tipo")}
+                        >
+                            {OPCIONES_TIPO.map((t) => (
+                                <option key={t.id} value={t.id}>
+                                    {t.etiqueta}
+                                </option>
+                            ))}
+                        </select>
+                    )}
                     {campoTexto(
                         "Descripción:",
                         "descripcion_aporte",
@@ -165,6 +244,7 @@ export const DetalleAporte = ({
                             {form.descripcion_aporte?.toLowerCase() === "otro" && (
                                 <input
                                     type="text"
+                                    maxLength={APORTE_DESCRIPCION_MAX}
                                     className={`input input-bordered w-full ${errores.descripcion_aporte && (!form.otra_descripcion?.trim() || form.otra_descripcion.trim().length < APORTE_DESCRIPCION_MIN) ? "input-error" : ""}`}
                                     placeholder="Ingresa la nueva descripción *"
                                     value={form.otra_descripcion}
@@ -180,7 +260,7 @@ export const DetalleAporte = ({
                         aporte && formatearFechaDDMMAAAA(aporte.fecha_aporte),
                         <input
                             type="date"
-                            className="input input-bordered w-full"
+                            className={`input input-bordered w-full ${errores.fecha_aporte ? "input-error" : ""}`}
                             value={form.fecha_aporte}
                             onChange={cambiar("fecha_aporte")}
                         />
@@ -222,9 +302,9 @@ export const DetalleAporte = ({
                         aporte && formatoCLP.format(Number(aporte.monto) || 0),
                         <input
                             type="number"
-                            min="1"
+                            min={MONTO_MINIMO}
                             step="1"
-                            className="input input-bordered w-full"
+                            className={`input input-bordered w-full ${errores.monto ? "input-error" : ""}`}
                             value={form.monto}
                             onChange={cambiar("monto")}
                         />
@@ -259,6 +339,95 @@ export const DetalleAporte = ({
                         </>
                     )}
                 </div>
+
+                {/* Sección de asignación a compromisos: solo para ingresos en modo detalle */}
+                {!esNuevo && !editando && esIngreso && puedeAsignar && (
+                    <div className="border-t border-base-content/10 pt-6 mt-6">
+                        <h4 className="text-lg font-semibold mb-2">Compromisos financiados</h4>
+
+                        <ul className="divide-y divide-base-content/10 mb-4">
+                            {asignables.filter((x) => x.montoAqui > 0).length === 0 && (
+                                <li className="py-2 text-base-content/60 text-sm">
+                                    Este ingreso aún no está asignado a ningún compromiso.
+                                </li>
+                            )}
+                            {asignables
+                                .filter((x) => x.montoAqui > 0)
+                                .map(({ compromiso: c, montoAqui }) => (
+                                    <li key={c.id_compromiso} className="py-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-medium text-sm break-words">{c.descripcion_compromiso}</p>
+                                            <p className="text-xs text-base-content/60">
+                                                {formatearFechaDDMMAAAA(c.fecha_compromiso)}
+                                            </p>
+                                        </div>
+                                        <p className="font-semibold text-sm">{formatoCLP.format(montoAqui)}</p>
+                                        <button
+                                            className="btn btn-ghost btn-xs text-error ml-auto"
+                                            onClick={() => handleQuitar(c.id_compromiso)}
+                                        >
+                                            Quitar
+                                        </button>
+                                    </li>
+                                ))}
+                        </ul>
+
+                        <div className="rounded-lg bg-base-200/60 p-4 space-y-3">
+                            <h5 className="font-semibold text-sm mb-1">Asignar a un compromiso</h5>
+                            {asignables.filter((x) => x.maximo > 0 || x.montoAqui === 0).length === 0 ? (
+                                <p className="text-base-content/60 text-sm">
+                                    No hay compromisos con saldo pendiente de financiar en esta carrera.
+                                </p>
+                            ) : (
+                                <>
+                                    <select
+                                        className="select select-bordered w-full"
+                                        value={compromisoId}
+                                        onChange={(e) => elegirCompromiso(e.target.value)}
+                                        aria-label="Compromiso"
+                                    >
+                                        <option value="" disabled>Selecciona un compromiso</option>
+                                        {asignables
+                                            .filter((x) => x.maximo > 0)
+                                            .map(({ compromiso: c, saldoCompromiso, montoAqui }) => (
+                                                <option key={c.id_compromiso} value={c.id_compromiso}>
+                                                    {c.descripcion_compromiso} — falta{" "}
+                                                    {formatoCLP.format(saldoCompromiso)}
+                                                    {montoAqui > 0 ? ` (ya asignado: ${formatoCLP.format(montoAqui)})` : ""}
+                                                </option>
+                                            ))}
+                                    </select>
+                                    <div>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            className={`input input-bordered w-full ${errorAsig ? "input-error" : ""}`}
+                                            placeholder="Monto a asignar"
+                                            value={montoAsig}
+                                            onChange={(e) => { setMontoAsig(e.target.value); setErrorAsig(""); }}
+                                            disabled={!seleccionadoComp}
+                                            aria-label="Monto a asignar"
+                                        />
+                                        {seleccionadoComp && !errorAsig && (
+                                            <p className="text-xs text-base-content/60 mt-1">
+                                                Máximo {formatoCLP.format(maximoAsig)}
+                                            </p>
+                                        )}
+                                        {errorAsig && <p className="text-xs text-error mt-1">{errorAsig}</p>}
+                                    </div>
+                                    <button
+                                        className="btn btn-primary btn-sm"
+                                        onClick={handleAsignar}
+                                        disabled={asignando}
+                                    >
+                                        {asignando ? "Guardando..." : "Asignar"}
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

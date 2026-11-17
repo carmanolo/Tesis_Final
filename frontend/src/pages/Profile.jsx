@@ -7,20 +7,23 @@ const Profile = () => {
   const { fetchProfile } = useGetProfile();
   const [profileData, setProfileData] = useState(null);
 
+  const reloadProfile = async () => {
+    const res = await fetchProfile();
+    if (res?.data) {
+      setProfileData(res.data);
+    }
+  };
+
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
-    const getProfileData = async () => {
-      const profileData = await fetchProfile();
-      setProfileData(profileData.data);
-    };
-    getProfileData();
+    reloadProfile();
   }, []);
 
   return (
     <div>
       {profileData ? (
         <div className="profile-container">
-          <ProfileCard user={profileData} />
+          <ProfileCard user={profileData} onProfileUpdated={reloadProfile} />
         </div>
       ) : (
         <DULoading />

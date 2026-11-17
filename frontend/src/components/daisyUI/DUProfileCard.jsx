@@ -1,10 +1,89 @@
+import { useState } from "react";
 import profilePic from "@assets/profilePic.jpg";
 import college from "@assets/college.jpg";
 import { AiFillStar } from "react-icons/ai";
-import { FaUserShield, FaUserTie, FaGraduationCap } from "react-icons/fa";
+import { FaUserShield, FaUserTie, FaGraduationCap, FaEdit, FaCheck, FaTimes, FaUser } from "react-icons/fa";
+import { updateProfileService } from "../../services/user.service.js";
+import { fireDynamicSwal } from "../../hooks/utils/dynamicSwal.jsx";
 
-export const DUProfileCard = ({ user }) => {
+export const DUProfileCard = ({ user, onProfileUpdated }) => {
   const roleLower = String(user?.role || "").trim().toLowerCase();
+  const esVocal = roleLower.includes("vocal");
+  const esAdmin = roleLower === "administrador" || roleLower === "admin";
+  const nombreCarrera = user?.carrera?.nombre_carrera || (user?.carrera?.sigla ? `Carrera (${user.carrera.sigla})` : "");
+
+  // Edición de username
+  const [editandoUsername, setEditandoUsername] = useState(false);
+  const [tempUsername, setTempUsername] = useState("");
+  const [guardandoUsername, setGuardandoUsername] = useState(false);
+
+  const handleIniciarEdicionUsername = () => {
+    setTempUsername(user?.username || "");
+    setEditandoUsername(true);
+  };
+
+  const handleGuardarUsername = async () => {
+    const nuevoUsername = tempUsername.trim();
+    if (!nuevoUsername) {
+      fireDynamicSwal(400, "Nombre requerido", "El nombre de usuario no puede estar vacío");
+      return;
+    }
+    if (nuevoUsername.length < 3) {
+      fireDynamicSwal(400, "Nombre muy corto", "El nombre de usuario debe tener al menos 3 caracteres");
+      return;
+    }
+    if (nuevoUsername === user?.username) {
+      setEditandoUsername(false);
+      return;
+    }
+
+    try {
+      setGuardandoUsername(true);
+      const res = await updateProfileService({ username: nuevoUsername });
+      
+      // Actualizar en sessionStorage para mantener consistencia en navbar/sidebar
+      try {
+        const storedUser = JSON.parse(sessionStorage.getItem("usuario") || "{}");
+        if (storedUser) {
+          storedUser.username = nuevoUsername;
+          sessionStorage.setItem("usuario", JSON.stringify(storedUser));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+
+      fireDynamicSwal(200, "Éxito", res?.message || "Nombre de usuario actualizado con éxito");
+      setEditandoUsername(false);
+      if (typeof onProfileUpdated === "function") {
+        await onProfileUpdated();
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Error al actualizar nombre de usuario";
+      fireDynamicSwal(err?.response?.status || 400, "Error", msg);
+    } finally {
+      setGuardandoUsername(false);
+    }
+  };
+
+  // Clave única por usuario en localStorage (NO se envía ni registra en el backend)
+  const storageKey = `vocalia_desc_${user?.id || user?.rut || user?.email || "vocal"}`;
+  const [vocalia, setVocalia] = useState(() => {
+    return localStorage.getItem(storageKey) || "";
+  });
+  const [editando, setEditando] = useState(false);
+  const [tempVocalia, setTempVocalia] = useState("");
+
+  const handleGuardarVocalia = () => {
+    const val = tempVocalia.trim();
+    if (val) {
+      localStorage.setItem(storageKey, val);
+      setVocalia(val);
+    } else {
+      localStorage.removeItem(storageKey);
+      setVocalia("");
+    }
+    setEditando(false);
+  };
 
   // Función para determinar la etiqueta institucional correcta según el rol del usuario
   const getEtiquetaInstitucional = () => {
@@ -49,14 +128,69 @@ export const DUProfileCard = ({ user }) => {
         </div>
 
         <div className="flex-row flex flex-wrap gap-2 align-middle items-center mt-2">
-            <h2 className="text-2xl font-bold">{user.username}</h2>
+            {!editandoUsername ? (
+                <div className="flex items-center gap-2">
+                    <h2 className="text-2xl font-bold">{user.username}</h2>
+                    <button
+                        type="button"
+                        className="btn btn-ghost btn-circle btn-xs text-base-content/60 hover:text-primary"
+                        onClick={handleIniciarEdicionUsername}
+                        title="Editar nombre de usuario"
+                        aria-label="Editar nombre de usuario"
+                    >
+                        <FaEdit />
+                    </button>
+                </div>
+            ) : (
+                <div className="flex items-center gap-2">
+                    <input
+                        type="text"
+                        className="input input-bordered input-sm font-bold text-lg max-w-xs"
+                        value={tempUsername}
+                        onChange={(e) => setTempUsername(e.target.value)}
+                        placeholder="Nombre de usuario"
+                        autoFocus
+                        disabled={guardandoUsername}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") handleGuardarUsername();
+                            if (e.key === "Escape") setEditandoUsername(false);
+                        }}
+                    />
+                    <button
+                        type="button"
+                        className="btn btn-success btn-xs text-white"
+                        onClick={handleGuardarUsername}
+                        disabled={guardandoUsername}
+                        title="Guardar nombre de usuario"
+                    >
+                        <FaCheck />
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-ghost btn-xs"
+                        onClick={() => setEditandoUsername(false)}
+                        disabled={guardandoUsername}
+                        title="Cancelar"
+                    >
+                        <FaTimes />
+                    </button>
+                </div>
+            )}
             
-            <div className="badge badge-secondary">
+            {/* Rol institucional */}
+            <div className="badge badge-secondary font-semibold">
                 <div className="flex flex-row align-middle items-center">
                     <span><AiFillStar className="mr-2"/></span>
                     <span>{String(user.role).toUpperCase()}</span>
                 </div>
             </div>
+
+            {/* Vocalía en su propia etiqueta junto al rol */}
+            {esVocal && vocalia && (
+                <div className="badge badge-secondary badge-outline font-semibold gap-1">
+                    <span>{vocalia}</span>
+                </div>
+            )}
 
             <div className={`badge ${etiqueta.badgeClass}`}>
                 <div className="flex flex-row align-middle items-center">
@@ -64,11 +198,76 @@ export const DUProfileCard = ({ user }) => {
                     <span>{etiqueta.texto}</span>
                 </div>
             </div>
+
+            {/* Carrera del usuario (no se muestra para administradores) */}
+            {!esAdmin && nombreCarrera && (
+                <div className="badge badge-outline border-primary/40 text-primary font-medium">
+                    <div className="flex flex-row align-middle items-center">
+                        <FaGraduationCap className="mr-1.5" />
+                        <span>{nombreCarrera}</span>
+                    </div>
+                </div>
+            )}
+
+            {/* Botón para editar descripción en caso de ser vocal */}
+            {esVocal && !editando && (
+                <button
+                    className="btn btn-xs btn-outline btn-secondary gap-1"
+                    onClick={() => {
+                        setTempVocalia(vocalia);
+                        setEditando(true);
+                    }}
+                    title="Editar descripción de tu vocalía"
+                >
+                    <FaEdit />
+                    {vocalia ? "Editar vocalía" : "Añadir vocalía"}
+                </button>
+            )}
         </div>
 
         <p className="text-sm text-base-content/70 mt-1">
             {"@" + String(user.email).split("@")[0]}
         </p>
+
+        {/* Panel para editar la vocalía exclusivo para vocales (almacenado solo en el frontend) */}
+        {esVocal && editando && (
+            <div className="mt-4 p-4 rounded-xl border border-secondary/30 bg-base-100 shadow-sm max-w-md">
+                <h4 className="font-semibold text-sm text-base-content mb-1 flex items-center gap-1.5">
+                    <FaEdit className="text-secondary" />
+                    Descripción de tu Vocalía
+                </h4>
+                <p className="text-xs text-base-content/60 mb-3">
+                    Ingresa el área o labor específica de tu vocalía (ej: Deportes, Comunicaciones, Asuntos Estudiantiles).
+                </p>
+                <div className="space-y-3">
+                    <input
+                        type="text"
+                        maxLength={50}
+                        className="input input-bordered input-sm w-full"
+                        placeholder="Ej: Vocalía de Deportes"
+                        value={tempVocalia}
+                        onChange={(e) => setTempVocalia(e.target.value)}
+                        autoFocus
+                    />
+                    <div className="flex items-center justify-end gap-2">
+                        <button
+                            type="button"
+                            className="btn btn-ghost btn-xs gap-1"
+                            onClick={() => setEditando(false)}
+                        >
+                            <FaTimes /> Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-secondary btn-xs text-white gap-1"
+                            onClick={handleGuardarVocalia}
+                        >
+                            <FaCheck /> Guardar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
     </div>
   );
 };

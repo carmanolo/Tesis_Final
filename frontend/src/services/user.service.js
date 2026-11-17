@@ -49,6 +49,16 @@ export async function getProfile() {
     }
 }
 
+export async function updateProfileService(userData) {
+    try {
+        const response = await axios.patch("/users/profile", userData);
+        return Object.assign(response.data, { status: response.status });
+    } catch (error) {
+        console.error("Error al actualizar perfil:", error);
+        throw error;
+    }
+}
+
 export const getUserRole = () => {
    try {
         const user = JSON.parse(sessionStorage.getItem("usuario"));

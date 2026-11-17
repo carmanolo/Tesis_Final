@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { logout } from "@services/auth.service.js";
 import { FaHome, FaUsers, FaSignOutAlt, FaSearch,FaAngleDoubleLeft, FaGraduationCap, FaCalendarAlt, FaUserCircle,FaMoneyBillWave, FaClipboardCheck} from "react-icons/fa";
 import { MdArticle, MdOutlineHistory } from "react-icons/md";
+import { GoVerified } from "react-icons/go";
 import { DUSidebarItem } from "./DUSidebarItem";
 import marcaUbb from "../../assets/escudo-color-gradiente.svg";
 
@@ -55,11 +56,18 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       label: "Aportes",
       destination: "/aportes",
       iconColor: "text-[#16a34a]",
-      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "estudiante"]
+      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee"]
+    },
+    {
+      icon: GoVerified,
+      label: "Compromisos",
+      destination: "/compromisos",
+       iconColor: "text-[#1e40af]",
+      roles: ["presidente cee", "vicepresidente cee", "tesorero cee", "secretario cee","vocal cee"]
     },
     {
       icon: FaClipboardCheck,
-      label: "Materiales",
+      label: "Materiales y Préstamos",
       destination: "/materiales",
       iconColor: "text-[#000000]",
       roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee", "estudiante"]
@@ -69,7 +77,7 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
       label: "Publicaciones",
       destination: "/publicaciones",
       iconColor: "text-[#000000]",
-      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee", "estudiante"]
+      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee","estudiante"]
     },
     {
       icon: MdOutlineHistory,
@@ -98,7 +106,7 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
         <input id="my-drawer-4" type="checkbox" className="drawer-toggle" />
 
         {/* Main Content Area */}
-        <div className="drawer-content flex flex-col">
+        <div className="drawer-content flex flex-col min-w-0 max-w-full overflow-x-hidden">
           {/* Header / Navbar */}
           <nav className="navbar w-full bg-[#2F4697] text-white shadow-sm px-4 py-2 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -174,8 +182,8 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
                   iconColor={item.iconColor}
                 />
               ))}
-
-              {/* Cerrar Sesión */}
+            </ul>
+            {/* Cerrar Sesión */}
               <DUSidebarItem
                 icon={FaSignOutAlt}
                 label="Cerrar Sesión"
@@ -183,8 +191,6 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
                 logoutSubmit={logoutSubmit}
                 iconColor="text-[#dc2626]"
               />
-            </ul>
-
             {/* Bottom Collapse Toggle Button */}
             <div className="mt-auto w-full py-2.5 bg-[#f8f9fa] border-t border-[#e2e8f0] flex items-center justify-center relative">
               <div className="absolute inset-x-0 top-1/2 h-[1px] bg-[#e2e8f0] -z-0"></div>

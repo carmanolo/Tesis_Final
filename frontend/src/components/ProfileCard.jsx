@@ -1,9 +1,9 @@
 import DUProfileCard from "./daisyUI/DUProfileCard";
 
-const ProfileCard = ({ user }) => {
+const ProfileCard = ({ user, onProfileUpdated }) => {
   return (
     <div className="profile-card">
-      {DUProfileCard({user})}
+      <DUProfileCard user={user} onProfileUpdated={onProfileUpdated} />
     </div>
   );
 };

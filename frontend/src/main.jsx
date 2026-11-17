@@ -11,6 +11,7 @@ import Carreras from "@pages/Carreras"
 import Profile from "@pages/Profile"
 import Reuniones from "@pages/Reuniones"
 import Aportes from "@pages/Aportes"
+import Compromisos from "@pages/Compromisos"
 import Materiales from "@pages/Materiales"
 import Publicaciones from "@pages/Publicaciones"
 import Historial from "@pages/Historial"
@@ -58,6 +59,12 @@ const router = createBrowserRouter([
         path: "/aportes",
         element: (
             <Aportes />
+        ),
+      },
+      {
+        path: "/compromisos",
+        element: (
+            <Compromisos />
         ),
       },
       {

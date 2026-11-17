@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { getUserCarreraId } from "../../services/user.service.js";
 
 const hoyISO = () => new Date().toLocaleDateString("en-CA");
 
 // Selector de prestatario con buscador integrado.
 
-const PrestatarioSelector = ({ value, onChange, error, usuarios = [] }) => {
+const PrestatarioSelector = ({ value, onChange, error, usuarios = [], carreraId }) => {
     const [busqueda, setBusqueda] = useState("");
     const [abierto, setAbierto] = useState(false);
     const ref = useRef(null);
@@ -17,7 +18,16 @@ const PrestatarioSelector = ({ value, onChange, error, usuarios = [] }) => {
             .toLowerCase()
             .trim();
 
-    const usuariosFiltrados = usuarios.filter((u) =>
+    // Filtra los usuarios para mostrar únicamente los de la respectiva carrera
+    const usuariosCandidatos = useMemo(() => {
+        if (!carreraId) return usuarios;
+        return usuarios.filter((u) => {
+            const uCarrera = u.carreraId ?? u.carrera?.id_carrera ?? u.carreras?.id_carrera;
+            return Number(uCarrera) === Number(carreraId);
+        });
+    }, [usuarios, carreraId]);
+
+    const usuariosFiltrados = usuariosCandidatos.filter((u) =>
         norm(u.username).includes(norm(busqueda))
     );
 
@@ -38,8 +48,8 @@ const PrestatarioSelector = ({ value, onChange, error, usuarios = [] }) => {
         setAbierto(false);
     };
 
-    // Sin lista de usuarios: input de texto libre
-    if (!usuarios.length) {
+    // Sin lista de usuarios para la carrera: input de texto libre
+    if (!usuariosCandidatos.length) {
         return (
             <input
                 type="text"
@@ -128,6 +138,8 @@ export const ModalPrestarMaterial = ({
     const [tneEntregada, setTneEntregada] = useState("false");
     const [errores, setErrores] = useState({});
     const [guardando, setGuardando] = useState(false);
+
+    const carreraObjetivo = material?.carreraId ?? material?.carrera?.id_carrera ?? getUserCarreraId();
 
     useEffect(() => {
         if (abierto) {
@@ -223,6 +235,7 @@ export const ModalPrestarMaterial = ({
                             }}
                             error={errores.prestatario}
                             usuarios={usuarios}
+                            carreraId={carreraObjetivo}
                         />
                         {errores.prestatario && (
                             <span className="text-xs text-error mt-1">{errores.prestatario}</span>

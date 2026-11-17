@@ -5,10 +5,11 @@ const isOk = (res) => res?.status >= 200 && res?.status < 300;
 
 export function useCreatePublicacion(onSuccess) {
     // Devuelve true si se creó correctamente, false en caso contrario.
-    const handleCreatePublicacion = async ({ titulo, descripcion, imagenes = [] }) => {
+    const handleCreatePublicacion = async ({ compromisoId, titulo, descripcion, imagenes = [] }) => {
         try {
             const formData = new FormData();
-            formData.append("titulo", titulo);
+            if (compromisoId) formData.append("compromisoId", compromisoId);
+            if (titulo) formData.append("titulo", titulo);
             formData.append("descripcion", descripcion);
             imagenes.forEach((img) => formData.append("imagenes", img));
 

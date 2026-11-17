@@ -9,9 +9,12 @@ import { AppDataSource } from "../config/configDb.js";
 import UserEntity from "../entity/user.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
 
+const isAdminRole = (role?: string) => ["admin", "administrador"].includes(String(role).toLowerCase());
+
 export async function createAporte(req: Request, res: Response): Promise<any> {
   try {
-    const { id, carreraId: userCarreraId } = (req.user as any) || {};
+    const { id, carreraId: userCarreraId, rol, role } = (req.user as any) || {};
+    const admin = isAdminRole(rol || role);
 
     if (!req.body) return handleErrorClient(res, 400, "datos no proporcionados");
 
@@ -21,10 +24,12 @@ export async function createAporte(req: Request, res: Response): Promise<any> {
     const result = createValidation.validate(req.body);
     if (result.error) return handleErrorClient(res, 400, "faltan parametros", result.error.message);
 
-    const { descripcion_aporte, fecha_aporte, procedencia, monto, carreraId, id_carrera } = req.body;
+    const { descripcion_aporte, fecha_aporte, procedencia, monto, tipo, carreraId: bodyCarreraId, id_carrera } = req.body;
 
-    // Asociar internamente la carrera del usuario creador
-    let targetCarreraId = userCarreraId || carreraId || id_carrera;
+    // Solo un administrador puede elegir la carrera; el resto usa la suya
+    let targetCarreraId = admin ? (bodyCarreraId || id_carrera || userCarreraId) : userCarreraId;
+
+    // Si el token no trae carrera, se busca la del propio usuario
     if (!targetCarreraId && id) {
       const userRepo = AppDataSource.getRepository(UserEntity as any);
       const user = await userRepo.findOne({ where: { id } });
@@ -33,8 +38,8 @@ export async function createAporte(req: Request, res: Response): Promise<any> {
       }
     }
 
-    // Si aún no tiene carrera (ej. administrador sin carrera asignada), tomar la primera carrera registrada
-    if (!targetCarreraId) {
+    // Solo un administrador sin carrera asignada toma la primera carrera registrada
+    if (!targetCarreraId && admin) {
       const carreraRepo = AppDataSource.getRepository(CarreraEntity as any);
       const primerCarrera = await carreraRepo.findOne({ where: {} });
       if (primerCarrera) {
@@ -47,7 +52,7 @@ export async function createAporte(req: Request, res: Response): Promise<any> {
     }
 
     const { data, error: errSer } = await createAporteSer(
-       descripcion_aporte, fecha_aporte, procedencia, monto, id, Number(targetCarreraId)
+      descripcion_aporte, fecha_aporte, procedencia, Number(monto), Number(targetCarreraId), tipo,
     );
     if (errSer) return handleErrorClient(res, 400, errSer);
 
@@ -61,12 +66,14 @@ export async function getAportes(req: Request, res: Response): Promise<any> {
   try {
     const { carreraId, rol, role } = (req.user as any) || {};
     const userRole = rol || role;
-    const queryCarreraId = req.query.carreraId ? Number(req.query.carreraId) : carreraId;
+
+    // Solo un administrador puede consultar otra carrera por query
+    const queryCarreraId = isAdminRole(userRole) && req.query.carreraId ? Number(req.query.carreraId) : carreraId;
 
     const Aportes = await getAportesSer(queryCarreraId, userRole);
 
     if (!Aportes) return handleErrorServer(res, 500, "Error interno del servidor");
-    return handleSuccess(res, 200, "Aportees obtenidas exitosamente", Aportes);
+    return handleSuccess(res, 200, "Aportes obtenidos exitosamente", Aportes);
   } catch (error: any) {
     return handleErrorServer(res, 500, "Error interno del servidor", error.message);
   }
@@ -79,7 +86,7 @@ export async function getAporteById(req: Request, res: Response): Promise<any> {
     const { id_aporte } = req.params;
 
     if (!id_aporte || isNaN(Number(id_aporte))) {
-      return handleErrorClient(res, 400, "el id de la Aporte es inválido");
+      return handleErrorClient(res, 400, "el id del Aporte es inválido");
     }
 
     const Aporte = await getAporteSer(Number(id_aporte), carreraId, userRole);
@@ -95,6 +102,8 @@ export async function patchAporteById(req: Request, res: Response): Promise<any>
   try {
     const { carreraId, rol, role } = (req.user as any) || {};
     const userRole = rol || role;
+    const esAdmin = isAdminRole(userRole);
+
     if (!req.body) return handleErrorClient(res, 400, "datos no proporcionados");
 
     const { id_aporte } = req.params;
@@ -111,10 +120,19 @@ export async function patchAporteById(req: Request, res: Response): Promise<any>
     if (!Aporte) return handleErrorClient(res, 404, "Aporte no encontrada");
 
     const { carreraId: newCarreraId, id_carrera: newIdCarrera, ...restData } = req.body;
+    const nuevaCarrera = newCarreraId || newIdCarrera;
+
+    // Solo un administrador puede mover un aporte a otra carrera
+    if (nuevaCarrera && !esAdmin && Number(nuevaCarrera) !== Number(carreraId)) {
+      return handleErrorClient(res, 403, "No tienes permiso para cambiar la carrera de un aporte");
+    }
+
+    if (restData.monto !== undefined) restData.monto = Number(restData.monto);
+
     Object.assign(Aporte, restData);
 
-    if (newCarreraId || newIdCarrera) {
-      Aporte.carreraId = Number(newCarreraId || newIdCarrera);
+    if (nuevaCarrera && esAdmin) {
+      Aporte.carreraId = Number(nuevaCarrera);
       Aporte.carrera = { id_carrera: Aporte.carreraId };
     }
 
@@ -151,12 +169,12 @@ export async function deleteAporteById(req: Request, res: Response): Promise<any
     return handleErrorServer(res, 500, "Error al eliminar el Aporte", error.message);
   }
 }
- 
+
 async function cargarDatosReporte(req: Request, res: Response,): Promise<{ aportes: any[]; periodo: string } | null> {
   const { carreraId, rol, role } = (req.user as any) || {};
   const userRole = rol || role;
   const { desde, hasta, carreraId: queryCarrera } = req.query;
- 
+
   if (desde !== undefined && (typeof desde !== "string" || !FECHA_ISO.test(desde))) {
     handleErrorClient(res, 400, "El parámetro 'desde' debe tener formato YYYY-MM-DD");
     return null;
@@ -169,7 +187,7 @@ async function cargarDatosReporte(req: Request, res: Response,): Promise<{ aport
     handleErrorClient(res, 400, "'desde' no puede ser posterior a 'hasta'");
     return null;
   }
- 
+
   let carreraFiltro: number | undefined;
   if (queryCarrera !== undefined) {
     carreraFiltro = Number(queryCarrera);
@@ -178,7 +196,7 @@ async function cargarDatosReporte(req: Request, res: Response,): Promise<{ aport
       return null;
     }
   }
- 
+
   const aportes = await getAportesReporteSer(carreraId, userRole, {
     carreraId: carreraFiltro,
     desde: desde as string | undefined,
@@ -188,34 +206,34 @@ async function cargarDatosReporte(req: Request, res: Response,): Promise<{ aport
     handleErrorServer(res, 500, "Error interno del servidor");
     return null;
   }
- 
+
   const periodo =
     desde || hasta
       ? `Período: ${desde ? formatearFecha(desde as string) : "inicio"} al ${hasta ? formatearFecha(hasta as string) : "hoy"}`
-      : "Período: todos los aportes";
- 
+      : "Período: todos los movimientos";
+
   return { aportes, periodo };
 }
- 
+
 export async function getSaldoAportes(req: Request, res: Response): Promise<any> {
   try {
     const datos = await cargarDatosReporte(req, res);
     if (!datos) return;
- 
-    return handleSuccess(res, 200, "Saldo calculado exitosamente", calcularResumen(datos.aportes));
+
+    return handleSuccess(res, 200, "Balance calculado exitosamente", calcularResumen(datos.aportes));
   } catch (error: any) {
     return handleErrorServer(res, 500, "Error interno del servidor", error.message);
   }
 }
- 
+
 export async function descargarReportePdf(req: Request, res: Response): Promise<any> {
   try {
     const datos = await cargarDatosReporte(req, res);
     if (!datos) return;
- 
+
     const buffer = await generarPdfAportes(datos.aportes, { periodo: datos.periodo });
-    const nombre = `aportes_${new Date().toISOString().slice(0, 10)}.pdf`;
- 
+    const nombre = `contabilidad_${new Date().toISOString().slice(0, 10)}.pdf`;
+
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${nombre}"`);
     return res.status(200).send(buffer);
@@ -223,15 +241,15 @@ export async function descargarReportePdf(req: Request, res: Response): Promise<
     return handleErrorServer(res, 500, "Error al generar el reporte PDF", error.message);
   }
 }
- 
+
 export async function descargarReporteExcel(req: Request, res: Response): Promise<any> {
   try {
     const datos = await cargarDatosReporte(req, res);
     if (!datos) return;
- 
+
     const buffer = await generarExcelAportes(datos.aportes, { periodo: datos.periodo });
-    const nombre = `aportes_${new Date().toISOString().slice(0, 10)}.xlsx`;
- 
+    const nombre = `contabilidad_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename="${nombre}"`);
     return res.status(200).send(buffer);
@@ -239,4 +257,3 @@ export async function descargarReporteExcel(req: Request, res: Response): Promis
     return handleErrorServer(res, 500, "Error al generar el reporte Excel", error.message);
   }
 }
- 
