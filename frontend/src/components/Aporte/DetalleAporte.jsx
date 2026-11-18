@@ -43,7 +43,7 @@ const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedenc
     return errores;
 };
 
-// `aporte` null = modo crear. Con aporte = modo detalle (editable si puedeGestionar).
+// `aporte` null = modo crear
 export const DetalleAporte = ({
     abierto,
     aporte,
