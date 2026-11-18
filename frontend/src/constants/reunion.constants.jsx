@@ -1,5 +1,5 @@
 
-export const ACCESO_GESTION_ACTAS = ["presidente cee", "secretario cee", "vicepresidente cee", "tesorero cee", "vocal cee"];
+export const ACCESO_GESTION_ACTAS = ["presidente cee", "secretario cee", "vicepresidente cee"];
 
 export const PLANTILLA_ACTA = `
 <h2>Asistentes</h2>

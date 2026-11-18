@@ -4,12 +4,7 @@ import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
 import Swal from "sweetalert2";
-import {
-    getContenidoActaService,
-    guardarContenidoActaService,
-    finalizarActaService,
-    exportarActaService,
-} from "@services/reunion.service.js";
+import { getContenidoActaService, guardarContenidoActaService, finalizarActaService, exportarActaService } from "@services/reunion.service.js";
 import { formatearFechaDDMMAAAA } from "../../utils/calendar.utils.js";
 import "../../styles/editorActa.css";
 import { PLANTILLA_ACTA } from "../../constants/reunion.constants.jsx";

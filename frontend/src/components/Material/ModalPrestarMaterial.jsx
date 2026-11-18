@@ -5,7 +5,7 @@ const hoyISO = () => new Date().toLocaleDateString("en-CA");
 
 // Selector de prestatario con buscador integrado.
 
-const PrestatarioSelector = ({ value, onChange, error, usuarios = [], carreraId }) => {
+const PrestatarioSelector = ({ value, onChange, error, usuarios = [], carreraId, usuariosBloqueados = new Map() }) => {
     const [busqueda, setBusqueda] = useState("");
     const [abierto, setAbierto] = useState(false);
     const ref = useRef(null);
@@ -42,7 +42,8 @@ const PrestatarioSelector = ({ value, onChange, error, usuarios = [], carreraId 
         return () => document.removeEventListener("mousedown", handleClickFuera);
     }, []);
 
-    const seleccionar = (username) => {
+    const seleccionar = (username, bloqueado) => {
+        if (bloqueado) return;
         onChange(username);
         setBusqueda("");
         setAbierto(false);
@@ -105,19 +106,35 @@ const PrestatarioSelector = ({ value, onChange, error, usuarios = [], carreraId 
                                 Sin resultados
                             </li>
                         ) : (
-                            usuariosFiltrados.map((u) => (
-                                <li
-                                    key={u.id}
-                                    className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary/10 transition-colors
-                                        ${value === u.username ? "bg-primary/20 font-semibold text-primary" : "text-base-content"}`}
-                                    onClick={() => seleccionar(u.username)}
-                                >
-                                    {u.username}
-                                    {u.email && (
-                                        <span className="ml-2 text-xs text-base-content/50">{u.email}</span>
-                                    )}
-                                </li>
-                            ))
+                            usuariosFiltrados.map((u) => {
+                                const infoBloqueo = usuariosBloqueados.get(norm(u.username));
+                                const estaBloqueado = Boolean(infoBloqueo);
+
+                                return (
+                                    <li
+                                        key={u.id}
+                                        className={`px-4 py-2 text-sm transition-colors flex items-center justify-between
+                                            ${estaBloqueado
+                                                ? "opacity-50 cursor-not-allowed bg-base-200/50"
+                                                : "cursor-pointer hover:bg-primary/10"}
+                                            ${value === u.username ? "bg-primary/20 font-semibold text-primary" : "text-base-content"}`}
+                                        onClick={() => seleccionar(u.username, estaBloqueado)}
+                                        title={estaBloqueado ? `Bloqueado: Debe devolver "${infoBloqueo}"` : ""}
+                                    >
+                                        <div className="truncate flex-1">
+                                            <span>{u.username}</span>
+                                            {u.email && (
+                                                <span className="ml-2 text-xs text-base-content/50">{u.email}</span>
+                                            )}
+                                        </div>
+                                        {estaBloqueado && (
+                                            <span className="badge badge-error badge-xs font-semibold ml-2 text-white shrink-0">
+                                                Préstamo pendiente
+                                            </span>
+                                        )}
+                                    </li>
+                                );
+                            })
                         )}
                     </ul>
                 </div>
@@ -132,12 +149,41 @@ export const ModalPrestarMaterial = ({
     onPrestar,
     onCerrar,
     usuarios = [],
+    materiales = [],
 }) => {
     const [prestatario, setPrestatario] = useState("");
     const [fechaPrestamo, setFechaPrestamo] = useState(hoyISO());
     const [tneEntregada, setTneEntregada] = useState("false");
     const [errores, setErrores] = useState({});
     const [guardando, setGuardando] = useState(false);
+
+    // Mapa de usuarios con préstamos pendientes de devolución
+    const usuariosBloqueados = useMemo(() => {
+        const mapa = new Map();
+        const hoy = hoyISO();
+
+        const normStr = (v) =>
+            String(v ?? "")
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase()
+                .trim();
+
+        for (const m of materiales) {
+            const prestamos = Array.isArray(m.prestamos) ? m.prestamos : [];
+            for (const p of prestamos) {
+                const estado = String(p.estado_prestamo ?? "").toLowerCase();
+                const fechaP = String(p.fecha_prestamo ?? "").slice(0, 10);
+                const vencido = fechaP && fechaP < hoy;
+
+                // Si está en estado pendiente o prestado vencido (más de un día)
+                if ((estado === "pendiente" || (estado === "prestado" && vencido)) && p.prestatario) {
+                    mapa.set(normStr(p.prestatario), m.nombre_material || "Material");
+                }
+            }
+        }
+        return mapa;
+    }, [materiales]);
 
     const carreraObjetivo = material?.carreraId ?? material?.carrera?.id_carrera ?? getUserCarreraId();
 
@@ -162,6 +208,18 @@ export const ModalPrestarMaterial = ({
             err.prestatario = "El nombre del estudiante es obligatorio";
         } else if (nombre.length < 3 || nombre.length > 60) {
             err.prestatario = "Debe tener entre 3 y 60 caracteres";
+        } else {
+            // Validar si el estudiante tiene préstamos pendientes de devolución
+            const normStr = (v) =>
+                String(v ?? "")
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .toLowerCase()
+                    .trim();
+            const materialPendiente = usuariosBloqueados.get(normStr(nombre));
+            if (materialPendiente) {
+                err.prestatario = `El usuario "${nombre}" tiene un préstamo pendiente (${materialPendiente}). No puede pedir más materiales hasta devolverlo.`;
+            }
         }
 
         if (!fechaPrestamo) {
@@ -236,6 +294,7 @@ export const ModalPrestarMaterial = ({
                             error={errores.prestatario}
                             usuarios={usuarios}
                             carreraId={carreraObjetivo}
+                            usuariosBloqueados={usuariosBloqueados}
                         />
                         {errores.prestatario && (
                             <span className="text-xs text-error mt-1">{errores.prestatario}</span>

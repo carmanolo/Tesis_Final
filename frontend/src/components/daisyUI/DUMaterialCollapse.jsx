@@ -114,8 +114,16 @@ export const DUMaterialCollapse = ({
                                 </thead>
                                 <tbody>
                                     {prestamos.map((p) => {
-                                        const esPrestado =
-                                            String(p.estado_prestamo).toLowerCase() === "prestado";
+                                        const estadoLower = String(p.estado_prestamo).toLowerCase();
+                                        const esDevuelto = estadoLower === "devuelto";
+                                        const esPendiente = estadoLower === "pendiente";
+                                        const badgeClass = esDevuelto
+                                            ? "bg-base-200 text-base-content/70"
+                                            : esPendiente
+                                            ? "bg-error/20 text-error font-bold"
+                                            : "bg-warning/20 text-yellow-900";
+                                        const labelEstado = esDevuelto ? "Devuelto" : esPendiente ? "Pendiente" : "Prestado";
+
                                         return (
                                             <tr
                                                 key={p.id_prestamo}
@@ -132,18 +140,14 @@ export const DUMaterialCollapse = ({
                                                 </td>
                                                 <td>
                                                     <span
-                                                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                                                            esPrestado
-                                                                ? "bg-warning/20 text-yellow-900"
-                                                                : "bg-base-200 text-base-content/70"
-                                                        }`}
+                                                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${badgeClass}`}
                                                     >
-                                                        {esPrestado ? "Prestado" : "Devuelto"}
+                                                        {labelEstado}
                                                     </span>
                                                 </td>
                                                 {canCrudMaterial && (
                                                     <td className="text-right whitespace-nowrap">
-                                                        {esPrestado && (
+                                                        {!esDevuelto && (
                                                             <button
                                                                 type="button"
                                                                 className="btn btn-xs btn-ghost border border-base-300 text-base-content hover:bg-base-200"
