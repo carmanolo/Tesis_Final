@@ -141,10 +141,10 @@ export const DetalleAporte = ({
                 ? form.otra_procedencia.trim()
                 : form.procedencia.trim();
 
-        // Solo campos que el backend acepta (cualquier otro devuelve 400)
+        // Solo campos que el backend acepta
         const datos = {
             descripcion_aporte: descripcionFinal,
-            fecha_aporte: form.fecha_aporte, // YYYY-MM-DD
+            fecha_aporte: form.fecha_aporte, 
             procedencia: procedenciaFinal,
             monto: Number(form.monto),
             tipo: form.tipo,
@@ -333,9 +333,7 @@ export const DetalleAporte = ({
                                     </button>
                                 </>
                             )}
-                            <button className="btn btn-neutral" onClick={onCerrar}>
-                                Cerrar
-                            </button>
+
                         </>
                     )}
                 </div>
