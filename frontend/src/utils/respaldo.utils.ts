@@ -17,25 +17,63 @@ export const getImageUrl = (imgPath: any) => {
 };
 
 export const getCompromisoId = (compromiso: unknown): number | null => {
+    if (typeof compromiso === "object" && compromiso !== null) {
+        const rawId =
+            (compromiso as any).id_compromiso ??
+            (compromiso as any).id ??
+            (compromiso as any).compromisoId;
+        const num = Number(rawId);
+        return isNaN(num) ? null : num;
+    }
+
     if (typeof compromiso !== "string") return null;
-    const [idPart] = compromiso.split(". ");
+
+    const trimmed = compromiso.trim();
+    const match = trimmed.match(/^(\d+)[\.\-\:\s]/);
+    if (match) {
+        const id = Number(match[1]);
+        return isNaN(id) ? null : id;
+    }
+
+    const [idPart] = trimmed.split(". ");
     const id = Number(idPart?.trim());
     return isNaN(id) ? null : id;
 };
 
 export const getCompromisoTitulo = (compromiso: unknown): string => {
-    const DEFAULT_TITULO = "No hay noticias";
+    const DEFAULT_TITULO = "Compromiso sin título";
+
+    if (typeof compromiso === "object" && compromiso !== null) {
+        const tit =
+            (compromiso as any).titulo ??
+            (compromiso as any).descripcion_compromiso ??
+            (compromiso as any).descripcion ??
+            (compromiso as any).nombre;
+        if (typeof tit === "string" && tit.trim().length > 0) {
+            return tit.trim();
+        }
+    }
+
     if (typeof compromiso !== "string") {
         return DEFAULT_TITULO;
     }
 
     try {
-        const splitCompromiso = compromiso.split("(")[0];
-        const nameCompromiso = splitCompromiso ? splitCompromiso.trim() : "";
-        const parts = nameCompromiso.split(". ");
-        const nameCompromisoWithoutId = parts.length > 1 ? parts.slice(1).join(". ") : parts[0];
+        const texto = compromiso.trim();
+        if (!texto) return DEFAULT_TITULO;
 
-        return nameCompromisoWithoutId?.trim() || DEFAULT_TITULO;
+        // Si empieza con prefijo numérico como "1. ", "1 - " o "1: ", extraemos el título sin el ID
+        const match = texto.match(/^\d+[\.\-\:]\s*(.+)$/);
+        if (match && match[1]?.trim()) {
+            return match[1].trim();
+        }
+
+        const parts = texto.split(". ");
+        if (parts.length > 1 && !isNaN(Number(parts[0]))) {
+            return parts.slice(1).join(". ").trim() || DEFAULT_TITULO;
+        }
+
+        return texto || DEFAULT_TITULO;
     } catch (error) {
         console.error(error);
         return DEFAULT_TITULO;
@@ -43,7 +81,7 @@ export const getCompromisoTitulo = (compromiso: unknown): string => {
 };
 
 export const processCompromisos = (compromisos: unknown): string[] => {
-  const DEFAULT_COMPROMISO = "NO EXISTE COMPROMISOS";
+  const DEFAULT_COMPROMISO = "Compromiso sin título";
 
   if (!Array.isArray(compromisos)) {
     return [];
@@ -51,11 +89,6 @@ export const processCompromisos = (compromisos: unknown): string[] => {
 
   const newCompromisos: string[] = compromisos.map((compromiso: unknown) => {
     try {
-      if (typeof compromiso !== "string") {
-        console.error("El compromiso debe ser un string: ", compromiso);
-        return DEFAULT_COMPROMISO;
-      }
-
       return getCompromisoTitulo(compromiso);
     } catch (error) {
       console.error(error);

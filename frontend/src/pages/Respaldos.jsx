@@ -51,12 +51,12 @@ const Respaldos = () => {
         if (typeof fetchCompromisoList === "function") {
             fetchCompromisoList();
         }
-    }, [fetchRespaldos]);
+    }, [fetchRespaldos, fetchCompromisoList]);
 
     const opcionesCompromiso = useMemo(() => {
         const lista = Array.isArray(compromisoList) ? compromisoList : [];
         return lista
-            .filter((c) => typeof c === "string" && c.trim().length > 0)
+            .filter((c) => Boolean(c) && (typeof c === "string" ? c.trim().length > 0 : typeof c === "object"))
             .map((c) => ({
                 id: getCompromisoId(c),
                 titulo: getCompromisoTitulo(c),
@@ -92,7 +92,8 @@ const Respaldos = () => {
             const coincideCompromiso =
                 !cFiltroId ||
                 Number(p.compromisoId) === cFiltroId ||
-                Number(p.compromiso?.id_compromiso) === cFiltroId;
+                Number(p.compromiso?.id_compromiso) === cFiltroId ||
+                Number(p.id_compromiso) === cFiltroId;
 
             if (!coincideCompromiso) return false;
 

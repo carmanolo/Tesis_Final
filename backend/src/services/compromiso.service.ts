@@ -297,8 +297,10 @@ export async function obtenerListaCompromiso(carreraId?: number, role?: string):
   try {
     const compromisoRepository = AppDataSource.getRepository(CompromisoEntity);
     const whereCondition: any = {};
-    if (!isAdminRole(role) && carreraId) {
-      whereCondition.carreraId = carreraId;
+    if (carreraId) {
+      whereCondition.carreraId = Number(carreraId);
+    } else if (!isAdminRole(role)) {
+      return [];
     }
     const compromisos = await compromisoRepository.find({
       where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,

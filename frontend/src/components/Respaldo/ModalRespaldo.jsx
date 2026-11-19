@@ -18,7 +18,7 @@ export function ModalRespaldo({ abierto, respaldo, compromisoList = [], onCrear,
     const opcionesCompromiso = useMemo(() => {
         const lista = Array.isArray(compromisoList) ? compromisoList : [];
         return lista
-            .filter((c) => typeof c === "string" && c.trim().length > 0)
+            .filter((c) => Boolean(c) && (typeof c === "string" ? c.trim().length > 0 : typeof c === "object"))
             .map((c) => {
                 const id = getCompromisoId(c);
                 const tit = getCompromisoTitulo(c);

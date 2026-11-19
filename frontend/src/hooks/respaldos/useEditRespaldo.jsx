@@ -1,11 +1,14 @@
-import Swal from "sweetalert2";
+import { fireDynamicSwal } from "../utils/dynamicSwal.jsx";
 import { patchRespaldoService } from "../../services/respaldo.service.js";
 
 const isOk = (res) => res?.status >= 200 && res?.status < 300;
+const extraerMensaje = (res) =>
+    res?.data?.details || res?.data?.message || res?.message;
 
 export function useEditRespaldo(onSuccess) {
-    // Devuelve true si se editó correctamente, false en caso contrario.
     const handleEditRespaldo = async (id, { compromisoId, titulo, descripcion, nuevasImagenes = [] }) => {
+        let status;
+        let mensaje;
         try {
             const formData = new FormData();
             if (compromisoId) formData.append("compromisoId", compromisoId);
@@ -14,13 +17,21 @@ export function useEditRespaldo(onSuccess) {
             nuevasImagenes.forEach((img) => formData.append("imagenes", img));
 
             const response = await patchRespaldoService(id, formData);
-            if (!isOk(response)) return false;
+            status = response?.status ?? 200;
+            mensaje = extraerMensaje(response) || "Respaldo actualizado con éxito";
 
-            await Swal.fire({ icon: "success", title: "Respaldo actualizado", confirmButtonColor: "#2F4697", timer: 2000 });
+            if (!isOk(response)) {
+                fireDynamicSwal(status, null, mensaje);
+                return false;
+            }
+
+            fireDynamicSwal(status, null, mensaje);
             if (typeof onSuccess === "function") onSuccess();
             return true;
         } catch (error) {
-            await Swal.fire({ icon: "error", title: "Error", text: error?.response?.data?.message || "Error al editar el respaldo.", confirmButtonColor: "#2F4697" });
+            status = error?.response?.status ?? 500;
+            mensaje = extraerMensaje(error?.response) || "Error al editar el respaldo.";
+            fireDynamicSwal(status, null, mensaje);
             return false;
         }
     };

@@ -20,7 +20,7 @@ export function authorizeRoles(...rolesPermitidos: string[]): RequestHandler {
 
             const rolActual = userFound.role;
 
-            if (!rolesPermitidos.includes(rolActual)) {
+            if (rolesPermitidos.length > 0 && !rolesPermitidos.includes(rolActual)) {
                 return handleErrorClient(
                     res, 
                     403, 

@@ -274,9 +274,22 @@ export async function descargarSolicitudExcel(req: Request, res: Response): Prom
 export async function getCompromisoList(req: Request, res: Response): Promise<any> {
   const DEFAULT_ARRAY: any[] = [];
   try {
-    const { carreraId, rol, role } = (req.user as any) || {};
+    let { carreraId, rol, role, id, email } = (req.user as any) || {};
     const userRole = rol || role;
-    const compromisos: any = await obtenerListaCompromiso(carreraId, userRole);
+
+    if (!carreraId && (id || email)) {
+      const userRepo = AppDataSource.getRepository(UserEntity);
+      const user = await userRepo.findOne({ where: id ? { id } : { email } });
+      if (user?.carreraId) {
+        carreraId = user.carreraId;
+      }
+    }
+
+    const queryCarreraId = isAdminRole(userRole) && req.query.carreraId
+      ? Number(req.query.carreraId)
+      : carreraId;
+
+    const compromisos: any = await obtenerListaCompromiso(queryCarreraId, userRole);
     const compromisoList = processCompromisos(compromisos);
     return handleSuccess(res, 200, "Lista de compromisos obtenida exitosamente", compromisoList);
   } catch (error) {
