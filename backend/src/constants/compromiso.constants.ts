@@ -1,7 +1,6 @@
-// Mismo patrón que aporte.constants.ts
 export const MIN_DESCRIPCION_COMPROMISO = 5;
 export const MAX_DESCRIPCION_COMPROMISO = 500;
-export const MONTO_MINIMO = 1;
+export const MONTO_MINIMO = 10;
 
 export const DESCRIPCION_OBLIGATORIA = "La descripción del compromiso es obligatoria";
 export const FECHA_OBLIGATORIA = "La fecha del compromiso es obligatoria";

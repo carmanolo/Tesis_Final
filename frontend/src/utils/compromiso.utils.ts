@@ -1,6 +1,5 @@
 import { normalizarFechaISO } from "./calendar.utils.js";
 
-
 export const hoyISO = () => new Date().toLocaleDateString("en-CA");
 
 // "YYYY-MM-DD" -> Date en hora local (evita el desfase de un día por zona horaria)
@@ -76,7 +75,6 @@ const totalAsignadoAporte = (aporteId: number, compromisos: any[]): number => {
 };
 
 // Aportes que se pueden asignar a este compromiso, con lo que le queda disponible a cada uno.
-// La disponibilidad se calcula como: monto_original - suma de lo asignado en TODOS los compromisos (excepto el actual)
 export const aportesAsignables = (aportes: any[], compromisos: any[], compromiso: any) => {
     const propios = new Map<number, number>(
         (compromiso?.aportes ?? []).map((a: any) => [a.aporteId, Number(a.monto_asignado) || 0])

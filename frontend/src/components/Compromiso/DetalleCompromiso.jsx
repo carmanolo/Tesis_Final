@@ -18,8 +18,8 @@ const validar = ({ descripcion_compromiso, fecha_compromiso, monto_total }, fina
     if (!fecha_compromiso) errores.fecha_compromiso = "Selecciona una fecha";
 
     const monto = Number(monto_total);
-    if (!Number.isInteger(monto) || monto <= 0) {
-        errores.monto_total = "El monto debe ser un entero mayor a 0";
+    if (!Number.isInteger(monto) || monto <= 10) {
+        errores.monto_total = "El monto debe ser un entero mayor a 10";
     } else if (monto < financiado) {
         errores.monto_total = `No puede ser menor a lo ya financiado (${formatoCLP.format(financiado)})`;
     }
