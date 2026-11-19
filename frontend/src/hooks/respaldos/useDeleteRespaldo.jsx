@@ -16,10 +16,10 @@ export function useDeleteRespaldo(onSuccess) {
         if (result.isConfirmed) {
             try {
                 await deleteRespaldoService(id);
-                await Swal.fire({ icon: "success", title: "Eliminado", text: "El Respaldo fue eliminado.", confirmButtonColor: "#2F4697" });
+                await Swal.fire({ icon: "success", title: "Eliminado", text: "El Respaldo fue eliminado.", showConfirmButton: false, timer: 2000});
                 if (typeof onSuccess === "function") onSuccess();
             } catch (error) {
-                await Swal.fire({ icon: "error", title: "Error", text: error?.response?.data?.message || "Error al eliminar el respaldo.", confirmButtonColor: "#2F4697" });
+                await Swal.fire({ icon: "error", title: "Error", text: error?.response?.data?.message || "Error al eliminar el respaldo.", showConfirmButton: false, timer: 2000});
             }
         }
     };

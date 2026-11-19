@@ -9,7 +9,6 @@ export function useDeleteImagenPublicacion(onSuccess) {
             text: "Esta acción no se puede deshacer.",
             icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: "#dc2626",
             cancelButtonColor: "#6b7280",
             confirmButtonText: "Sí, eliminar",
             cancelButtonText: "Cancelar",
@@ -18,11 +17,11 @@ export function useDeleteImagenPublicacion(onSuccess) {
 
         try {
             await deleteImagenPublicacionService(respaldoId, imagenUrl);
-            await Swal.fire({ icon: "success", title: "Imagen eliminada", confirmButtonColor: "#2F4697" });
+            await Swal.fire({ icon: "success", title: "Imagen eliminada", showConfirmButton: false, timer: 2000});
             if (typeof onSuccess === "function") await onSuccess();
             return true;
         } catch (error) {
-            await Swal.fire({ icon: "error", title: "Error", text: error?.response?.data?.message || "Error al eliminar la imagen.", confirmButtonColor: "#2F4697" });
+            await Swal.fire({ icon: "error", title: "Error", text: error?.response?.data?.message || "Error al eliminar la imagen." });
             return false;
         }
     };

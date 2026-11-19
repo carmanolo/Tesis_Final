@@ -367,9 +367,6 @@ export const DetalleAporte = ({
                             <button className="btn btn-primary" onClick={handleGuardar} disabled={guardando}>
                                 {esNuevo ? "Crear" : "Guardar"}
                             </button>
-                            <button className="btn btn-neutral" onClick={handleCancelar} disabled={guardando}>
-                                Cancelar
-                            </button>
                         </>
                     ) : (
                         <>

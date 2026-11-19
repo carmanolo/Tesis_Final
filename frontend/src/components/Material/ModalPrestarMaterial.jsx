@@ -346,14 +346,6 @@ export const ModalPrestarMaterial = ({
 
                     <div className="flex justify-end gap-3 pt-3 border-t border-base-300">
                         <button
-                            type="button"
-                            className="btn btn-ghost btn-sm"
-                            onClick={onCerrar}
-                            disabled={guardando}
-                        >
-                            Cancelar
-                        </button>
-                        <button
                             type="submit"
                             className="btn btn-primary btn-sm"
                             disabled={guardando || stockDisponible < 1}

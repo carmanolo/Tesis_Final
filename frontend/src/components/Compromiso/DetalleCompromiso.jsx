@@ -215,9 +215,6 @@ export const DetalleCompromiso = ({ abierto, compromiso, compromisos, aportes, p
                             <button className="btn btn-primary" onClick={handleGuardar} disabled={guardando}>
                                 {esNuevo ? "Crear compromiso" : "Guardar cambios"}
                             </button>
-                            <button className="btn btn-neutral" onClick={handleCancelar} disabled={guardando}>
-                                Cancelar
-                            </button>
                         </>
                     ) : (
                         <>
