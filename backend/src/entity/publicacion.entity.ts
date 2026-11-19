@@ -2,7 +2,7 @@ import { EntitySchema } from "typeorm";
 import type { IUser } from "./user.entity.js";
 import type { Carrera } from "./carrera.entity.js";
 import type { Compromiso } from "./compromiso.entity.js";
-import { imagenesTransformer } from "../utils/publicacion.utils.js";
+import { imagenesTransformer } from "../utils/respaldo.utils.js";
 
 export interface Publicacion {
     id_publicacion: number;

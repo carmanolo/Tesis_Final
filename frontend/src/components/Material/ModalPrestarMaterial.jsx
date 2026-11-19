@@ -176,7 +176,7 @@ export const ModalPrestarMaterial = ({
                 const fechaP = String(p.fecha_prestamo ?? "").slice(0, 10);
                 const vencido = fechaP && fechaP < hoy;
 
-                // Si está en estado pendiente o prestado vencido (más de un día)
+                // Si está en estado pendiente o prestado vencido
                 if ((estado === "pendiente" || (estado === "prestado" && vencido)) && p.prestatario) {
                     mapa.set(normStr(p.prestatario), m.nombre_material || "Material");
                 }

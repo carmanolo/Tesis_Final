@@ -2,24 +2,18 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { Request, Response, NextFunction } from "express";
-import {
-    PUBLICACION_UPLOAD_DIR,
-    IMAGEN_MIME_TYPES,
-    TAMANO_MAXIMO_IMAGEN_BYTES,
-    FORMATO_NO_PERMITIDO,
-    MAX_IMAGENES,
-} from "../constants/publicacion.constants.js";
+import { RESPALDO_UPLOAD_DIR, IMAGEN_MIME_TYPES, TAMANO_MAXIMO_IMAGEN_BYTES, FORMATO_NO_PERMITIDO, MAX_IMAGENES} from "../constants/respaldo.constants.js";
 import { handleErrorClient } from "../handlers/responseHandlers.js";
 import { validarFirmaArchivo } from "../utils/fileValidator.utils.js";
 
 // Asegura que el directorio de almacenamiento exista
-if (!fs.existsSync(PUBLICACION_UPLOAD_DIR)) {
-    fs.mkdirSync(PUBLICACION_UPLOAD_DIR, { recursive: true });
+if (!fs.existsSync(RESPALDO_UPLOAD_DIR)) {
+    fs.mkdirSync(RESPALDO_UPLOAD_DIR, { recursive: true });
 }
 
 const storage = multer.diskStorage({
     destination: (_req, _file, cb) => {
-        cb(null, PUBLICACION_UPLOAD_DIR);
+        cb(null, RESPALDO_UPLOAD_DIR);
     },
     filename: (_req, file, cb) => {
         const ext = path.extname(file.originalname);

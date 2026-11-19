@@ -1,0 +1,18 @@
+import { Router } from "express";
+import { getRespaldos, getRespaldoById, createRespaldo, patchRespaldoById, deleteRespaldoById, deleteImagenPublicacion} from "../controllers/respaldo.controller.js";
+import { authenticateJwt } from "../middleware/authentication.middleware.js";
+import { authorizeRoles } from "../middleware/authorization.middleware.js";
+import { uploadImagenesMiddleware } from "../middleware/publicacion.upload.middleware.js";
+
+const router = Router();
+router.use(authenticateJwt);
+
+
+router.get("/", getRespaldos);
+router.get("/:id_respaldo", getRespaldoById);
+router.post("/crear", authorizeRoles("administrador", "presidente cee", "vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee"), uploadImagenesMiddleware, createRespaldo);
+router.patch("/editar/:id_publicacion", authorizeRoles("administrador", "presidente cee", "vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee"), uploadImagenesMiddleware, patchRespaldoById);
+router.delete("/eliminar/:id_respaldo", authorizeRoles("administrador", "presidente cee", "vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee"), deleteRespaldoById);
+router.delete("/:id_respaldo/imagen", authorizeRoles("administrador", "presidente cee", "vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee"), deleteImagenPublicacion);
+
+export default router;

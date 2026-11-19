@@ -1,24 +1,24 @@
 import { normalizarFechaISO, MESES } from "./calendar.utils.js";
 import { OPCIONES_PROCEDENCIA, OPCIONES_DESCRIPCION, TOP_N } from "../constants/aporte.constants.jsx";
 
-// ---------- Formatos ----------
+// Formatos 
 export const formatoCLP = new Intl.NumberFormat("es-CL", {
     style: "currency",
     currency: "CLP",
     maximumFractionDigits: 0,
 });
 
-// Pasar moneda a valor chileno en formato corto (ejes del gráfico)
+// Pasar moneda a valor chileno en formato corto 
 export const formatoCompacto = new Intl.NumberFormat("es-CL", { notation: "compact" });
 
 export const aMonto = (valor: any) => Number(valor) || 0;
 
 const hoyISO = () => new Date().toLocaleDateString("en-CA");
 
-// Los registros sin tipo se consideran ingresos (igual que el backend)
+// Los registros sin tipo se consideran ingresos
 export const esEgreso = (aporte: any) => aporte?.tipo === "egreso";
 
-// ---------- Formulario (DetalleAporte) ----------
+//Formulario (DetalleAporte)
 export const obtenerEstadoProcedencia = (procedencia: string) => {
     if (!procedencia) {
         return { procedencia: "", otra_procedencia: "" };
@@ -65,7 +65,7 @@ export const valoresIniciales = (aporte: any) => {
     };
 };
 
-// ---------- Balance (misma lógica que calcularResumen del backend) ----------
+// Balance
 export const calcularBalance = (aportes: any[]) => {
     let totalIngresos = 0;
     let totalEgresos = 0;
@@ -76,7 +76,7 @@ export const calcularBalance = (aportes: any[]) => {
     return { totalIngresos, totalEgresos, balance: totalIngresos - totalEgresos };
 };
 
-// ---------- Gráfico (GraficoAporte) ----------
+// Gráfico (GraficoAporte)
 // Suma los montos por texto y ordena de mayor a menor
 export const agruparPorTexto = (aportes: any[], campo: string) => {
     const grupos = new Map();

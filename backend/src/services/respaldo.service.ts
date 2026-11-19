@@ -1,10 +1,10 @@
 import { AppDataSource } from "../config/configDb.js";
-import PublicacionEntity from "../entity/publicacion.entity.js";
+import RespaldoEntity from "../entity/respaldo.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
 import CompromisoEntity from "../entity/compromiso.entity.js";
-import { isAdminRole } from "../utils/publicacion.utils.js";
+import { isAdminRole } from "../utils/respaldo.utils.js";
 
-const repo = () => AppDataSource.getRepository(PublicacionEntity as any);
+const repo = () => AppDataSource.getRepository(RespaldoEntity as any);
 
 const withTitulo = (pub: any) => {
     if (!pub) return pub;
@@ -14,7 +14,7 @@ const withTitulo = (pub: any) => {
     };
 };
 
-export async function createPublicacionSer(
+export async function createRespaldoSer(
     compromisoId: number,
     descripcion: string,
     imagenes: string[],
@@ -49,19 +49,19 @@ export async function createPublicacionSer(
 
         const saved = await repo().save(nueva);
         const completada = await repo().findOne({
-            where: { id_publicacion: saved.id_publicacion },
+            where: { id_respaldo: saved.id_respaldo },
             relations: { carrera: true, creador: true, compromiso: true },
         });
 
         return { data: withTitulo(completada ?? saved), error: null };
     } catch (error) {
-        console.error("Error al crear la Publicación:", error);
-        return { data: null, error: "Error interno al crear la Publicación" };
+        console.error("Error al crear el respaldo:", error);
+        return { data: null, error: "Error interno al crear el respaldo" };
     }
 }
 
-// Devuelve las Publicaciones de la carrera o todas si es administrador
-export async function getPublicacionesSer(carreraId?: number, role?: string): Promise<any[] | null> {
+// Devuelve los respaldo de la carrera
+export async function getRespaldosSer(carreraId?: number, role?: string): Promise<any[] | null> {
     try {
         if (!isAdminRole(role) && !carreraId) return [];
 
@@ -70,64 +70,64 @@ export async function getPublicacionesSer(carreraId?: number, role?: string): Pr
             whereCondition.carreraId = carreraId;
         }
 
-        const publicaciones = await repo().find({
+        const respaldos = await repo().find({
             where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
             relations: { carrera: true, creador: true, compromiso: true },
             order: { createdAt: "DESC" },
         });
 
-        return publicaciones.map(withTitulo);
+        return respaldos.map(withTitulo);
     } catch (error) {
-        console.error("error al obtener Publicaciones: ", error);
+        console.error("error al obtener Respaldos: ", error);
         return null;
     }
 }
 
-// Devuelve la Publicación si pertenece a la carrera
-export async function getPublicacionSer(id_publicacion: number, carreraId?: number, role?: string): Promise<any | null> {
+// Devuelve el Respaldo si pertenece a la carrera
+export async function getRespaldoSer(id_respaldo: number, carreraId?: number, role?: string): Promise<any | null> {
     try {
-        const whereCondition: any = { id_publicacion };
+        const whereCondition: any = { id_respaldo };
         if (!isAdminRole(role)) {
             if (!carreraId) return null;
             whereCondition.carreraId = carreraId;
         }
 
-        const publicacion = await repo().findOne({
+        const respaldo = await repo().findOne({
             where: whereCondition,
             relations: { carrera: true, creador: true, compromiso: true },
         });
 
-        return publicacion ? withTitulo(publicacion) : null;
+        return respaldo ? withTitulo(respaldo) : null;
     } catch (error) {
-        console.error("Error al obtener la Publicación", error);
+        console.error("Error al obtener el respaldo", error);
         throw error;
     }
 }
 
-export async function patchPublicacionSer(publicacion: any): Promise<any> {
+export async function patchRespaldoSer(respaldo: any): Promise<any> {
     try {
-        const saved = await repo().save(publicacion);
+        const saved = await repo().save(respaldo);
         const completada = await repo().findOne({
-            where: { id_publicacion: saved.id_publicacion },
+            where: { id_respaldo: saved.id_respaldo },
             relations: { carrera: true, creador: true, compromiso: true },
         });
 
         return {
             data: withTitulo(completada ?? saved),
-            message: "Publicación actualizada con éxito",
+            message: "Respaldo actualizado con éxito",
         };
     } catch (error) {
-        console.error("Error al actualizar Publicación", error);
+        console.error("Error al actualizar respaldo", error);
         return { data: null, message: "Error interno del servidor" };
     }
 }
 
-export async function deletePublicacionSer(id_publicacion: number): Promise<any> {
+export async function deleteRespaldoSer(id_respaldo: number): Promise<any> {
     try {
-        const result = await repo().delete({ id_publicacion });
-        return { result, message: "Publicación eliminada exitosamente" };
+        const result = await repo().delete({ id_respaldo });
+        return { result, message: "Respaldo eliminado exitosamente" };
     } catch (error) {
         console.error(error);
-        return { result: null, message: "Error al eliminar la publicación" };
+        return { result: null, message: "Error al eliminar el respaldo" };
     }
 }

@@ -8,10 +8,10 @@ import {
     COMPROMISO_OBLIGATORIO,
     DESCRIPCION_OBLIGATORIA,
     CAMPOS_ADICIONALES,
-} from "../constants/publicacion.constants.js";
+} from "../constants/respaldo.constants.js";
 
 export const integrityValidation = Joi.object({
-    id_publicacion: Joi.any().custom(idValidationFunction),
+    id_respaldo: Joi.any().custom(idValidationFunction),
 
     compromisoId: Joi.number().integer().positive().messages({
         "number.base": "El id del compromiso debe ser un número",
@@ -67,8 +67,6 @@ export const createValidation = Joi.object({
     "object.unknown": CAMPOS_ADICIONALES,
   });
 
-// Sin .min(1): al actualizar se puede enviar solo imágenes (multipart) sin campos de texto.
-// El controlador valida que venga al menos un campo o una imagen.
 export const updateValidation = Joi.object({
     compromisoId: Joi.any(),
     id_compromiso: Joi.any(),

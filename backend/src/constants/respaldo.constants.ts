@@ -3,7 +3,7 @@ export const MAX_TITULO = 200;
 export const MIN_DESCRIPCION = 5;
 export const MAX_DESCRIPCION = 5000;
 
-export const PUBLICACION_NO_ENCONTRADA = "Publicación no encontrada";
+export const RESPALDO_NO_ENCONTRADO = "Respaldo no encontrado";
 export const TITULO_OBLIGATORIO = "El título es obligatorio";
 export const COMPROMISO_OBLIGATORIO = "El compromiso es obligatorio";
 export const COMPROMISO_NO_ENCONTRADO = "El compromiso especificado no existe";
@@ -15,5 +15,5 @@ export const FORMATO_NO_PERMITIDO = "Formato de archivo no permitido. Solo se ac
 export const IMAGEN_MIME_TYPES = ["image/jpeg", "image/png", "image/jpg"];
 export const TAMANO_MAXIMO_IMAGEN_MB = 5;
 export const TAMANO_MAXIMO_IMAGEN_BYTES = TAMANO_MAXIMO_IMAGEN_MB * 1024 * 1024;
-export const PUBLICACION_UPLOAD_DIR = "uploads/publicaciones";
+export const RESPALDO_UPLOAD_DIR = "uploads/publicaciones";
 export const MAX_IMAGENES = 10;

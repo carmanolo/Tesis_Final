@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { PUBLICACION_UPLOAD_DIR } from "../constants/publicacion.constants.js";
+import { RESPALDO_UPLOAD_DIR } from "../constants/respaldo.constants.js";
 
 //Normaliza las barras invertidas '\' de Windows a '/' para URLs web.
 export const normalizePath = (filePath: string): string => {
@@ -75,7 +75,7 @@ export function deleteImagenesFromDisk(imagenes: string[] = []): void {
     for (const img of imagenes) {
         if (!img) continue;
         const filename = path.basename(img);
-        const fullPath = path.join(PUBLICACION_UPLOAD_DIR, filename);
+        const fullPath = path.join(RESPALDO_UPLOAD_DIR, filename);
         
         fs.access(fullPath, fs.constants.F_OK, (err) => {
             if (!err) {
