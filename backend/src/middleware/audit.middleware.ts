@@ -54,25 +54,25 @@ function identificarEvento(req: Request, statusCode: number): { accion: string; 
   }
 
   // Módulo de Publicaciones
-  if (path.includes("/publicaciones/crear") || (path.includes("/publicaciones") && method === "POST")) {
+  if (path.includes("/respaldos/crear") || (path.includes("/respaldos") && method === "POST")) {
     return {
-      accion: "CREAR_PUBLICACION",
-      modulo: "PUBLICACIONES",
+      accion: "CREAR_RESPALDO",
+      modulo: "RESPALDOS",
       descripcion: `Nueva publicación creada: "${req.body?.titulo || "Sin título"}"`,
     };
   }
-  if (path.includes("/publicaciones/editar") || (path.includes("/publicaciones") && method === "PATCH")) {
+  if (path.includes("/respaldos/editar") || (path.includes("/respaldos") && method === "PATCH")) {
     return {
-      accion: "EDITAR_PUBLICACION",
-      modulo: "PUBLICACIONES",
+      accion: "EDITAR_RESPALDO",
+      modulo: "RESPALDOS",
       descripcion: `Edición de publicación: "${req.body?.titulo || path.split("/").pop()}"`,
     };
   }
-  if (path.includes("/publicaciones/eliminar") || (path.includes("/publicaciones") && method === "DELETE")) {
+  if (path.includes("/respaldos/eliminar") || (path.includes("/respaldos") && method === "DELETE")) {
     return {
-      accion: "ELIMINAR_PUBLICACION",
-      modulo: "PUBLICACIONES",
-      descripcion: `Eliminación de publicación ID: ${path.split("/").pop()}`,
+      accion: "ELIMINAR_RESPALDO",
+      modulo: "RESPALDOS",
+      descripcion: `Eliminación de respaldo ID: ${path.split("/").pop()}`,
     };
   }
 

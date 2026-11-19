@@ -209,10 +209,10 @@ export async function deleteImagenPublicacion(req: Request, res: Response): Prom
   try {
     const { carreraId, rol, role } = (req.user as any) || {};
     const userRole = rol || role;
-    const { id_publicacion } = req.params;
+    const { id_respaldo } = req.params;
     const { imagenUrl } = req.body ?? {};
 
-    if (!id_publicacion || isNaN(Number(id_publicacion))) {
+    if (!id_respaldo || isNaN(Number(id_respaldo))) {
       return handleErrorClient(res, 400, "El id del respaldo es inválido");
     }
 
@@ -220,7 +220,7 @@ export async function deleteImagenPublicacion(req: Request, res: Response): Prom
       return handleErrorClient(res, 400, "Debe proporcionar la URL de la imagen a eliminar");
     }
 
-    const Respaldo = await getRespaldoSer(Number(id_publicacion), carreraId, userRole);
+    const Respaldo = await getRespaldoSer(Number(id_respaldo), carreraId, userRole);
     if (!Respaldo) return handleErrorClient(res, 404, RESPALDO_NO_ENCONTRADO);
 
     const { imagenes, encontrada } = removeImagen(Respaldo.imagenes, imagenUrl);
