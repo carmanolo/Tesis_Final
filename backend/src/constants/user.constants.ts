@@ -25,7 +25,8 @@ export const isRoleCEE = (rol?: string): boolean =>
 export const CAMPOS_ADICIONALES = "No se permiten campos adicionales";
 export const UNKNOWN_ERROR = "Error desconocido";
 
-export const VALIDAR_DOMINIO = ["@ubiobio.cl", "@alumnos.ubiobio.cl", "@gmail.com", "@gmail.cl"];
+export const VALIDAR_DOMINIO = ["@ubiobio.cl", "@alumnos.ubiobio.cl"];
+export const VALIDAR_LOGIN = ["@ubiobio.cl", "@alumnos.ubiobio.cl", "@gmail.com"];
 
 export const MAX_ID = 100000000;
 export const MIN_ID = 1;
