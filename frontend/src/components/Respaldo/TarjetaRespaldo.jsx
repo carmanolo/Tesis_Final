@@ -28,8 +28,12 @@ export function TarjetaRespaldo({ respaldo, canGestionar, onEditar, onEliminar, 
                             {imagenes.map((_, i) => (
                                 <button
                                     key={i}
+                                    type="button"
                                     className={`w-2 h-2 rounded-full border border-white transition-colors ${i === indice ? "bg-white" : "bg-white/40"}`}
-                                    onClick={() => setImagenActual(i)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setImagenActual(i);
+                                    }}
                                 />
                             ))}
                         </div>
@@ -37,12 +41,20 @@ export function TarjetaRespaldo({ respaldo, canGestionar, onEditar, onEliminar, 
                     {imagenes.length > 1 && (
                         <>
                             <button
+                                type="button"
                                 className="absolute left-1 top-1/2 -translate-y-1/2 btn btn-circle btn-xs bg-black/40 text-white border-0 hover:bg-black/60"
-                                onClick={() => setImagenActual((indice - 1 + imagenes.length) % imagenes.length)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setImagenActual((indice - 1 + imagenes.length) % imagenes.length);
+                                }}
                             >‹</button>
                             <button
+                                type="button"
                                 className="absolute right-1 top-1/2 -translate-y-1/2 btn btn-circle btn-xs bg-black/40 text-white border-0 hover:bg-black/60"
-                                onClick={() => setImagenActual((indice + 1) % imagenes.length)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setImagenActual((indice + 1) % imagenes.length);
+                                }}
                             >›</button>
                         </>
                     )}

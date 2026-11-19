@@ -107,9 +107,10 @@ export function RespaldoDetalle({ respaldo }) {
     );
 }
 
-//Misma vista dentro de un modal grande.
+// Misma vista dentro de un modal grande.
+export function ModalRespaldoDetalle({ abierto, respaldo, publicacion, onCerrar }) {
+    const data = respaldo || publicacion;
 
-export function ModalRespaldoDetalle({ abierto, publicacion, onCerrar }) {
     useEffect(() => {
         if (!abierto) return;
         const onKey = (e) => { if (e.key === "Escape") onCerrar(); };
@@ -117,7 +118,7 @@ export function ModalRespaldoDetalle({ abierto, publicacion, onCerrar }) {
         return () => window.removeEventListener("keydown", onKey);
     }, [abierto, onCerrar]);
 
-    if (!abierto || !publicacion) return null;
+    if (!abierto || !data) return null;
 
     return (
         <div className="modal modal-open">
@@ -128,7 +129,7 @@ export function ModalRespaldoDetalle({ abierto, publicacion, onCerrar }) {
                     className="btn btn-sm btn-circle btn-ghost absolute right-3 top-3"
                     onClick={onCerrar}
                 >✕</button>
-                <RespaldoDetalle publicacion={publicacion} />
+                <RespaldoDetalle respaldo={data} />
             </div>
             <div className="modal-backdrop" onClick={onCerrar}></div>
         </div>
