@@ -11,6 +11,16 @@ export const EMAIL_OBLIGATORIO = "El correo es obligatorio";
 export const CONTRASENIA_OBLIGATORIO = "La contraseña es obligatoria";
 export const ROL_OBLIGATORIO = "El rol es obligatorio";
 export const ROLES_VALIDOS = ["administrador", "jefe de carrera", "presidente cee", "vicepresidente cee","secretario cee", "tesorero cee", "vocal cee", "estudiante"] as const;
+export const ROLES_CEE = [
+  "presidente cee",
+  "vicepresidente cee",
+  "secretario cee",
+  "tesorero cee",
+  "vocal cee",
+] as const;
+
+export const isRoleCEE = (rol?: string): boolean =>
+  ROLES_CEE.includes(String(rol ?? "").toLowerCase().trim() as any);
 
 export const CAMPOS_ADICIONALES = "No se permiten campos adicionales";
 export const UNKNOWN_ERROR = "Error desconocido";
