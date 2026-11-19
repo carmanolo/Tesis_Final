@@ -18,13 +18,85 @@ const hoyISO = () => new Date().toLocaleDateString("en-CA");
 // Los registros sin tipo se consideran ingresos
 export const esEgreso = (aporte: any) => aporte?.tipo === "egreso";
 
+const STORAGE_KEY_DESCRIPCIONES = "aporte_descripciones_custom";
+const STORAGE_KEY_PROCEDENCIAS = "aporte_procedencias_custom";
+
+export const getOpcionesDescripcionAporte = (): string[] => {
+    try {
+        const guardadas = JSON.parse(localStorage.getItem(STORAGE_KEY_DESCRIPCIONES) || "[]");
+        const combinadas = [...OPCIONES_DESCRIPCION.filter((o) => o.toLowerCase() !== "otro")];
+        if (Array.isArray(guardadas)) {
+            guardadas.forEach((d: string) => {
+                if (d && !combinadas.some((c) => c.toLowerCase() === d.toLowerCase())) {
+                    combinadas.push(d);
+                }
+            });
+        }
+        combinadas.push("Otro");
+        return combinadas;
+    } catch {
+        return [...OPCIONES_DESCRIPCION];
+    }
+};
+
+export const guardarNuevaDescripcionAporte = (nueva: string) => {
+    if (!nueva) return;
+    const limpia = nueva.trim();
+    if (!limpia || limpia.toLowerCase() === "otro") return;
+    try {
+        const guardadas = JSON.parse(localStorage.getItem(STORAGE_KEY_DESCRIPCIONES) || "[]");
+        const lista = Array.isArray(guardadas) ? guardadas : [];
+        if (!lista.some((d: string) => d.toLowerCase() === limpia.toLowerCase())) {
+            lista.push(limpia);
+            localStorage.setItem(STORAGE_KEY_DESCRIPCIONES, JSON.stringify(lista));
+        }
+    } catch (e) {
+        console.error(e);
+    }
+};
+
+export const getOpcionesProcedenciaAporte = (): string[] => {
+    try {
+        const guardadas = JSON.parse(localStorage.getItem(STORAGE_KEY_PROCEDENCIAS) || "[]");
+        const combinadas = [...OPCIONES_PROCEDENCIA.filter((o) => o.toLowerCase() !== "otro")];
+        if (Array.isArray(guardadas)) {
+            guardadas.forEach((d: string) => {
+                if (d && !combinadas.some((c) => c.toLowerCase() === d.toLowerCase())) {
+                    combinadas.push(d);
+                }
+            });
+        }
+        combinadas.push("Otro");
+        return combinadas;
+    } catch {
+        return [...OPCIONES_PROCEDENCIA];
+    }
+};
+
+export const guardarNuevaProcedenciaAporte = (nueva: string) => {
+    if (!nueva) return;
+    const limpia = nueva.trim();
+    if (!limpia || limpia.toLowerCase() === "otro") return;
+    try {
+        const guardadas = JSON.parse(localStorage.getItem(STORAGE_KEY_PROCEDENCIAS) || "[]");
+        const lista = Array.isArray(guardadas) ? guardadas : [];
+        if (!lista.some((d: string) => d.toLowerCase() === limpia.toLowerCase())) {
+            lista.push(limpia);
+            localStorage.setItem(STORAGE_KEY_PROCEDENCIAS, JSON.stringify(lista));
+        }
+    } catch (e) {
+        console.error(e);
+    }
+};
+
 //Formulario (DetalleAporte)
 export const obtenerEstadoProcedencia = (procedencia: string) => {
     if (!procedencia) {
         return { procedencia: "", otra_procedencia: "" };
     }
-    const opcionExacta = OPCIONES_PROCEDENCIA.find(
-        (op) => op.toLowerCase() !== "otro" && op.toLowerCase() === procedencia.toLowerCase()
+    const opciones = getOpcionesProcedenciaAporte().filter((op) => op.toLowerCase() !== "otro");
+    const opcionExacta = opciones.find(
+        (op) => op.toLowerCase() === procedencia.toLowerCase()
     );
     if (opcionExacta) {
         return { procedencia: opcionExacta, otra_procedencia: "" };
@@ -39,8 +111,9 @@ export const obtenerEstadoDescripcion = (descripcion: string) => {
     if (!descripcion) {
         return { descripcion_aporte: "", otra_descripcion: "" };
     }
-    const opcionExacta = OPCIONES_DESCRIPCION.find(
-        (op) => op.toLowerCase() !== "otro" && op.toLowerCase() === descripcion.toLowerCase()
+    const opciones = getOpcionesDescripcionAporte().filter((op) => op.toLowerCase() !== "otro");
+    const opcionExacta = opciones.find(
+        (op) => op.toLowerCase() === descripcion.toLowerCase()
     );
     if (opcionExacta) {
         return { descripcion_aporte: opcionExacta, otra_descripcion: "" };

@@ -1,5 +1,6 @@
 // Debe coincidir con los roles que las rutas de crear / editar / eliminar autorizan en el backend
 export const PUEDE_EDITAR_APORTE = ["administrador", "presidente cee", "vicepresidente cee", "tesorero cee"];
+export const PUEDE_CREAR_OTRO_APORTE = ["presidente cee", "tesorero cee"];
 
 export const OPCIONES_PROCEDENCIA = ["DDE", "Rectoria", "Decanatura", "Dirección de Departamento", "DCCTI","FACE", "FACI", "FARCORDI", "FI", "FEDUH", "FACSA", "Externo", "Otro"];
 export const OPCIONES_DESCRIPCION = [
