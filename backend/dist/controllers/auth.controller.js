@@ -1,12 +1,16 @@
 import User from "../entity/user.entity.js";
 import jwt from "jsonwebtoken";
+import { In } from "typeorm";
 import { encryptPassword, comparePassword } from "../helpers/bcrypt.helper.js";
 import { AppDataSource } from "../config/configDb.js";
 import { SESSION_SECRET } from "../config/configEnv.js";
-import { registerValidation, loginValidation, } from "../validations/auth.validations.js";
+import { registerValidation, loginValidation, recoveryRequestValidation, resetPasswordValidation } from "../validations/auth.validations.js";
 import { handleErrorClient } from "../handlers/responseHandlers.js";
 import { registrarActividad } from "../services/historialActividad.service.js";
 import { obtenerIp, obtenerDispositivo } from "../utils/audit.utils.js";
+import { auditBase, generarCodigo } from "../utils/user.utils.js";
+import { CAMPOS_RECUPERACION, MINUTOS_VIGENCIA, MAX_INTENTOS, LIMPIAR } from "../constants/ajustes.constants.js";
+import { enviarCorreoRecuperacion } from "../services/mail.service.js";
 export async function register(req, res) {
     const ip = obtenerIp(req);
     const dispositivo = obtenerDispositivo(req);
@@ -199,5 +203,227 @@ export async function logout(req, res) {
     }
     catch (error) {
         return res.status(500).json({ message: "Error al cerrar sesión" });
+    }
+}
+export async function requestRecovery(req, res) {
+    const generic = {
+        message: "Si el correo está registrado, se notificó al administrador. Él te entregará un código de recuperación.",
+    };
+    try {
+        const { error } = recoveryRequestValidation.validate(req.body);
+        if (error)
+            return res.status(400).json({ message: error.message });
+        const { email } = req.body;
+        const userRepo = AppDataSource.getRepository(User);
+        const user = await userRepo.findOne({
+            where: { email },
+            select: CAMPOS_RECUPERACION,
+        });
+        if (user) {
+            const codigoVencido = user.recoveryStatus === "codigo_generado" &&
+                (!user.recoveryCodeExpires || user.recoveryCodeExpires.getTime() < Date.now());
+            if (!user.recoveryStatus || codigoVencido) {
+                await userRepo.update(user.id, {
+                    recoveryStatus: "pendiente",
+                    recoveryRequestedAt: new Date(),
+                    recoveryCodeHash: null,
+                    recoveryCodeExpires: null,
+                    recoveryAttempts: 0,
+                });
+            }
+            await registrarActividad({
+                usuarioId: user.id,
+                usuarioEmail: user.email,
+                usuarioNombre: user.username,
+                rol: user.role,
+                accion: "RECUPERACION_SOLICITADA",
+                modulo: "AUTH",
+                descripcion: `Solicitud de recuperación de cuenta: ${user.email}`,
+                estadoHttp: 200,
+                esSospechoso: false,
+                ...auditBase(req),
+            });
+        }
+        return res.status(200).json(generic);
+    }
+    catch (error) {
+        console.error("Error en recovery.controller.ts -> requestRecovery(): ", error);
+        return res.status(500).json({ message: "Error al solicitar la recuperación" });
+    }
+}
+/** ADMIN: lista solicitudes activas */
+export async function listPending(_req, res) {
+    try {
+        const userRepo = AppDataSource.getRepository(User);
+        const users = await userRepo.find({
+            where: { recoveryStatus: In(["pendiente", "codigo_generado"]) },
+            select: CAMPOS_RECUPERACION,
+            order: { recoveryRequestedAt: "DESC" },
+        });
+        const data = users.map((u) => ({
+            id: u.id, // el id de la solicitud es el id del usuario
+            userId: u.id,
+            username: u.username,
+            email: u.email,
+            status: u.recoveryStatus,
+            createdAt: u.recoveryRequestedAt,
+            codeExpires: u.recoveryCodeExpires,
+        }));
+        return res.status(200).json({ data });
+    }
+    catch (error) {
+        console.error("Error en recovery.controller.ts -> listPending(): ", error);
+        return res.status(500).json({ message: "Error al listar solicitudes" });
+    }
+}
+// ADMIN: genera el código de recuperación
+export async function generateCode(req, res) {
+    try {
+        const admin = req.user;
+        const userId = Number(req.params.id);
+        const userRepo = AppDataSource.getRepository(User);
+        const user = await userRepo.findOne({
+            where: { id: userId },
+            select: CAMPOS_RECUPERACION,
+        });
+        if (!user || !["pendiente", "codigo_generado"].includes(user.recoveryStatus)) {
+            return res.status(404).json({ message: "Solicitud no encontrada o ya resuelta" });
+        }
+        const code = generarCodigo();
+        const expiresAt = new Date(Date.now() + MINUTOS_VIGENCIA * 60 * 1000);
+        await userRepo.update(userId, {
+            recoveryStatus: "codigo_generado",
+            recoveryCodeHash: await encryptPassword(code),
+            recoveryCodeExpires: expiresAt,
+            recoveryAttempts: 0,
+        });
+        const emailSent = await enviarCorreoRecuperacion(user.email, user.username, code, MINUTOS_VIGENCIA);
+        await registrarActividad({
+            usuarioId: admin.id,
+            usuarioEmail: admin.email,
+            usuarioNombre: admin.username,
+            rol: admin.role || admin.rol,
+            accion: "RECUPERACION_CODIGO_GENERADO",
+            modulo: "AUTH",
+            descripcion: `Código de recuperación generado para el usuario id ${userId}`,
+            estadoHttp: 200,
+            esSospechoso: false,
+            ...auditBase(req),
+        });
+        if (emailSent) {
+            return res.status(200).json({
+                message: "Código enviado al correo del usuario",
+                data: { emailSent: true, email: user.email, expiresAt },
+            });
+        }
+        //El correo falló, el admin entrega el código manualmente
+        return res.status(200).json({
+            message: "No se pudo enviar el correo. Entrega el código manualmente.",
+            data: { emailSent: false, code, expiresAt },
+        });
+    }
+    catch (error) {
+        console.error("Error en recovery.controller.ts -> generateCode(): ", error);
+        return res.status(500).json({ message: "Error al generar el código" });
+    }
+}
+// ADMIN: rechaza la solicitud
+export async function rejectRequest(req, res) {
+    try {
+        const admin = req.user;
+        const userId = Number(req.params.id);
+        const userRepo = AppDataSource.getRepository(User);
+        const user = await userRepo.findOne({
+            where: { id: userId },
+            select: CAMPOS_RECUPERACION,
+        });
+        if (!user || !["pendiente", "codigo_generado"].includes(user.recoveryStatus)) {
+            return res.status(404).json({ message: "Solicitud no encontrada o ya resuelta" });
+        }
+        await userRepo.update(userId, LIMPIAR);
+        await registrarActividad({
+            usuarioId: admin.id,
+            usuarioEmail: admin.email,
+            usuarioNombre: admin.username,
+            rol: admin.role || admin.rol,
+            accion: "RECUPERACION_RECHAZADA",
+            modulo: "AUTH",
+            descripcion: `Solicitud de recuperación rechazada (usuario id ${userId})`,
+            estadoHttp: 200,
+            esSospechoso: false,
+            ...auditBase(req),
+        });
+        return res.status(200).json({ message: "Solicitud rechazada" });
+    }
+    catch (error) {
+        console.error("Error en recovery.controller.ts -> rejectRequest(): ", error);
+        return res.status(500).json({ message: "Error al rechazar la solicitud" });
+    }
+}
+//El usuario cambia su clave con el código del administrador
+export async function resetWithCode(req, res) {
+    const invalido = { message: "Código inválido o expirado" };
+    try {
+        const { error } = resetPasswordValidation.validate(req.body);
+        if (error)
+            return res.status(400).json({ message: error.message });
+        const email = req.body.email;
+        const code = String(req.body.code).trim().toUpperCase();
+        const newPassword = req.body.newPassword;
+        const userRepo = AppDataSource.getRepository(User);
+        const user = await userRepo.findOne({
+            where: { email },
+            select: CAMPOS_RECUPERACION,
+        });
+        if (!user ||
+            user.recoveryStatus !== "codigo_generado" ||
+            !user.recoveryCodeHash ||
+            !user.recoveryCodeExpires) {
+            return res.status(400).json(invalido);
+        }
+        if (user.recoveryCodeExpires.getTime() < Date.now() || user.recoveryAttempts >= MAX_INTENTOS) {
+            await userRepo.update(user.id, LIMPIAR);
+            return res.status(400).json(invalido);
+        }
+        const ok = await comparePassword(code, user.recoveryCodeHash);
+        if (!ok) {
+            const intentos = user.recoveryAttempts + 1;
+            await userRepo.update(user.id, { recoveryAttempts: intentos });
+            await registrarActividad({
+                usuarioId: user.id,
+                usuarioEmail: user.email,
+                usuarioNombre: user.username,
+                rol: user.role,
+                accion: "RECUPERACION_CODIGO_INCORRECTO",
+                modulo: "AUTH",
+                descripcion: `Código de recuperación incorrecto (intento ${intentos}/${MAX_INTENTOS})`,
+                estadoHttp: 400,
+                esSospechoso: true,
+                motivoSospecha: "Código de recuperación incorrecto",
+                ...auditBase(req),
+            });
+            return res.status(400).json(invalido);
+        }
+        await userRepo.update(user.id, {
+            password: await encryptPassword(newPassword),
+            ...LIMPIAR,
+        });
+        await registrarActividad({
+            usuarioId: user.id,
+            usuarioEmail: user.email,
+            usuarioNombre: user.username,
+            rol: user.role,
+            accion: "RECUPERACION_EXITOSA",
+            modulo: "AUTH",
+            descripcion: `Contraseña restablecida mediante código del administrador: ${user.email}`,
+            estadoHttp: 200,
+            esSospechoso: false,
+            ...auditBase(req),
+        });
+        return res.status(200).json({ message: "Contraseña actualizada. Ya puedes iniciar sesión." });
+    }
+    catch (error) {
+        console.error("Error en recovery.controller.ts -> resetWithCode(): ", error);
+        return res.status(500).json({ message: "Error al restablecer la contraseña" });
     }
 }

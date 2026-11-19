@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { getUsers, getUserById, getProfile, createUser, deleteUserById, getUserStats, patchUserById, enviarCorreoRegistro } from "../controllers/user.controller.js";
+import { getUsers, getUserById, getProfile, updateProfile, createUser, deleteUserById, getUserStats, patchUserById, enviarCorreoRegistro } from "../controllers/user.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { authorizeRoles } from "../middleware/authorization.middleware.js";
 const router = Router();
 router.use(authenticateJwt);
 router.get("/profile", getProfile);
+router.patch("/profile", updateProfile);
 router.get("/getUserStats", getUserStats);
 // router.use(isAdmin);
 router.get("/", getUsers);

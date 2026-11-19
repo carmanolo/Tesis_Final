@@ -67,3 +67,10 @@ export const updateValidation = Joi.object({
     "any.unknown": CAMPOS_ADICIONALES,
     "object.unknown": CAMPOS_ADICIONALES,
 });
+export const contenidoValidation = Joi.object({
+    contenido: Joi.string().allow("").max(1_000_000).required().messages({
+        "string.base": "El contenido debe ser texto",
+        "string.max": "El contenido del acta es demasiado largo",
+        "any.required": "El contenido es obligatorio",
+    }),
+}).unknown(false);

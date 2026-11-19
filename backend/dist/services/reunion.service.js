@@ -1,10 +1,35 @@
 import fs from "fs";
+import path from "path";
 import { AppDataSource } from "../config/configDb.js";
 import { ReunionEntity } from "../entity/reunion.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
 import { isAdminRole } from "../utils/user.utils.js";
+import { ACTA_UPLOAD_DIR } from "../constants/reunion.constants.js";
 import { crearEventoReunion, actualizarEventoReunion, eliminarEventoReunion } from "./googleCalendar.service.js";
 import { getEmailsCarrera } from "../helpers/emailCarrera.helper.js";
+//Resuelve la ruta real del archivo de acta
+export function resolverRutaActa(rutaGuardada) {
+    // 1. Si la ruta guardada ya es absoluta y existe, usarla directamente
+    if (path.isAbsolute(rutaGuardada) && fs.existsSync(rutaGuardada)) {
+        return rutaGuardada;
+    }
+    // 2. Si es solo un nombre de archivo (ej: "acta_4_123.pdf"), buscarlo en ACTA_UPLOAD_DIR
+    const soloNombre = path.join(ACTA_UPLOAD_DIR, path.basename(rutaGuardada));
+    if (fs.existsSync(soloNombre)) {
+        return soloNombre;
+    }
+    // 3. Intentar resolver la ruta relativa completa contra la raíz del proyecto
+    const desdeRaiz = path.resolve(ACTA_UPLOAD_DIR, "..", "..", rutaGuardada);
+    if (fs.existsSync(desdeRaiz)) {
+        return desdeRaiz;
+    }
+    // 4. Último intento: resolver contra el cwd actual
+    const desdeCwd = path.resolve(rutaGuardada);
+    if (fs.existsSync(desdeCwd)) {
+        return desdeCwd;
+    }
+    return null;
+}
 const repo = () => AppDataSource.getRepository(ReunionEntity);
 export async function createReunionSer(fecha_reunion, descripcion, creadorId, carreraId) {
     try {
@@ -111,8 +136,10 @@ export async function deleteReunionSer(id_reunion) {
             return { result: null, message: "reunión no encontrada" };
         }
         // Si tiene un acta asociada, se elimina también el archivo físico
-        if (reunion.ruta_archivo && fs.existsSync(reunion.ruta_archivo)) {
-            fs.unlinkSync(reunion.ruta_archivo);
+        if (reunion.ruta_archivo) {
+            const rutaReal = resolverRutaActa(reunion.ruta_archivo);
+            if (rutaReal)
+                fs.unlinkSync(rutaReal);
         }
         // eliminar recordatorio asociado
         if (reunion.google_event_id) {
@@ -144,8 +171,10 @@ export async function subirActaSer(id_reunion, file) {
             return { data: null, message: "reunión no encontrada" };
         }
         // Si ya existía un acta previa asociada, se reemplaza y se borra la anterior
-        if (reunion.ruta_archivo && fs.existsSync(reunion.ruta_archivo)) {
-            fs.unlinkSync(reunion.ruta_archivo);
+        if (reunion.ruta_archivo) {
+            const rutaAnterior = resolverRutaActa(reunion.ruta_archivo);
+            if (rutaAnterior)
+                fs.unlinkSync(rutaAnterior);
         }
         reunion.nombre_archivo = file.filename;
         reunion.nombre_original = file.originalname;
@@ -168,12 +197,13 @@ export async function obtenerActaSer(id_reunion) {
         if (!reunion || !reunion.ruta_archivo) {
             return { data: null, message: "acta no encontrada" };
         }
-        if (!fs.existsSync(reunion.ruta_archivo)) {
+        const rutaReal = resolverRutaActa(reunion.ruta_archivo);
+        if (!rutaReal) {
             return { data: null, message: "el archivo del acta no existe en el servidor" };
         }
         return {
             data: {
-                ruta_archivo: reunion.ruta_archivo,
+                ruta_archivo: rutaReal,
                 nombre_original: reunion.nombre_original,
                 tipo_archivo: reunion.tipo_archivo
             },
