@@ -36,6 +36,15 @@ export const ReunionEntity = new EntitySchema({
             type: "timestamp",
             nullable: true,
         },
+        contenido_acta: {
+            type: "text",
+            nullable: true,
+            select: false
+        },
+        acta_estado: {
+            type: String,
+            nullable: true
+        },
         google_event_id: {
             type: String,
             nullable: true,

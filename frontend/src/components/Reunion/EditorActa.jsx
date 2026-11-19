@@ -4,25 +4,10 @@ import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
 import Swal from "sweetalert2";
-import {
-    getContenidoActaService,
-    guardarContenidoActaService,
-    finalizarActaService,
-    exportarActaService,
-} from "@services/reunion.service.js";
+import { getContenidoActaService, guardarContenidoActaService, finalizarActaService, exportarActaService } from "@services/reunion.service.js";
 import { formatearFechaDDMMAAAA } from "../../utils/calendar.utils.js";
-import "./editorActa.css";
-
-const PLANTILLA_ACTA = `
-<h2>Asistentes</h2>
-<ul><li></li></ul>
-<h2>Tabla</h2>
-<ol><li></li></ol>
-<h2>Desarrollo</h2>
-<p></p>
-<h2>Acuerdos</h2>
-<ol><li></li></ol>
-`;
+import "../../styles/editorActa.css";
+import { PLANTILLA_ACTA } from "../../constants/reunion.constants.jsx";
 
 function descargarBlob(blob, nombre) {
     const url = URL.createObjectURL(blob);
@@ -54,11 +39,11 @@ const Sep = () => <span className="w-px h-5 bg-base-content/20 mx-1" />;
 export const EditorActa = ({ reunion, onCerrar, onActualizado }) => {
     const [cargando, setCargando] = useState(true);
     const [dirty, setDirty] = useState(false);
-    const [ocupado, setOcupado] = useState(null); // "guardando" | "previa" | "pdf" | "docx" | "finalizando"
+    const [ocupado, setOcupado] = useState(null); 
     const [previewUrl, setPreviewUrl] = useState(null);
 
     const editor = useEditor({
-        // En v3, StarterKit ya incluye Underline (no se agrega aparte) y Link
+        // En v3, StarterKit ya incluye Underline y Link
         extensions: [
             StarterKit,
             TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -68,12 +53,12 @@ export const EditorActa = ({ reunion, onCerrar, onActualizado }) => {
             TableCell,
         ],
         content: "",
-        // En v3 es false por defecto: sin esto la barra no refleja negrita/lista activa, etc.
+        // En v3 es false por defecto
         shouldRerenderOnTransaction: true,
         onUpdate: () => setDirty(true),
     });
 
-    // Carga el borrador guardado (o una plantilla si el acta aún no se redacta)
+    // Carga el borrador guardado 
     useEffect(() => {
         if (!editor) return;
         let cancelado = false;

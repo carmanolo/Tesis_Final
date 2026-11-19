@@ -39,6 +39,30 @@ export const UserEntity = new EntitySchema({
             default: () => "CURRENT_TIMESTAMP",
             onUpdate: "CURRENT_TIMESTAMP",
         },
+        recoveryStatus: {
+            type: String, nullable: true,
+            select: false
+        },
+        recoveryRequestedAt: {
+            type: "timestamp",
+            nullable: true,
+            select: false
+        },
+        recoveryCodeHash: {
+            type: String,
+            nullable: true,
+            select: false
+        },
+        recoveryCodeExpires: {
+            type: "timestamp",
+            nullable: true,
+            select: false
+        },
+        recoveryAttempts: {
+            type: "int",
+            default: 0,
+            select: false
+        },
     },
     relations: {
         carreras: {

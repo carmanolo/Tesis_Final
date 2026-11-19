@@ -9,7 +9,6 @@ import { calcularResumenCompromiso } from "../utils/compromiso.utils.js";
 import type { CompromisoReporte } from "../utils/compromiso.utils.js";
 
 const repo = () => AppDataSource.getRepository(CompromisoEntity as any);
-const asignacionRepo = () => AppDataSource.getRepository(CompromisoAporteEntity as any);
 
 const sumaAsignada = (asignaciones: any[]) =>
     asignaciones.reduce((suma, a) => suma + (Number(a.monto_asignado) || 0), 0);
@@ -58,7 +57,6 @@ export async function createCompromisoSer(
     }
 }
 
-// Devuelve los compromisos de la carrera o todos si es administrador
 export async function getCompromisosSer(carreraId?: number, role?: string): Promise<any[] | null> {
     try {
         const whereCondition: any = {};
@@ -77,7 +75,7 @@ export async function getCompromisosSer(carreraId?: number, role?: string): Prom
     }
 }
 
-// Devuelve el compromiso si pertenece a la carrera del usuario o si es administrador
+// Devuelve el compromiso si pertenece a la carrera del usuario
 export async function getCompromisoSer(id_compromiso: number, carreraId?: number, role?: string): Promise<any | null> {
     try {
         const whereCondition: any = { id_compromiso };
@@ -206,7 +204,7 @@ export async function asignarAporteSer(
                 return { data: null, error: "Solo se pueden asignar aportes de tipo ingreso a compromisos" };
             }
 
-            // Lo disponible del aporte = monto original - suma de lo asignado en TODOS los compromisos (excepto este)
+            // Lo disponible del aporte = monto original - suma de lo asignado en TODOS los compromisos
             const todasLasAsignaciones = (await manager.find(CompromisoAporteEntity as any, {
                 where: { aporteId },
             })) as any[];
@@ -222,7 +220,7 @@ export async function asignarAporteSer(
                 };
             }
 
-            // No se modifica aporte.monto: el disponible se calcula dinámicamente desde compromiso_aportes
+            // El monto asociado al aporte asignado se calcula dinámicamente desde compromiso_aportes
 
             const guardado = await manager.save(
                 CompromisoAporteEntity as any,
@@ -246,7 +244,6 @@ export async function desasignarAporteSer(compromisoId: number, aporteId: number
             });
             if (!asignacion) return { result: null, message: "Aporte no asignado a este compromiso" };
 
-            // No se modifica aporte.monto: el disponible se calcula dinámicamente desde compromiso_aportes
             const result = await manager.delete(CompromisoAporteEntity as any, { compromisoId, aporteId });
             return { result, message: "Aporte quitado del compromiso" };
         });
@@ -300,8 +297,10 @@ export async function obtenerListaCompromiso(carreraId?: number, role?: string):
   try {
     const compromisoRepository = AppDataSource.getRepository(CompromisoEntity);
     const whereCondition: any = {};
-    if (!isAdminRole(role) && carreraId) {
-      whereCondition.carreraId = carreraId;
+    if (carreraId) {
+      whereCondition.carreraId = Number(carreraId);
+    } else if (!isAdminRole(role)) {
+      return [];
     }
     const compromisos = await compromisoRepository.find({
       where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,

@@ -223,7 +223,10 @@ export async function getProfile(req, res) {
     try {
         const userRepository = AppDataSource.getRepository(User);
         const userEmail = req.user?.email; // Tipado gracias a tu archivo types/express.d.ts
-        const user = await userRepository.findOne({ where: { email: userEmail } });
+        const user = await userRepository.findOne({
+            where: { email: userEmail },
+            relations: { carreras: true }
+        });
         if (!user) {
             return res.status(404).json({ message: "Perfil no encontrado." });
         }
@@ -232,13 +235,67 @@ export async function getProfile(req, res) {
             username: user.username,
             email: user.email,
             rut: user.rut,
-            role: user.role
+            role: user.role,
+            carrera: user.carreras
+                ? {
+                    id_carrera: user.carreras.id_carrera,
+                    nombre_carrera: user.carreras.nombre_carrera,
+                    sigla: user.carreras.sigla,
+                }
+                : null,
         };
         return res.status(200).json({ message: "Perfil encontrado: ", data: formattedUser });
     }
     catch (error) {
         console.error("Error en user.controller -> getProfile(): ", error);
         return res.status(500).json({ message: "Error interno del servidor" });
+    }
+}
+export async function updateProfile(req, res) {
+    try {
+        const userRepository = AppDataSource.getRepository(User);
+        const userEmail = req.user?.email;
+        if (!req.body || !req.body.username) {
+            return handleErrorClient(res, 400, "El nombre de usuario es obligatorio");
+        }
+        const { username } = req.body;
+        const { error } = integrityValidation.validate({ username });
+        if (error) {
+            return handleErrorClient(res, 400, "Nombre de usuario inválido", error.message);
+        }
+        const user = await userRepository.findOne({
+            where: { email: userEmail },
+            relations: { carreras: true }
+        });
+        if (!user) {
+            return handleErrorClient(res, 404, "Perfil no encontrado");
+        }
+        // Verificar si el username ya está tomado por otro usuario
+        const existente = await userRepository.findOne({ where: { username } });
+        if (existente && existente.id !== user.id) {
+            return handleErrorClient(res, 400, "El nombre de usuario ya está en uso");
+        }
+        user.username = username.trim();
+        const updated = await userRepository.save(user);
+        const formattedUser = {
+            id: updated.id,
+            username: updated.username,
+            email: updated.email,
+            rut: updated.rut,
+            role: updated.role,
+            carrera: updated.carreras
+                ? {
+                    id_carrera: updated.carreras.id_carrera,
+                    nombre_carrera: updated.carreras.nombre_carrera,
+                    sigla: updated.carreras.sigla,
+                }
+                : null,
+        };
+        return handleSuccess(res, 200, "Perfil actualizado con éxito", formattedUser);
+    }
+    catch (error) {
+        console.error("Error en user.controller -> updateProfile(): ", error);
+        return handleErrorServer(res, 500, "Error interno del servidor", error.message);
     }
 }
 export async function getUserStats(req, res) {

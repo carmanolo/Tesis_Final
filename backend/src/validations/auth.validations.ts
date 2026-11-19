@@ -1,11 +1,11 @@
 import Joi, { CustomValidator } from "joi";
-import { VALIDAR_DOMINIO } from "../constants/user.constants.js";
+import { VALIDAR_LOGIN } from "../constants/user.constants.js";
 
 const domainEmailValidator: CustomValidator = (value, helpers) => {
-  const isValid = VALIDAR_DOMINIO.some((domain) => value.endsWith(domain));
+  const isValid = VALIDAR_LOGIN.some((domain) => value.endsWith(domain));
   if (!isValid) {
     return helpers.message(
-      `El correo electrónico debe finalizar en: ${VALIDAR_DOMINIO.join(", ")}` as any
+      `El correo electrónico debe finalizar en: ${VALIDAR_LOGIN.join(", ")}` as any
     );
   }
   return value;

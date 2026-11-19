@@ -181,14 +181,6 @@ export const ModalMaterial = ({
                     {/* Botones de acción */}
                     <div className="flex justify-end gap-3 pt-4 border-t border-base-300">
                         <button
-                            type="button"
-                            className="btn btn-ghost"
-                            onClick={onCerrar}
-                            disabled={guardando}
-                        >
-                            Cancelar
-                        </button>
-                        <button
                             type="submit"
                             className="btn btn-primary"
                             disabled={guardando}

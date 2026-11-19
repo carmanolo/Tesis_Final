@@ -1,7 +1,7 @@
 import { EntitySchema } from "typeorm";
 export const AporteEntity = new EntitySchema({
     name: "Aporte",
-    tableName: "Aportes",
+    tableName: "aportes",
     columns: {
         id_aporte: {
             type: Number,
@@ -12,10 +12,6 @@ export const AporteEntity = new EntitySchema({
             type: String,
             nullable: false
         },
-        fecha_aporte: {
-            type: "date",
-            nullable: false
-        },
         procedencia: {
             type: String,
             nullable: false
@@ -24,13 +20,15 @@ export const AporteEntity = new EntitySchema({
             type: Number,
             nullable: false
         },
-        fecha_recepcion: {
-            type: "timestamp",
-            nullable: true
+        // Fecha elegida por el usuario al registrar el aporte
+        fecha_aporte: {
+            type: "date",
+            nullable: false
         },
-        creadorId: {
-            type: "int",
+        tipo: {
+            type: "varchar",
             nullable: false,
+            default: "ingreso",
         },
         carreraId: {
             type: "int",
@@ -38,19 +36,11 @@ export const AporteEntity = new EntitySchema({
         },
     },
     relations: {
-        creador: {
-            type: "many-to-one",
-            target: "User",
-            joinColumn: { name: "creadorId", referencedColumnName: "id" },
-            inverseSide: "Aportes",
-            nullable: false,
-            onDelete: "RESTRICT",
-        },
         carrera: {
             type: "many-to-one",
             target: "Carrera",
             joinColumn: { name: "carreraId", referencedColumnName: "id_carrera" },
-            inverseSide: "Aportes",
+            inverseSide: "aportes",
             nullable: false,
             onDelete: "CASCADE",
         },

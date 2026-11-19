@@ -1,25 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatearFechaDDMMAAAA } from "../../utils/calendar.utils.js";
 import { formatoCLP } from "../../utils/aporte.utils.js";
-import { COMPROMISO_DESCRIPCION_MIN, COMPROMISO_DESCRIPCION_MAX } from "../../constants/compromiso.constants.jsx";
-import { valoresIniciales, resumenDe } from "../../utils/compromiso.utils.js";
+import { COMPROMISO_DESCRIPCION_MIN, COMPROMISO_DESCRIPCION_MAX, PUEDE_CREAR_OTRO_COMPROMISO } from "../../constants/compromiso.constants.jsx";
+import { valoresIniciales, resumenDe, getOpcionesDescripcionCompromiso, guardarNuevaDescripcionCompromiso } from "../../utils/compromiso.utils.js";
+import { getUserRole } from "../../services/user.service.js";
 import { FinanciamientoCompromiso } from "./FinanciamientoCompromiso.jsx";
 
-const validar = ({ descripcion_compromiso, fecha_compromiso, monto_total }, financiado = 0) => {
+const validar = ({ descripcion_compromiso, otra_descripcion, fecha_compromiso, monto_total }, financiado = 0) => {
     const errores = {};
-    const descripcion = (descripcion_compromiso || "").trim();
 
-    if (!descripcion) {
-        errores.descripcion_compromiso = "Escribe una descripción";
-    } else if (descripcion.length < COMPROMISO_DESCRIPCION_MIN || descripcion.length > COMPROMISO_DESCRIPCION_MAX) {
-        errores.descripcion_compromiso = `La descripción debe tener entre ${COMPROMISO_DESCRIPCION_MIN} y ${COMPROMISO_DESCRIPCION_MAX} caracteres`;
+    if (!descripcion_compromiso) {
+        errores.descripcion_compromiso = "Selecciona una descripción";
+    } else if (descripcion_compromiso.toLowerCase() === "otro") {
+        const descripcionTrim = (otra_descripcion || "").trim();
+        if (!descripcionTrim) {
+            errores.descripcion_compromiso = "Debes ingresar la nueva descripción";
+        } else if (descripcionTrim.length < COMPROMISO_DESCRIPCION_MIN || descripcionTrim.length > COMPROMISO_DESCRIPCION_MAX) {
+            errores.descripcion_compromiso = `La descripción debe tener entre ${COMPROMISO_DESCRIPCION_MIN} y ${COMPROMISO_DESCRIPCION_MAX} caracteres`;
+        }
     }
 
     if (!fecha_compromiso) errores.fecha_compromiso = "Selecciona una fecha";
 
     const monto = Number(monto_total);
-    if (!Number.isInteger(monto) || monto <= 0) {
-        errores.monto_total = "El monto debe ser un entero mayor a 0";
+    if (!Number.isInteger(monto) || monto <= 10) {
+        errores.monto_total = "El monto debe ser un entero mayor a 10";
     } else if (monto < financiado) {
         errores.monto_total = `No puede ser menor a lo ya financiado (${formatoCLP.format(financiado)})`;
     }
@@ -30,25 +35,46 @@ const validar = ({ descripcion_compromiso, fecha_compromiso, monto_total }, fina
 
 export const DetalleCompromiso = ({ abierto, compromiso, compromisos, aportes, puedeGestionar, onCrear, 
     onEditar,  onEliminar, onDescargar, descargando, onCerrar,}) => {
+    const userRole = String(getUserRole() ?? "").toLowerCase();
+    const puedeCrearOtro = PUEDE_CREAR_OTRO_COMPROMISO.includes(userRole);
+
     const esNuevo = !compromiso;
     const [editando, setEditando] = useState(false);
     const [form, setForm] = useState(valoresIniciales(null));
     const [errores, setErrores] = useState({});
     const [guardando, setGuardando] = useState(false);
 
+    // Opciones del selector cerrado (incluye las custom registradas en localStorage)
+    const [opcionesDescripcion, setOpcionesDescripcion] = useState(getOpcionesDescripcionCompromiso);
+
+    const actualizarOpciones = () => {
+        setOpcionesDescripcion(getOpcionesDescripcionCompromiso());
+    };
+
     // Reinicia el formulario cada vez que se abre o cambia el compromiso seleccionado
     useEffect(() => {
+        actualizarOpciones();
         setForm(valoresIniciales(compromiso));
         setErrores({});
         setEditando(!compromiso);
     }, [compromiso?.id_compromiso, abierto]);
+
+    // Opciones visibles según el rol del usuario (solo presidente y tesorero ven la opción "Otro")
+    const opcionesVisibles = useMemo(() => {
+        if (puedeCrearOtro) return opcionesDescripcion;
+        return opcionesDescripcion.filter((op) => op.toLowerCase() !== "otro");
+    }, [opcionesDescripcion, puedeCrearOtro]);
 
     if (!abierto) return null;
 
     const cambiar = (campo) => (e) => {
         const valor = e.target.value;
         setForm((prev) => ({ ...prev, [campo]: valor }));
-        if (errores[campo]) setErrores((prev) => ({ ...prev, [campo]: undefined }));
+        if (campo === "descripcion_compromiso" || campo === "otra_descripcion") {
+            setErrores((prev) => ({ ...prev, descripcion_compromiso: undefined }));
+        } else if (errores[campo]) {
+            setErrores((prev) => ({ ...prev, [campo]: undefined }));
+        }
     };
 
     const handleGuardar = async () => {
@@ -57,8 +83,19 @@ export const DetalleCompromiso = ({ abierto, compromiso, compromisos, aportes, p
         setErrores(erroresForm);
         if (Object.keys(erroresForm).length > 0) return;
 
+        const descripcionFinal =
+            form.descripcion_compromiso.toLowerCase() === "otro"
+                ? form.otra_descripcion.trim()
+                : form.descripcion_compromiso.trim();
+
+        // Si fue una descripción nueva con "Otro", guardarla para que quede registrada en el selector
+        if (form.descripcion_compromiso.toLowerCase() === "otro") {
+            guardarNuevaDescripcionCompromiso(descripcionFinal);
+            actualizarOpciones();
+        }
+
         const datos = {
-            descripcion_compromiso: form.descripcion_compromiso.trim(),
+            descripcion_compromiso: descripcionFinal,
             fecha_compromiso: form.fecha_compromiso,
             monto_total: Number(form.monto_total),
         };
@@ -118,15 +155,33 @@ export const DetalleCompromiso = ({ abierto, compromiso, compromisos, aportes, p
                         "Descripción:",
                         "descripcion_compromiso",
                         compromiso?.descripcion_compromiso,
-                        <textarea
-                            className={`textarea textarea-bordered w-full ${errores.descripcion_compromiso ? "textarea-error" : ""}`}
-                            rows={3}
-                            maxLength={COMPROMISO_DESCRIPCION_MAX}
-                            placeholder="¿Qué se va a pagar o realizar?"
-                            value={form.descripcion_compromiso}
-                            onChange={cambiar("descripcion_compromiso")}
-                            autoFocus={esNuevo}
-                        />
+                        <div className="space-y-2">
+                            <select
+                                className={`select select-bordered w-full ${errores.descripcion_compromiso && !form.descripcion_compromiso ? "select-error" : ""}`}
+                                value={form.descripcion_compromiso}
+                                onChange={cambiar("descripcion_compromiso")}
+                            >
+                                <option value="" disabled>
+                                    Selecciona una descripción
+                                </option>
+                                {opcionesVisibles.map((opcion) => (
+                                    <option key={opcion} value={opcion}>
+                                        {opcion}
+                                    </option>
+                                ))}
+                            </select>
+                            {form.descripcion_compromiso?.toLowerCase() === "otro" && puedeCrearOtro && (
+                                <input
+                                    type="text"
+                                    maxLength={COMPROMISO_DESCRIPCION_MAX}
+                                    className={`input input-bordered w-full ${errores.descripcion_compromiso && (!form.otra_descripcion?.trim() || form.otra_descripcion.trim().length < COMPROMISO_DESCRIPCION_MIN) ? "input-error" : ""}`}
+                                    placeholder="Ingresa la nueva descripción del compromiso *"
+                                    value={form.otra_descripcion}
+                                    onChange={cambiar("otra_descripcion")}
+                                    autoFocus
+                                />
+                            )}
+                        </div>
                     )}
                     {campo(
                         "Fecha:",
@@ -159,9 +214,6 @@ export const DetalleCompromiso = ({ abierto, compromiso, compromisos, aportes, p
                         <>
                             <button className="btn btn-primary" onClick={handleGuardar} disabled={guardando}>
                                 {esNuevo ? "Crear compromiso" : "Guardar cambios"}
-                            </button>
-                            <button className="btn btn-neutral" onClick={handleCancelar} disabled={guardando}>
-                                Cancelar
                             </button>
                         </>
                     ) : (

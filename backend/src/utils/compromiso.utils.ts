@@ -296,7 +296,7 @@ export const processCompromisos = (compromisos: Compromiso[] | unknown): string[
 
     const processedCompromisos = compromisos.map((compromiso: Compromiso) => {
         const id_compromiso = compromiso?.id_compromiso ?? "0";
-        const descripcion_compromiso = compromiso?.descripcion_compromiso || "Donar a la teletón";
+        const descripcion_compromiso = compromiso?.descripcion_compromiso || "Compromiso sin descripción";
 
         return `${id_compromiso}. ${descripcion_compromiso}`;
     });

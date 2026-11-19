@@ -74,10 +74,10 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
     },
     {
       icon: MdArticle,
-      label: "Publicaciones",
-      destination: "/publicaciones",
+      label: "Respaldos",
+      destination: "/respaldos",
       iconColor: "text-[#000000]",
-      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee","estudiante"]
+      roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee", "vocal cee"]
     },
     {
       icon: MdOutlineHistory,

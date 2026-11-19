@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import morgan from "morgan";
 import path from "path";
+import { fileURLToPath } from "url";
 import indexRoutes from "./routes/index.routes.js";
 import { PORT, HOST } from "./config/configEnv.js";
 import { connectDB } from "./config/configDb.js";
@@ -18,7 +19,7 @@ async function setupServer() {
         origin: true,
         exposedHeaders: ["Content-Disposition"], // <-- Permite al frontend leer el nombre original
     }));
-    app.use(express.json());
+    app.use(express.json({ limit: "2mb" }));
     /*app.use((req, res, next) => {
       console.log(`${req.method} ${req.url}`);
       next();
@@ -27,7 +28,10 @@ async function setupServer() {
     // Middleware de auditoría para registro de actividades y seguridad
     app.use(auditMiddleware);
     // Servir archivos estáticos (uploads: actas, publicaciones, etc.)
-    //const uploadsDir = path.resolve(__dirname, "../../uploads");
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
+    app.use("/uploads", express.static(path.resolve(__dirname, "../../uploads")));
     app.use("/uploads", express.static(path.resolve("uploads")));
     app.use("/api", indexRoutes);
     app.listen(Number(PORT), () => {

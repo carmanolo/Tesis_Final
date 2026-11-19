@@ -5,7 +5,7 @@ import { fireDynamicSwal } from "../utils/dynamicSwal.jsx";
 const EXTENSIONES = { pdf: "pdf", excel: "xlsx" };
 const FECHA_ISO = /^\d{4}-\d{2}-\d{2}$/;
 
-// Con responseType "blob" los errores del backend también llegan como Blob: hay que leerlos como texto
+// Leer como texto objetos Blob
 const extraerMensajeError = async (error) => {
     const data = error?.response?.data;
     try {
@@ -41,7 +41,6 @@ const limpiarFiltros = ({ desde, hasta } = {}) => {
 export const useDownloadReporteAporte = () => {
     const [descargando, setDescargando] = useState(false);
 
-    // formato: "pdf" | "excel"; filtros: { desde, hasta } en YYYY-MM-DD (opcionales)
     const handleDownloadReporte = async (formato, filtrosEntrada = {}) => {
         if (!EXTENSIONES[formato]) {
             fireDynamicSwal(400, "Formato inválido", "Selecciona PDF o Excel");
@@ -62,7 +61,7 @@ export const useDownloadReporteAporte = () => {
         setDescargando(true);
         try {
             const blob = await descargarReporteAporteService(formato, filtros);
-            const hoy = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD en hora local
+            const hoy = new Date().toLocaleDateString("en-CA");
             guardarArchivo(blob, `contabilidad_${hoy}.${EXTENSIONES[formato]}`);
             fireDynamicSwal(200, "Reporte generado", "La descarga ha comenzado");
             return true;

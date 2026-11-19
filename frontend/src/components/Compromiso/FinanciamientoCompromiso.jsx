@@ -3,8 +3,7 @@ import { formatearFechaDDMMAAAA } from "../../utils/calendar.utils.js";
 import { formatoCLP } from "../../utils/aporte.utils.js";
 import { resumenDe } from "../../utils/compromiso.utils.js";
 
-// Sección del detalle: cuánto está financiado y qué aportes lo financian (vista de lectura).
-// La asignación y desasignación de aportes se gestiona desde la sección Aportes.
+// Sección del detalle: cuánto está financiado y qué aportes lo financian 
 export const FinanciamientoCompromiso = ({ compromiso, aportes, puedeGestionar, onDescargar, descargando}) => {
     const resumen = resumenDe(compromiso);
     const requiereSolicitud = resumen.saldoPorFinanciar > 0;

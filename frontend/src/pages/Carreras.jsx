@@ -3,8 +3,8 @@ import useGetCarrera from "@hooks/carreras/useConseguirCarrera.jsx";
 import useCreateCarrera from "@hooks/carreras/useCrearCarrera.jsx"
 import { useEditCarrera } from "@hooks/carreras/useActualizarCarrera.jsx";
 import useDeleteCarreras from "@hooks/carreras/useEliminarCarrera.jsx"
-import { useEffect, useState } from "react";
-
+import { useEffect, useState, useMemo } from "react";
+import { norm } from "../utils/user.utils.js";
 import { DUCarreraTable } from "../components/daisyUI/DUCarreraTable.jsx";
 import { getUserRole } from "../services/user.service.js";
 import { DUPageBrowser } from "../components/daisyUI/DUPageBrowser.jsx";
@@ -26,6 +26,7 @@ const Carrera = () => {
     const { handleDeleteCarreras } = useDeleteCarreras(fetchCarrera);
 
     const [buscar, setBuscar] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
         if (typeof(fetchCarrera) === "function") {
@@ -34,31 +35,61 @@ const Carrera = () => {
 
     }, []);
 
+    const POSTS_PER_PAGE = 4;
+
     const limpiarFiltros = () => {
         setBuscar("");
+        setCurrentPage(1);
     };
 
-    //paginacion
-    const POSTS_PER_PAGE = 4;
-    const [currentPage, setCurrentPage] = useState(1);
+    // Filtro por nombre de carrera
+    const carrerasFiltradas = useMemo(() => {
+        const lista = Array.isArray(Carreras) ? Carreras : [];
+        const q = norm(buscar);
 
-    const lastPostIndex  = currentPage * POSTS_PER_PAGE;
+        return lista.filter(
+            (c) =>
+                !q ||
+                [c.nombre_carrera, c.sigla].some((campo) => norm(campo).includes(q))
+        );
+    }, [Carreras, buscar]);
+
+    const lastPostIndex = currentPage * POSTS_PER_PAGE;
     const firstPostIndex = lastPostIndex - POSTS_PER_PAGE;
-    const currentPageContent = (Array.isArray(Carreras) && Carreras.slice(firstPostIndex, lastPostIndex)) || [];
-    const pageAmount = Math.abs(Math.ceil((Array.isArray(Carreras) && Carreras?.length) / POSTS_PER_PAGE)) || 0;
+    const currentPageContent = carrerasFiltradas.slice(firstPostIndex, lastPostIndex);
+    const pageAmount = Math.ceil(carrerasFiltradas.length / POSTS_PER_PAGE) || 0;
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [buscar]);
 
     return (
-        <div className="Clase-page">
-            <div className="flex gap-4 mb-4">
+        <div className="Clase-page p-4">
+            <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">Lista de carreras</h2>
-                {canCrudCarreras && (<button className="btn btn-primary ml-auto" onClick={() => handleCreateCarrera()}>Crear Carrera</button>)}
-                {(buscar ) && (
-                    <button className="solicitud-limpiar-btn btn" onClick={limpiarFiltros}>
+
+                {canCrudCarreras && (
+                    <button className="btn btn-primary" onClick={() => handleCreateCarrera()}>
+                        Crear Carrera
+                    </button>
+                )}
+            </div>
+            <div className="flex items-center gap-3 mb-6">
+                <input
+                    type="text"
+                    className="input input-bordered w-full max-w-sm"
+                    placeholder="Buscar por nombre o sigla..."
+                    value={buscar}
+                    onChange={(e) => setBuscar(e.target.value)}
+                />
+
+                {buscar && (
+                    <button className="btn" onClick={limpiarFiltros}>
                         Limpiar
                     </button>
                 )}
             </div>
-            <div className="Clase2-page">
+            <div className="Clase2-page mb-6">
                 <DUCarreraTable data={currentPageContent || []}  
                     handleEditCarreras={handleEditCarreras} 
                     handleDeleteCarreras={handleDeleteCarreras} 
