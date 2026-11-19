@@ -1,10 +1,9 @@
 import Swal from "sweetalert2";
-import { deleteImagenPublicacionService } from "../../services/publicacion.service.js";
+import { deleteImagenPublicacionService } from "../../services/respaldo.service.js";
 
 export function useDeleteImagenPublicacion(onSuccess) {
     // `imagenUrl` debe ser EXACTAMENTE el valor guardado en publicacion.imagenes
-    // (el backend compara por igualdad exacta). No normalizar ni construir URL completa.
-    const handleDeleteImagen = async (publicacionId, imagenUrl) => {
+    const handleDeleteImagen = async (respaldoId, imagenUrl) => {
         const result = await Swal.fire({
             title: "¿Eliminar imagen?",
             text: "Esta acción no se puede deshacer.",
@@ -18,7 +17,7 @@ export function useDeleteImagenPublicacion(onSuccess) {
         if (!result.isConfirmed) return false;
 
         try {
-            await deleteImagenPublicacionService(publicacionId, imagenUrl);
+            await deleteImagenPublicacionService(respaldoId, imagenUrl);
             await Swal.fire({ icon: "success", title: "Imagen eliminada", confirmButtonColor: "#2F4697" });
             if (typeof onSuccess === "function") await onSuccess();
             return true;

@@ -1,22 +1,22 @@
 import { useState } from "react";
-import { getImageUrl } from "../../utils/publicacion.utils.js";
+import {getImageUrl} from "../../utils/respaldo.utils.ts"
 
-export function TarjetaPublicacion({ publicacion, canGestionar, onEditar, onEliminar, onVer }) {
+export function TarjetaRespaldo({ respaldo, canGestionar, onEditar, onEliminar, onVer }) {
     const [imagenActual, setImagenActual] = useState(0);
-    const imagenes = Array.isArray(publicacion.imagenes) ? publicacion.imagenes : [];
+    const imagenes = Array.isArray(respaldo.imagenes) ? respaldo.imagenes : [];
 
     // Evita índice fuera de rango si se eliminan imágenes
     const indice = Math.min(imagenActual, Math.max(imagenes.length - 1, 0));
 
-    const fecha = publicacion.createdAt
-        ? new Date(publicacion.createdAt).toLocaleDateString("es-CL", { day: "2-digit", month: "long", year: "numeric" })
+    const fecha = respaldo.createdAt
+        ? new Date(respaldo.createdAt).toLocaleDateString("es-CL", { day: "2-digit", month: "long", year: "numeric" })
         : "";
 
     return (
         <div className="card bg-base-100 shadow-md border border-base-200 overflow-hidden">
             {/* Galería de imágenes */}
             {imagenes.length > 0 && (
-                <figure className="relative bg-base-200 h-52 cursor-pointer" onClick={() => onVer?.(publicacion)}>
+                <figure className="relative bg-base-200 h-52 cursor-pointer" onClick={() => onVer?.(respaldo)}>
                     <img
                         src={getImageUrl(imagenes[indice])}
                         alt={`imagen-${indice}`}
@@ -53,23 +53,23 @@ export function TarjetaPublicacion({ publicacion, canGestionar, onEditar, onElim
             )}
 
             <div className="card-body p-4">
-                <h2 className="card-title text-base font-semibold cursor-pointer hover:underline" onClick={() => onVer?.(publicacion)}>
-                    {publicacion.titulo}
+                <h2 className="card-title text-base font-semibold cursor-pointer hover:underline" onClick={() => onVer?.(respaldo)}>
+                    {respaldo.titulo}
                 </h2>
-                <p className="text-sm text-base-content/80 line-clamp-3">{publicacion.descripcion}</p>
+                <p className="text-sm text-base-content/80 line-clamp-3">{respaldo.descripcion}</p>
 
                 <div className="flex items-center justify-between mt-2 text-xs text-base-content/60">
-                    <span>{publicacion.carrera?.nombre_carrera || publicacion.carrera?.sigla || ""}</span>
+                    <span>{respaldo.carrera?.nombre_carrera || respaldo.carrera?.sigla || ""}</span>
                     <span>{fecha}</span>
                 </div>
-                {publicacion.creador && (
-                    <p className="text-xs text-base-content/50">Por: {publicacion.creador?.username || ""}</p>
+                {respaldo.creador && (
+                    <p className="text-xs text-base-content/50">Por: {respaldo.creador?.username || ""}</p>
                 )}
 
                 {canGestionar && (
                     <div className="card-actions justify-end mt-2">
-                        <button className="btn btn-outline btn-xs" onClick={() => onEditar(publicacion)}>Editar</button>
-                        <button className="btn btn-error btn-xs text-white" onClick={() => onEliminar(publicacion.id_publicacion)}>Eliminar</button>
+                        <button className="btn btn-outline btn-xs" onClick={() => onEditar(respaldo)}>Editar</button>
+                        <button className="btn btn-error btn-xs text-white" onClick={() => onEliminar(respaldo.id_respaldo)}>Eliminar</button>
                     </div>
                 )}
             </div>

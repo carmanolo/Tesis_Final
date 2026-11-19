@@ -13,7 +13,7 @@ import Reuniones from "@pages/Reuniones"
 import Aportes from "@pages/Aportes"
 import Compromisos from "@pages/Compromisos"
 import Materiales from "@pages/Materiales"
-import Publicaciones from "@pages/Publicaciones"
+import Respaldos from "@pages/Respaldos"
 import Historial from "@pages/Historial"
 import ProtectedRoute from "@components/ProtectedRoute"
 import "@styles/global.css";
@@ -74,9 +74,9 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/publicaciones",
+        path: "/respaldos",
         element: (
-            <Publicaciones />
+            <Respaldos />
         ),
       },
       {

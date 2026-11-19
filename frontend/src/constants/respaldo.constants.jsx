@@ -2,3 +2,4 @@ export const PUEDE_GESTIONAR_PUBLICACION = [ "presidente cee", "vicepresidente c
 export const FORMATOS_ACEPTADOS = ".jpg,.jpeg,.png";
 export const MAX_IMAGENES = 10;
 export const TAMANO_MAX_MB = 10;
+export const TIPOS_VALIDOS = ["image/jpeg", "image/png", "image/jpg"];

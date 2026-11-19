@@ -1,26 +1,26 @@
 import { useEffect, useState } from "react";
-import { getImageUrl } from "../../utils/publicacion.utils.js";
+import { getImageUrl } from "../../utils/respaldo.utils.ts";
 
-export function PublicacionDetalle({ publicacion }) {
+export function RespaldoDetalle({ respaldo }) {
     const [indice, setIndice] = useState(0);
-    const imagenes = Array.isArray(publicacion?.imagenes) ? publicacion.imagenes : [];
+    const imagenes = Array.isArray(respaldo?.imagenes) ? respaldo.imagenes : [];
 
     // Al cambiar de publicación vuelve a la primera imagen
     useEffect(() => {
         setIndice(0);
-    }, [publicacion?.id_publicacion]);
+    }, [respaldo?.id_respaldo]);
 
-    if (!publicacion) return null;
+    if (!respaldo) return null;
 
     const actual = Math.min(indice, Math.max(imagenes.length - 1, 0));
     const anterior = () => setIndice((actual - 1 + imagenes.length) % imagenes.length);
     const siguiente = () => setIndice((actual + 1) % imagenes.length);
 
-    const fecha = publicacion.createdAt
-        ? new Date(publicacion.createdAt).toLocaleDateString("es-CL", { day: "2-digit", month: "long", year: "numeric" })
+    const fecha = respaldo.createdAt
+        ? new Date(respaldo.createdAt).toLocaleDateString("es-CL", { day: "2-digit", month: "long", year: "numeric" })
         : "";
-    const carrera = publicacion.carrera?.nombre_carrera || publicacion.carrera?.sigla || "";
-    const autor = publicacion.creador?.username || "";
+    const carrera = respaldo.carrera?.nombre_carrera || respaldo.carrera?.sigla || "";
+    const autor = respaldo.creador?.username || "";
 
     return (
         <article className="w-full max-w-4xl mx-auto">
@@ -29,11 +29,11 @@ export function PublicacionDetalle({ publicacion }) {
                 {carrera && (
                     <span className="badge badge-primary badge-outline badge-sm mb-3">{carrera}</span>
                 )}
-                <h1 className="text-3xl md:text-4xl font-bold leading-tight">{publicacion.titulo}</h1>
+                <h1 className="text-3xl md:text-4xl font-bold leading-tight">{respaldo.titulo}</h1>
                 <p className="mt-3 text-sm text-base-content/60">
                     {autor && <span>Por {autor}</span>}
                     {autor && fecha && <span className="mx-2">·</span>}
-                    {fecha && <time dateTime={publicacion.createdAt}>{fecha}</time>}
+                    {fecha && <time dateTime={respaldo.createdAt}>{fecha}</time>}
                 </p>
             </header>
 
@@ -43,7 +43,7 @@ export function PublicacionDetalle({ publicacion }) {
                     <div className="relative w-full flex items-center justify-center overflow-hidden rounded-xl bg-base-200">
                         <img
                             src={getImageUrl(imagenes[actual])}
-                            alt={`${publicacion.titulo} (imagen ${actual + 1})`}
+                            alt={`${respaldo.titulo} (imagen ${actual + 1})`}
                             className="block w-auto h-auto max-w-full max-h-[70vh] object-contain"
                             onError={(e) => { e.target.src = ""; e.target.alt = "Imagen no disponible"; }}
                         />
@@ -101,16 +101,15 @@ export function PublicacionDetalle({ publicacion }) {
 
             {/* Descripción */}
             <div className="text-lg leading-relaxed whitespace-pre-line">
-                {publicacion.descripcion}
+                {respaldo.descripcion}
             </div>
         </article>
     );
 }
 
-/**
- * Misma vista dentro de un modal grande. Cierra con Esc, con el fondo o con el botón.
- */
-export function ModalPublicacionDetalle({ abierto, publicacion, onCerrar }) {
+//Misma vista dentro de un modal grande.
+
+export function ModalRespaldoDetalle({ abierto, publicacion, onCerrar }) {
     useEffect(() => {
         if (!abierto) return;
         const onKey = (e) => { if (e.key === "Escape") onCerrar(); };
@@ -129,7 +128,7 @@ export function ModalPublicacionDetalle({ abierto, publicacion, onCerrar }) {
                     className="btn btn-sm btn-circle btn-ghost absolute right-3 top-3"
                     onClick={onCerrar}
                 >✕</button>
-                <PublicacionDetalle publicacion={publicacion} />
+                <RespaldoDetalle publicacion={publicacion} />
             </div>
             <div className="modal-backdrop" onClick={onCerrar}></div>
         </div>

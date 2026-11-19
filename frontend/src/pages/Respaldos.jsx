@@ -1,23 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
-import { useGetPublicaciones } from "../hooks/publicaciones/useGetPublicaciones.jsx";
-import { useGetPublicacionById } from "../hooks/publicaciones/UseGetPublicacionbyid.jsx";
+import { useGetRespaldos } from "../hooks/respaldos/useGetRespaldos.jsx";
+import { useGetRespaldoById } from "../hooks/respaldos/UseGetRespaldobyid.jsx";
 import { useGetCompromisoList } from "../hooks/listas/useGetCompromisoList.jsx";
-import { useCreatePublicacion } from "../hooks/publicaciones/useCreatePublicacion.jsx";
-import { useEditPublicacion } from "../hooks/publicaciones/useEditPublicacion.jsx";
-import { useDeletePublicacion } from "../hooks/publicaciones/useDeletePublicacion.jsx";
-import { useDeleteImagenPublicacion } from "../hooks/publicaciones/UseDeleteImagenPublicacion.jsx";
+import { useCreateRespaldo } from "../hooks/respaldos/useCreateRespaldo.jsx";
+import { useEditRespaldo } from "../hooks/respaldos/useEditRespaldo.jsx";
+import { useDeleteRespaldo } from "../hooks/respaldos/useDeleteRespaldo.jsx";
+import { useDeleteImagenPublicacion } from "../hooks/respaldos/UseDeleteImagenPublicacion.jsx";
 
-import { ModalPublicacion } from "../components/Publicacion/ModalPublicacion.jsx";
-import { ModalPublicacionDetalle } from "../components/Publicacion/PublicacionDetalle.jsx";
-import { TarjetaPublicacion } from "../components/Publicacion/TarjetaPublicacion.jsx";
+import { ModalRespaldo } from "../components/Respaldo/ModalRespaldo.jsx";
+import { ModalRespaldoDetalle} from "../components/Respaldo/RespaldoDetalle.jsx";
+import { TarjetaRespaldo } from "../components/Respaldo/TarjetaRespaldo.jsx";
 import { DUPageBrowser } from "../components/daisyUI/DUPageBrowser.jsx";
 import { getUserRole } from "../services/user.service.js";
-import { PUEDE_GESTIONAR_PUBLICACION } from "../constants/publicacion.constants.jsx";
-import { getCompromisoId, getCompromisoTitulo } from "../utils/publicacion.utils.js";
+import { PUEDE_GESTIONAR_PUBLICACION } from "../constants/respaldo.constants.jsx";
+import { getCompromisoId, getCompromisoTitulo } from "../utils/respaldo.utils.ts";
 
 const POSTS_PER_PAGE = 6;
 
-const Publicaciones = () => {
+const Respaldos = () => {
     const userRole = getUserRole();
     const canGestionar = PUEDE_GESTIONAR_PUBLICACION.includes(userRole);
 
@@ -25,33 +25,33 @@ const Publicaciones = () => {
     const [compromisoList, fetchCompromisoList] = useGetCompromisoList(compromisos, setCompromisos);
 
     const [modalAbierto, setModalAbierto] = useState(false);
-    const [publicacionSeleccionada, setPublicacionSeleccionada] = useState(null);
+    const [respaldoSeleccionado, setRespaldoSeleccionado] = useState(null);
     const [buscar, setBuscar] = useState("");
     const [compromisoFiltro, setCompromisoFiltro] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [detalle, setDetalle] = useState(null);
 
-    const { publicaciones, loading, fetchPublicaciones } = useGetPublicaciones();
-    const { fetchPublicacion } = useGetPublicacionById();
-    const { handleCreatePublicacion } = useCreatePublicacion(fetchPublicaciones);
-    const { handleEditPublicacion } = useEditPublicacion(fetchPublicaciones);
-    const { handleDeletePublicacion } = useDeletePublicacion(fetchPublicaciones);
+    const { respaldos, loading, fetchRespaldos } = useGetRespaldos();
+    const { fetchRespaldo } = useGetRespaldoById();
+    const { handleCreateRespaldo } = useCreateRespaldo(fetchRespaldos);
+    const { handleEditRespaldo } = useEditRespaldo(fetchRespaldos);
+    const { handleDeleteRespaldo } = useDeleteRespaldo(fetchRespaldos);
 
     // Tras borrar una imagen: refresca la publicación abierta en el modal y la lista
     const { handleDeleteImagen } = useDeleteImagenPublicacion(async () => {
-        if (publicacionSeleccionada) {
-            const fresca = await fetchPublicacion(publicacionSeleccionada.id_publicacion);
-            if (fresca) setPublicacionSeleccionada(fresca);
+        if (respaldoSeleccionado) {
+            const fresca = await fetchRespaldo(respaldoSeleccionado.id_respaldo);
+            if (fresca) setRespaldoSeleccionado(fresca);
         }
-        fetchPublicaciones();
+        fetchRespaldos();
     });
 
     useEffect(() => {
-        fetchPublicaciones();
+        fetchRespaldos();
         if (typeof fetchCompromisoList === "function") {
             fetchCompromisoList();
         }
-    }, [fetchPublicaciones]);
+    }, [fetchRespaldos]);
 
     const opcionesCompromiso = useMemo(() => {
         const lista = Array.isArray(compromisoList) ? compromisoList : [];
@@ -66,25 +66,25 @@ const Publicaciones = () => {
     }, [compromisoList]);
 
     const abrirCrear = () => {
-        setPublicacionSeleccionada(null);
+        setRespaldoSeleccionado(null);
         setModalAbierto(true);
     };
 
     // Carga la publicación fresca desde el backend; si falla, usa la de la lista
     const abrirEditar = async (pub) => {
-        const fresca = await fetchPublicacion(pub.id_publicacion);
-        setPublicacionSeleccionada(fresca ?? pub);
+        const fresca = await fetchRespaldo(pub.id_respaldo);
+        setRespaldoSeleccionado(fresca ?? pub);
         setModalAbierto(true);
     };
 
     const cerrarModal = () => {
         setModalAbierto(false);
-        setPublicacionSeleccionada(null);
+        setRespaldoSeleccionado(null);
     };
 
     // Filtra por búsqueda de texto y por selector de compromiso
-    const publicacionesFiltradas = useMemo(() => {
-        const lista = Array.isArray(publicaciones) ? publicaciones : [];
+    const respaldosFiltradas = useMemo(() => {
+        const lista = Array.isArray(respaldos) ? respaldos : [];
         const q = buscar.trim().toLowerCase();
         const cFiltroId = compromisoFiltro ? Number(compromisoFiltro) : null;
 
@@ -104,19 +104,19 @@ const Publicaciones = () => {
                 p.compromiso?.descripcion_compromiso,
             ].some((campo) => String(campo ?? "").toLowerCase().includes(q));
         });
-    }, [publicaciones, buscar, compromisoFiltro]);
+    }, [respaldos, buscar, compromisoFiltro]);
 
     const lastIdx = currentPage * POSTS_PER_PAGE;
     const firstIdx = lastIdx - POSTS_PER_PAGE;
-    const currentPageContent = publicacionesFiltradas.slice(firstIdx, lastIdx);
-    const pageAmount = Math.ceil(publicacionesFiltradas.length / POSTS_PER_PAGE) || 0;
+    const currentPageContent = respaldosFiltradas.slice(firstIdx, lastIdx);
+    const pageAmount = Math.ceil(respaldosFiltradas.length / POSTS_PER_PAGE) || 0;
 
     return (
         <div className="Clase-page">
             {/* Header */}
             <div className="flex flex-wrap gap-4 mb-4 items-center justify-between">
                 <div className="flex flex-wrap gap-3 items-center">
-                    <h2 className="text-xl font-semibold">Publicaciones del Centro de Estudiantes</h2>
+                    <h2 className="text-xl font-semibold">Respaldos del Centro de Estudiantes</h2>
                     <div className="join">
                         <input
                             className="input input-bordered input-sm join-item w-[240px] sm:w-[280px]"
@@ -166,7 +166,7 @@ const Publicaciones = () => {
                 </div>
                 {canGestionar && (
                     <button className="btn btn-primary btn-sm ml-auto" onClick={abrirCrear}>
-                        Nueva publicación
+                        Nuevo respaldo
                     </button>
                 )}
             </div>
@@ -193,22 +193,22 @@ const Publicaciones = () => {
                                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                             />
                         </svg>
-                        <p className="text-lg font-medium">No hay publicaciones</p>
+                        <p className="text-lg font-medium">No hay respaldos</p>
                         <p className="text-sm">
                             {canGestionar
-                                ? "Crea la primera publicación para tu carrera."
-                                : "Aún no hay publicaciones para tu carrera."}
+                                ? "Crea el primer respaldo para tu carrera."
+                                : "Aún no hay respaldos para tu carrera."}
                         </p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {currentPageContent.map((pub) => (
-                            <TarjetaPublicacion
-                                key={pub.id_publicacion}
-                                publicacion={pub}
+                            <TarjetaRespaldo
+                                key={pub.id_respaldo}
+                                respaldo={pub}
                                 canGestionar={canGestionar}
                                 onEditar={abrirEditar}
-                                onEliminar={handleDeletePublicacion}
+                                onEliminar={handleDeleteRespaldo}
                                 onVer={setDetalle}
                             />
                         ))}
@@ -227,22 +227,22 @@ const Publicaciones = () => {
                 </div>
             )}
 
-            <ModalPublicacion
+            <ModalRespaldo
                 abierto={modalAbierto}
-                publicacion={publicacionSeleccionada}
+                respaldo={respaldoSeleccionado}
                 compromisoList={compromisoList}
-                onCrear={handleCreatePublicacion}
-                onEditar={handleEditPublicacion}
+                onCrear={handleCreateRespaldo}
+                onEditar={handleEditRespaldo}
                 onEliminarImagen={handleDeleteImagen}
                 onCerrar={cerrarModal}
             />
-            <ModalPublicacionDetalle
+            <ModalRespaldoDetalle
                 abierto={!!detalle}
-                publicacion={detalle}
+                respaldo={detalle}
                 onCerrar={() => setDetalle(null)}
             />
         </div>
     );
 };
 
-export default Publicaciones;
+export default Respaldos;

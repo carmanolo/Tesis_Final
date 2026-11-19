@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { FORMATOS_ACEPTADOS, MAX_IMAGENES, TAMANO_MAX_MB } from "../../constants/publicacion.constants.jsx";
-import { getImageUrl, getCompromisoId, getCompromisoTitulo } from "../../utils/publicacion.utils.js";
+import { FORMATOS_ACEPTADOS, MAX_IMAGENES, TAMANO_MAX_MB, TIPOS_VALIDOS } from "../../constants/respaldo.constants.jsx";
+import { getImageUrl, getCompromisoId, getCompromisoTitulo } from "../../utils/respaldo.utils.js";
 
-const TIPOS_VALIDOS = ["image/jpeg", "image/png", "image/jpg"];
 
-export function ModalPublicacion({ abierto, publicacion, compromisoList = [], onCrear, onEditar, onEliminarImagen, onCerrar }) {
+export function ModalRespaldo({ abierto, respaldo, compromisoList = [], onCrear, onEditar, onEliminarImagen, onCerrar }) {
     const [compromisoId, setCompromisoId] = useState("");
     const [titulo, setTitulo] = useState("");
     const [descripcion, setDescripcion] = useState("");
@@ -33,7 +32,7 @@ export function ModalPublicacion({ abierto, publicacion, compromisoList = [], on
     }, [compromisoList]);
 
     // Imágenes ya guardadas en el backend (rutas tal cual vienen en la respuesta)
-    const existentes = Array.isArray(publicacion?.imagenes) ? publicacion.imagenes : [];
+    const existentes = Array.isArray(respaldo?.imagenes) ? respaldo.imagenes : [];
     const maxNuevas = Math.max(MAX_IMAGENES - existentes.length, 0);
 
     useEffect(() => {
@@ -47,17 +46,16 @@ export function ModalPublicacion({ abierto, publicacion, compromisoList = [], on
     useEffect(() => {
         if (abierto) {
             previewsRef.current.forEach(URL.revokeObjectURL);
-            const initialCompromisoId = publicacion?.compromisoId || publicacion?.compromiso?.id_compromiso || "";
+            const initialCompromisoId = respaldo?.compromisoId || respaldo?.compromiso?.id_compromiso || "";
             setCompromisoId(initialCompromisoId ? String(initialCompromisoId) : "");
-            setTitulo(publicacion?.titulo || publicacion?.compromiso?.descripcion_compromiso || "");
-            setDescripcion(publicacion?.descripcion || "");
+            setTitulo(respaldo?.titulo || respaldo?.compromiso?.descripcion_compromiso || "");
+            setDescripcion(respaldo?.descripcion || "");
             setNuevasImagenes([]);
             setPreviews([]);
             setErrores({});
             setGuardando(false);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [abierto, publicacion?.id_publicacion]);
+    }, [abierto, respaldo?.id_respaldo]);
 
     const handleCompromisoChange = (e) => {
         const val = e.target.value;
@@ -87,7 +85,7 @@ export function ModalPublicacion({ abierto, publicacion, compromisoList = [], on
 
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files);
-        e.target.value = ""; // permite volver a elegir el mismo archivo
+        e.target.value = "";
 
         const validos = files.filter(f => TIPOS_VALIDOS.includes(f.type) && f.size <= TAMANO_MAX_MB * 1024 * 1024);
         const cupo = Math.max(maxNuevas - nuevasImagenes.length, 0);
@@ -117,8 +115,8 @@ export function ModalPublicacion({ abierto, publicacion, compromisoList = [], on
         if (guardando || !validar()) return;
         setGuardando(true);
         try {
-            const ok = publicacion
-                ? await onEditar(publicacion.id_publicacion, { compromisoId: Number(compromisoId), titulo, descripcion, nuevasImagenes })
+            const ok = respaldo
+                ? await onEditar(respaldo.id_respaldo, { compromisoId: Number(compromisoId), titulo, descripcion, nuevasImagenes })
                 : await onCrear({ compromisoId: Number(compromisoId), titulo, descripcion, imagenes: nuevasImagenes });
             if (ok) onCerrar();
         } finally {
@@ -132,7 +130,7 @@ export function ModalPublicacion({ abierto, publicacion, compromisoList = [], on
         <div className="modal modal-open">
             <div className="modal-box max-w-2xl w-full">
                 <h3 className="font-bold text-lg mb-4">
-                    {publicacion ? "Editar publicación" : "Nueva publicación"}
+                    {respaldo ? "Editar respaldo" : "Nueva respaldo"}
                 </h3>
                 <form onSubmit={handleSubmit} encType="multipart/form-data">
                     {/* Selector de Compromiso (Título) */}
@@ -145,7 +143,7 @@ export function ModalPublicacion({ abierto, publicacion, compromisoList = [], on
                             value={compromisoId}
                             onChange={handleCompromisoChange}
                         >
-                            <option value="">-- Selecciona un compromiso para el título --</option>
+                            <option value=""> Selecciona un compromiso para el título </option>
                             {opcionesCompromiso.map((opt) => (
                                 <option key={opt.id} value={opt.id}>
                                     {opt.titulo}
@@ -180,7 +178,7 @@ export function ModalPublicacion({ abierto, publicacion, compromisoList = [], on
                     </div>
 
                     {/* Imágenes actuales (solo edición) */}
-                    {publicacion && existentes.length > 0 && (
+                    {respaldo && existentes.length > 0 && (
                         <div className="form-control mb-3">
                             <label className="label">
                                 <span className="label-text font-medium">
@@ -199,7 +197,7 @@ export function ModalPublicacion({ abierto, publicacion, compromisoList = [], on
                                         <button
                                             type="button"
                                             className="absolute -top-1.5 -right-1.5 btn btn-circle btn-xs btn-error text-white"
-                                            onClick={() => onEliminarImagen(publicacion.id_publicacion, img)}
+                                            onClick={() => onEliminarImagen(respaldo.id_respaldo, img)}
                                         >✕</button>
                                     </div>
                                 ))}
@@ -211,7 +209,7 @@ export function ModalPublicacion({ abierto, publicacion, compromisoList = [], on
                     <div className="form-control mb-4">
                         <label className="label">
                             <span className="label-text font-medium">
-                                {publicacion ? "Agregar imágenes" : "Imágenes *"}
+                                {respaldo ? "Agregar imágenes" : "Imágenes *"}
                                 <span className="text-xs text-base-content/60 ml-1">(JPEG/PNG, máx. {TAMANO_MAX_MB}MB c/u, máx. {MAX_IMAGENES} en total)</span>
                             </span>
                         </label>
@@ -253,7 +251,7 @@ export function ModalPublicacion({ abierto, publicacion, compromisoList = [], on
                     <div className="modal-action">
                         <button type="button" className="btn btn-ghost btn-sm" onClick={onCerrar}>Cancelar</button>
                         <button type="submit" className="btn btn-primary btn-sm" disabled={guardando}>
-                            {guardando ? <span className="loading loading-spinner loading-xs"></span> : publicacion ? "Guardar cambios" : "Publicar"}
+                            {guardando ? <span className="loading loading-spinner loading-xs"></span> : respaldo ? "Guardar cambios" : "Publicar"}
                         </button>
                     </div>
                 </form>
