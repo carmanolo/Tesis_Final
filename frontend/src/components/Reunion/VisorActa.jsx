@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getContenidoActaService } from "@services/reunion.service.js";
 import { formatearFechaDDMMAAAA } from "../../utils/calendar.utils.js";
-import "@styles/editorActa.css";
+import "@styles/EditorActa.css";
 
 //Modal de Lectura que muestra el contenido HTML del acta finalizada.
 export const VisorActa = ({ reunion, onCerrar }) => {

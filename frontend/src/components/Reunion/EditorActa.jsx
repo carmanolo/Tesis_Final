@@ -6,7 +6,7 @@ import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table
 import Swal from "sweetalert2";
 import { getContenidoActaService, guardarContenidoActaService, finalizarActaService, exportarActaService } from "@services/reunion.service.js";
 import { formatearFechaDDMMAAAA } from "../../utils/calendar.utils.js";
-import "@styles/editorActa.css";
+import "@styles/EditorActa.css";
 import { PLANTILLA_ACTA } from "../../constants/reunion.constants.jsx";
 
 function descargarBlob(blob, nombre) {
