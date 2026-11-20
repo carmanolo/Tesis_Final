@@ -210,6 +210,7 @@ const Material = () => {
                 onPrestar={handleCreatePrestamo}
                 onCerrar={cerrarPrestar}
                 usuarios={usuariosCarrera}
+                materiales={materiales}
             />
         </div>
     );

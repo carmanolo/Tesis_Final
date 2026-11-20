@@ -4,24 +4,35 @@ import {
     APORTE_DESCRIPCION_MIN,
     APORTE_DESCRIPCION_MAX,
     MONTO_MINIMO,
-    OPCIONES_PROCEDENCIA,
-    OPCIONES_DESCRIPCION,
     OPCIONES_TIPO,
+    PUEDE_CREAR_OTRO_APORTE,
 } from "../../constants/aporte.constants.jsx";
-import { formatoCLP, valoresIniciales } from "../../utils/aporte.utils.js";
+import {
+    formatoCLP,
+    valoresIniciales,
+    getOpcionesDescripcionAporte,
+    guardarNuevaDescripcionAporte,
+    getOpcionesProcedenciaAporte,
+    guardarNuevaProcedenciaAporte,
+} from "../../utils/aporte.utils.js";
 import { compromisosAsignables } from "../../utils/compromiso.utils.js";
+import { getUserRole } from "../../services/user.service.js";
 
-const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedencia, otra_procedencia, monto, tipo }) => {
+const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedencia, otra_procedencia, monto, tipo }, puedeCrearOtro = false) => {
     const errores = {};
 
     if (!descripcion_aporte) {
         errores.descripcion_aporte = "Selecciona una descripción";
     } else if (descripcion_aporte.toLowerCase() === "otro") {
-        const descripcionTrim = (otra_descripcion || "").trim();
-        if (!descripcionTrim) {
-            errores.descripcion_aporte = "Debes ingresar la nueva descripción";
-        } else if (descripcionTrim.length < APORTE_DESCRIPCION_MIN || descripcionTrim.length > APORTE_DESCRIPCION_MAX) {
-            errores.descripcion_aporte = `La descripción debe tener entre ${APORTE_DESCRIPCION_MIN} y ${APORTE_DESCRIPCION_MAX} caracteres`;
+        if (!puedeCrearOtro) {
+            errores.descripcion_aporte = "No tienes permisos para registrar una nueva descripción";
+        } else {
+            const descripcionTrim = (otra_descripcion || "").trim();
+            if (!descripcionTrim) {
+                errores.descripcion_aporte = "Debes ingresar la nueva descripción";
+            } else if (descripcionTrim.length < APORTE_DESCRIPCION_MIN || descripcionTrim.length > APORTE_DESCRIPCION_MAX) {
+                errores.descripcion_aporte = `La descripción debe tener entre ${APORTE_DESCRIPCION_MIN} y ${APORTE_DESCRIPCION_MAX} caracteres`;
+            }
         }
     }
 
@@ -30,8 +41,12 @@ const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedenc
 
     if (!procedencia) {
         errores.procedencia = "Selecciona una procedencia";
-    } else if (procedencia.toLowerCase() === "otro" && !otra_procedencia?.trim()) {
-        errores.procedencia = "Debes ingresar la nueva procedencia";
+    } else if (procedencia.toLowerCase() === "otro") {
+        if (!puedeCrearOtro) {
+            errores.procedencia = "No tienes permisos para registrar una nueva procedencia";
+        } else if (!otra_procedencia?.trim()) {
+            errores.procedencia = "Debes ingresar la nueva procedencia";
+        }
     }
 
     // El backend exige un entero >= MONTO_MINIMO
@@ -43,7 +58,7 @@ const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedenc
     return errores;
 };
 
-// `aporte` null = modo crear. Con aporte = modo detalle (editable si puedeGestionar).
+// `aporte` null = modo crear
 export const DetalleAporte = ({
     abierto,
     aporte,
@@ -57,12 +72,24 @@ export const DetalleAporte = ({
     onQuitar,
     onCerrar,
 }) => {
+    const userRole = String(getUserRole() ?? "").toLowerCase();
+    const puedeCrearOtro = PUEDE_CREAR_OTRO_APORTE.includes(userRole);
+
     const esNuevo = !aporte;
     const esIngreso = aporte?.tipo !== "egreso";
     const [editando, setEditando] = useState(false);
     const [form, setForm] = useState(valoresIniciales(null));
     const [errores, setErrores] = useState({});
     const [guardando, setGuardando] = useState(false);
+
+    // Opciones del selector cerrado (incluye las custom registradas en localStorage)
+    const [opcionesDescripcion, setOpcionesDescripcion] = useState(getOpcionesDescripcionAporte);
+    const [opcionesProcedencia, setOpcionesProcedencia] = useState(getOpcionesProcedenciaAporte);
+
+    const actualizarOpciones = () => {
+        setOpcionesDescripcion(getOpcionesDescripcionAporte());
+        setOpcionesProcedencia(getOpcionesProcedenciaAporte());
+    };
 
     // Estado para asignación a compromisos
     const [compromisoId, setCompromisoId] = useState("");
@@ -106,11 +133,23 @@ export const DetalleAporte = ({
 
     // Reinicia el formulario cada vez que se abre o cambia el aporte seleccionado
     useEffect(() => {
+        actualizarOpciones();
         setForm(valoresIniciales(aporte));
         setErrores({});
         setEditando(!aporte);
         setCompromisoId(""); setMontoAsig(""); setErrorAsig("");
     }, [aporte, abierto]);
+
+    // Opciones visibles según el rol del usuario (solo presidente y tesorero ven la opción "Otro")
+    const opcionesDescripcionVisibles = useMemo(() => {
+        if (puedeCrearOtro) return opcionesDescripcion;
+        return opcionesDescripcion.filter((op) => op.toLowerCase() !== "otro");
+    }, [opcionesDescripcion, puedeCrearOtro]);
+
+    const opcionesProcedenciaVisibles = useMemo(() => {
+        if (puedeCrearOtro) return opcionesProcedencia;
+        return opcionesProcedencia.filter((op) => op.toLowerCase() !== "otro");
+    }, [opcionesProcedencia, puedeCrearOtro]);
 
     if (!abierto) return null;
 
@@ -127,7 +166,7 @@ export const DetalleAporte = ({
     };
 
     const handleGuardar = async () => {
-        const erroresForm = validar(form);
+        const erroresForm = validar(form, puedeCrearOtro);
         setErrores(erroresForm);
         if (Object.keys(erroresForm).length > 0) return;
 
@@ -141,10 +180,10 @@ export const DetalleAporte = ({
                 ? form.otra_procedencia.trim()
                 : form.procedencia.trim();
 
-        // Solo campos que el backend acepta (cualquier otro devuelve 400)
+        // Solo campos que el backend acepta
         const datos = {
             descripcion_aporte: descripcionFinal,
-            fecha_aporte: form.fecha_aporte, // YYYY-MM-DD
+            fecha_aporte: form.fecha_aporte, 
             procedencia: procedenciaFinal,
             monto: Number(form.monto),
             tipo: form.tipo,
@@ -155,6 +194,17 @@ export const DetalleAporte = ({
         setGuardando(false);
 
         if (!ok) return;
+
+        if (form.descripcion_aporte.toLowerCase() === "otro" && puedeCrearOtro) {
+            guardarNuevaDescripcionAporte(descripcionFinal);
+            setOpcionesDescripcion(getOpcionesDescripcionAporte());
+        }
+
+        if (form.procedencia.toLowerCase() === "otro" && puedeCrearOtro) {
+            guardarNuevaProcedenciaAporte(procedenciaFinal);
+            setOpcionesProcedencia(getOpcionesProcedenciaAporte());
+        }
+
         if (esNuevo) onCerrar();
         else setEditando(false);
     };
@@ -235,13 +285,13 @@ export const DetalleAporte = ({
                                 <option value="" disabled>
                                     Selecciona una descripción
                                 </option>
-                                {OPCIONES_DESCRIPCION.map((opcion) => (
+                                {opcionesDescripcionVisibles.map((opcion) => (
                                     <option key={opcion} value={opcion}>
                                         {opcion}
                                     </option>
                                 ))}
                             </select>
-                            {form.descripcion_aporte?.toLowerCase() === "otro" && (
+                            {form.descripcion_aporte?.toLowerCase() === "otro" && puedeCrearOtro && (
                                 <input
                                     type="text"
                                     maxLength={APORTE_DESCRIPCION_MAX}
@@ -278,13 +328,13 @@ export const DetalleAporte = ({
                                 <option value="" disabled>
                                     Selecciona una procedencia
                                 </option>
-                                {OPCIONES_PROCEDENCIA.map((opcion) => (
+                                {opcionesProcedenciaVisibles.map((opcion) => (
                                     <option key={opcion} value={opcion}>
                                         {opcion}
                                     </option>
                                 ))}
                             </select>
-                            {form.procedencia?.toLowerCase() === "otro" && (
+                            {form.procedencia?.toLowerCase() === "otro" && puedeCrearOtro && (
                                 <input
                                     type="text"
                                     className={`input input-bordered w-full ${errores.procedencia && !form.otra_procedencia?.trim() ? "input-error" : ""}`}
@@ -317,9 +367,6 @@ export const DetalleAporte = ({
                             <button className="btn btn-primary" onClick={handleGuardar} disabled={guardando}>
                                 {esNuevo ? "Crear" : "Guardar"}
                             </button>
-                            <button className="btn btn-neutral" onClick={handleCancelar} disabled={guardando}>
-                                Cancelar
-                            </button>
                         </>
                     ) : (
                         <>
@@ -333,9 +380,7 @@ export const DetalleAporte = ({
                                     </button>
                                 </>
                             )}
-                            <button className="btn btn-neutral" onClick={onCerrar}>
-                                Cerrar
-                            </button>
+
                         </>
                     )}
                 </div>

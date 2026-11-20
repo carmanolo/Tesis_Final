@@ -9,6 +9,7 @@ function hoyEnChile() {
         day: "2-digit",
     }).format(new Date());
 }
+// Disponible por si se requiere impedir fechas pasadas; actualmente no se aplica a fecha_aporte
 export function fechaNoPasadaValidation(value, helpers) {
     const original = String(helpers.original ?? value);
     const fechaStr = original.slice(0, 10);
@@ -25,10 +26,6 @@ export const integrityValidation = Joi.object({
         "string.min": `La descripción del aporte debe tener al menos ${MIN_NOMBRE_APORTE} caracteres`,
         "string.max": `La descripción del aporte no puede tener más de ${MAX_NOMBRE_APORTE} caracteres`,
     }),
-    fecha_aporte: Joi.date().custom(fechaNoPasadaValidation).messages({
-        "date.base": "La fecha del aporte debe ser una fecha válida",
-        "date.min": "La fecha del aporte no puede ser anterior a hoy",
-    }),
     procedencia: Joi.string().messages({
         "string.base": "La procedencia debe ser un string",
         "string.empty": "La procedencia no puede ser vacía",
@@ -37,6 +34,15 @@ export const integrityValidation = Joi.object({
         "number.base": ERROR_CANTIDAD_INVALIDA,
         "number.integer": ERROR_CANTIDAD_INVALIDA,
         "number.min": `El monto del aporte debe ser al menos ${MONTO_MINIMO}`,
+    }),
+    // Fecha seleccionada por el usuario (formato ISO, p. ej. YYYY-MM-DD)
+    fecha_aporte: Joi.date().iso().messages({
+        "date.base": "La fecha del aporte debe ser una fecha válida",
+        "date.format": "La fecha del aporte debe tener formato YYYY-MM-DD",
+    }),
+    tipo: Joi.string().valid("ingreso", "egreso").messages({
+        "any.only": "El tipo debe ser 'ingreso' o 'egreso'",
+        "string.base": "El tipo debe ser un string",
     }),
     carreraId: Joi.number().integer().positive().messages({
         "number.base": "El id de la carrera debe ser un número",
@@ -63,6 +69,7 @@ export const createValidation = Joi.object({
     monto: Joi.any().required().messages({
         "any.required": MONTO_OBLIGATORIA
     }),
+    tipo: Joi.any(),
     carreraId: Joi.any(),
     id_carrera: Joi.any(),
 }).min(1).unknown(false)
@@ -76,6 +83,7 @@ export const updateValidation = Joi.object({
     fecha_aporte: Joi.any(),
     procedencia: Joi.any(),
     monto: Joi.any(),
+    tipo: Joi.any(),
     carreraId: Joi.any(),
     id_carrera: Joi.any(),
 }).min(1).unknown(false).messages({

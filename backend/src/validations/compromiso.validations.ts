@@ -13,7 +13,6 @@ import {
     ERROR_CANTIDAD_INVALIDA,
 } from "../constants/compromiso.constants.js";
 
-// Paso 1: valida el FORMATO de los campos que lleguen (todos opcionales)
 export const integrityValidation = Joi.object({
     id_compromiso: Joi.any().custom(idValidationFunction),
 
@@ -23,7 +22,6 @@ export const integrityValidation = Joi.object({
         "string.min": `La descripción del compromiso debe tener al menos ${MIN_DESCRIPCION_COMPROMISO} caracteres`,
         "string.max": `La descripción del compromiso no puede tener más de ${MAX_DESCRIPCION_COMPROMISO} caracteres`,
     }),
-    // Fecha seleccionada por el usuario (formato ISO, p. ej. YYYY-MM-DD)
     fecha_compromiso: Joi.date().iso().messages({
         "date.base": "La fecha del compromiso debe ser una fecha válida",
         "date.format": "La fecha del compromiso debe tener formato YYYY-MM-DD",
@@ -42,7 +40,6 @@ export const integrityValidation = Joi.object({
         "number.positive": "El id de la carrera debe ser un número positivo",
     }),
 
-    // Campos de la asignación de aportes
     aporteId: Joi.number().integer().positive().messages({
         "number.base": "El id del aporte debe ser un número",
         "number.positive": "El id del aporte debe ser un número positivo",
@@ -57,7 +54,6 @@ export const integrityValidation = Joi.object({
     "object.unknown": CAMPOS_ADICIONALES,
 });
 
-// Paso 2 (crear): valida que vengan los campos OBLIGATORIOS
 export const createValidation = Joi.object({
     descripcion_compromiso: Joi.any().required().messages({
         "any.required": DESCRIPCION_OBLIGATORIA,
@@ -68,7 +64,6 @@ export const createValidation = Joi.object({
     monto_total: Joi.any().required().messages({
         "any.required": MONTO_TOTAL_OBLIGATORIO,
     }),
-    // Solo lo usa el administrador; el resto queda ligado a su propia carrera
     carreraId: Joi.any(),
     id_carrera: Joi.any(),
 
@@ -78,7 +73,6 @@ export const createValidation = Joi.object({
     "object.unknown": CAMPOS_ADICIONALES,
 });
 
-// Paso 2 (actualizar): la carrera NO se puede cambiar en un compromiso
 export const updateValidation = Joi.object({
     descripcion_compromiso: Joi.any(),
     fecha_compromiso: Joi.any(),
@@ -91,7 +85,6 @@ export const updateValidation = Joi.object({
     "object.unknown": CAMPOS_ADICIONALES,
 });
 
-// Paso 2 (asignar aporte): ambos campos obligatorios
 export const asignarAporteValidation = Joi.object({
     aporteId: Joi.any().required().messages({
         "any.required": APORTE_ID_OBLIGATORIO,

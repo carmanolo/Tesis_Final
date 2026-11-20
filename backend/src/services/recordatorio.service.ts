@@ -48,12 +48,7 @@ export async function enviarRecordatoriosDeManana(): Promise<void> {
     }
 }
 
-/**
- * Revisa préstamos activos cuyo día de préstamo ya pasó (más de 1 día de préstamo transcurrido).
- * 1. Cambia el estado del préstamo a "pendiente".
- * 2. Cambia el estado del material a "pendiente".
- * 3. Notifica por correo al estudiante con su nombre y el material que debe.
- */
+//Revisa préstamos activos cuyo día de préstamo ya pasó (más de 1 día de préstamo transcurrido).
 export async function verificarPrestamosVencidos(): Promise<void> {
     try {
         const prestamoRepo = AppDataSource.getRepository(PrestamoEntity as any);
@@ -123,12 +118,8 @@ Centro de Estudiantes.`;
 }
 
 export function iniciarCronRecordatorios(): void {
-    // 1. Recordatorio diario de reuniones a las 10:00 AM
-    cron.schedule("0 10 * * *", () => {
-        enviarRecordatoriosDeManana().catch((e) => console.error("Error en cron de recordatorios de reuniones", e));
-    }, { timezone: TZ });
 
-    // 2. Verificación de préstamos vencidos (se ejecuta a las 11:00 AM y a las 18:00 PM todos los días)
+    // Verificación de préstamos vencidos (se ejecuta a las 11:00 AM y a las 18:00 PM todos los días)
     cron.schedule("0 11,18 * * *", () => {
         verificarPrestamosVencidos().catch((e) => console.error("Error en cron de préstamos vencidos", e));
     }, { timezone: TZ });

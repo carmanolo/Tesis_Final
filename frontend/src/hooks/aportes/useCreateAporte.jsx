@@ -1,11 +1,10 @@
 import { createAporteService } from "../../services/aporte.service.js";
 import { fireDynamicSwal } from "../utils/dynamicSwal.jsx";
 
-// Backend: { status, message, details?, data }. Para errores 400 `details` trae el motivo concreto.
 const extraerMensaje = (response) =>
     response?.data?.details || response?.data?.message || response?.message;
 
-// Este hook solo recibe los datos ya validados, los envía y refresca la lista.
+// Este hook recibe los datos ya validados, los envía y refresca la lista.
 export const useCreateAporte = (fetchAportes) => {
     const handleCreateAporte = async (aporteData) => {
         let status;
@@ -13,7 +12,6 @@ export const useCreateAporte = (fetchAportes) => {
 
         try {
             const response = await createAporteService(aporteData);
-            // Si el service no lanzó error, la creación fue exitosa (el backend responde 201)
             status = response?.status ?? 201;
             mensaje = extraerMensaje(response) || "Aporte registrado exitosamente";
 

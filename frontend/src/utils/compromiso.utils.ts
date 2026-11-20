@@ -1,5 +1,58 @@
 import { normalizarFechaISO } from "./calendar.utils.js";
+import { OPCIONES_DESCRIPCION } from "../constants/compromiso.constants.jsx";
 
+const STORAGE_KEY_DESCRIPCIONES = "compromiso_descripciones_custom";
+
+export const getOpcionesDescripcionCompromiso = (): string[] => {
+    try {
+        const guardadas = JSON.parse(localStorage.getItem(STORAGE_KEY_DESCRIPCIONES) || "[]");
+        const combinadas = [...OPCIONES_DESCRIPCION.filter((o) => o.toLowerCase() !== "otro")];
+        if (Array.isArray(guardadas)) {
+            guardadas.forEach((d: string) => {
+                if (d && !combinadas.some((c) => c.toLowerCase() === d.toLowerCase())) {
+                    combinadas.push(d);
+                }
+            });
+        }
+        combinadas.push("Otro");
+        return combinadas;
+    } catch {
+        return [...OPCIONES_DESCRIPCION];
+    }
+};
+
+export const guardarNuevaDescripcionCompromiso = (nueva: string) => {
+    if (!nueva) return;
+    const limpia = nueva.trim();
+    if (!limpia || limpia.toLowerCase() === "otro") return;
+    try {
+        const guardadas = JSON.parse(localStorage.getItem(STORAGE_KEY_DESCRIPCIONES) || "[]");
+        const lista = Array.isArray(guardadas) ? guardadas : [];
+        if (!lista.some((d: string) => d.toLowerCase() === limpia.toLowerCase())) {
+            lista.push(limpia);
+            localStorage.setItem(STORAGE_KEY_DESCRIPCIONES, JSON.stringify(lista));
+        }
+    } catch (e) {
+        console.error(e);
+    }
+};
+
+export const obtenerEstadoDescripcionCompromiso = (descripcion: string) => {
+    if (!descripcion) {
+        return { descripcion_compromiso: "", otra_descripcion: "" };
+    }
+    const opciones = getOpcionesDescripcionCompromiso().filter((op) => op.toLowerCase() !== "otro");
+    const opcionExacta = opciones.find(
+        (op) => op.toLowerCase() === descripcion.toLowerCase()
+    );
+    if (opcionExacta) {
+        return { descripcion_compromiso: opcionExacta, otra_descripcion: "" };
+    }
+    return {
+        descripcion_compromiso: "Otro",
+        otra_descripcion: descripcion.toLowerCase() === "otro" ? "" : descripcion,
+    };
+};
 
 export const hoyISO = () => new Date().toLocaleDateString("en-CA");
 
@@ -40,11 +93,15 @@ export const estadoFinanciamiento = (compromiso: any) => {
     return { id: "sin-financiar", etiqueta: "Sin financiar", clase: "badge-ghost" };
 };
 
-export const valoresIniciales = (compromiso: any) => ({
-    descripcion_compromiso: compromiso?.descripcion_compromiso ?? "",
-    fecha_compromiso: compromiso ? normalizarFechaISO(compromiso.fecha_compromiso) : hoyISO(),
-    monto_total: compromiso?.monto_total ?? "",
-});
+export const valoresIniciales = (compromiso: any) => {
+    const estado = obtenerEstadoDescripcionCompromiso(compromiso?.descripcion_compromiso);
+    return {
+        descripcion_compromiso: estado.descripcion_compromiso,
+        otra_descripcion: estado.otra_descripcion,
+        fecha_compromiso: compromiso ? normalizarFechaISO(compromiso.fecha_compromiso) : hoyISO(),
+        monto_total: compromiso?.monto_total ?? "",
+    };
+};
 
 //ProximoCompromiso
 
@@ -76,7 +133,6 @@ const totalAsignadoAporte = (aporteId: number, compromisos: any[]): number => {
 };
 
 // Aportes que se pueden asignar a este compromiso, con lo que le queda disponible a cada uno.
-// La disponibilidad se calcula como: monto_original - suma de lo asignado en TODOS los compromisos (excepto el actual)
 export const aportesAsignables = (aportes: any[], compromisos: any[], compromiso: any) => {
     const propios = new Map<number, number>(
         (compromiso?.aportes ?? []).map((a: any) => [a.aporteId, Number(a.monto_asignado) || 0])

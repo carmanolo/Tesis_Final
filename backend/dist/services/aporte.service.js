@@ -2,12 +2,9 @@ import { AppDataSource } from "../config/configDb.js";
 import { Between, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import AporteEntity from "../entity/aporte.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
+import { isAdminRole } from "../utils/user.utils.js";
 const repo = () => AppDataSource.getRepository(AporteEntity);
-const isAdminRole = (role) => {
-    const r = role?.toLowerCase();
-    return r === "admin" || r === "administrador";
-};
-export async function createAporteSer(descripcion_aporte, fecha_aporte, procedencia, monto, creadorId, carreraId) {
+export async function createAporteSer(descripcion_aporte, fecha_aporte, procedencia, monto, carreraId, tipo = "ingreso") {
     try {
         const carreraRepo = AppDataSource.getRepository(CarreraEntity);
         const carrera = await carreraRepo.findOneBy({ id_carrera: carreraId });
@@ -19,9 +16,8 @@ export async function createAporteSer(descripcion_aporte, fecha_aporte, proceden
             fecha_aporte,
             procedencia,
             monto,
-            creadorId,
+            tipo,
             carreraId,
-            creador: { id: creadorId },
             carrera: { id_carrera: carreraId },
         });
         const saved = await repo().save(nueva);
@@ -36,12 +32,13 @@ export async function createAporteSer(descripcion_aporte, fecha_aporte, proceden
 export async function getAportesSer(carreraId, role) {
     try {
         const whereCondition = {};
-        if (!isAdminRole(role) || carreraId) {
+        if (!isAdminRole(role) && !carreraId)
+            return [];
+        if (carreraId)
             whereCondition.carreraId = carreraId;
-        }
         const Aportes = await repo().find({
             where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
-            relations: { carrera: true, creador: true },
+            relations: { carrera: true },
             order: { fecha_aporte: "DESC" },
         });
         return Aportes;
@@ -56,11 +53,13 @@ export async function getAporteSer(id_aporte, carreraId, role) {
     try {
         const whereCondition = { id_aporte };
         if (!isAdminRole(role)) {
+            if (!carreraId)
+                return null;
             whereCondition.carreraId = carreraId;
         }
         const Aporte = await repo().findOne({
             where: whereCondition,
-            relations: { carrera: true, creador: true },
+            relations: { carrera: true },
         });
         return Aporte;
     }

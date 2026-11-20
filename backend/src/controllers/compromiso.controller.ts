@@ -27,10 +27,8 @@ export async function createCompromiso(req: Request, res: Response): Promise<any
 
     const { descripcion_compromiso, fecha_compromiso, monto_total, carreraId: bodyCarreraId, id_carrera } = req.body;
 
-    // Solo un administrador puede elegir la carrera; el resto usa la suya
     let targetCarreraId = admin ? (bodyCarreraId || id_carrera || userCarreraId) : userCarreraId;
 
-    // Si el token no trae carrera, se busca la del propio usuario
     if (!targetCarreraId && id) {
       const userRepo = AppDataSource.getRepository(UserEntity as any);
       const user = await userRepo.findOne({ where: { id } });
@@ -39,7 +37,6 @@ export async function createCompromiso(req: Request, res: Response): Promise<any
       }
     }
 
-    // Solo un administrador sin carrera asignada toma la primera carrera registrada
     if (!targetCarreraId && admin) {
       const carreraRepo = AppDataSource.getRepository(CarreraEntity as any);
       const primerCarrera = await carreraRepo.findOne({ where: {} });
@@ -68,7 +65,6 @@ export async function getCompromisos(req: Request, res: Response): Promise<any> 
     const { carreraId, rol, role } = (req.user as any) || {};
     const userRole = rol || role;
 
-    // Solo un administrador puede consultar otra carrera por query
     const queryCarreraId = isAdminRole(userRole) && req.query.carreraId ? Number(req.query.carreraId) : carreraId;
 
     const compromisos = await getCompromisosSer(queryCarreraId, userRole);
@@ -184,7 +180,7 @@ export async function asignarAporte(req: Request, res: Response): Promise<any> {
     );
     if (errSer) return handleErrorClient(res, 400, errSer);
 
-    // Se devuelve el saldo actualizado: cada aporte asignado hace bajar lo que falta por financiar
+    // Se devuelve el saldo actualizado
     const actualizado = await getCompromisoSer(Number(id_compromiso), carreraId, userRole);
     return handleSuccess(res, creada ? 201 : 200, "Aporte asignado al compromiso", {
       asignacion: data,
@@ -274,13 +270,26 @@ export async function descargarSolicitudExcel(req: Request, res: Response): Prom
   }
 }
 
-//esto es para procesar la lista de compromisos al colocar
+//Esto es para procesar la lista de compromisos para el selector de resplados
 export async function getCompromisoList(req: Request, res: Response): Promise<any> {
   const DEFAULT_ARRAY: any[] = [];
   try {
-    const { carreraId, rol, role } = (req.user as any) || {};
+    let { carreraId, rol, role, id, email } = (req.user as any) || {};
     const userRole = rol || role;
-    const compromisos: any = await obtenerListaCompromiso(carreraId, userRole);
+
+    if (!carreraId && (id || email)) {
+      const userRepo = AppDataSource.getRepository(UserEntity);
+      const user = await userRepo.findOne({ where: id ? { id } : { email } });
+      if (user?.carreraId) {
+        carreraId = user.carreraId;
+      }
+    }
+
+    const queryCarreraId = isAdminRole(userRole) && req.query.carreraId
+      ? Number(req.query.carreraId)
+      : carreraId;
+
+    const compromisos: any = await obtenerListaCompromiso(queryCarreraId, userRole);
     const compromisoList = processCompromisos(compromisos);
     return handleSuccess(res, 200, "Lista de compromisos obtenida exitosamente", compromisoList);
   } catch (error) {

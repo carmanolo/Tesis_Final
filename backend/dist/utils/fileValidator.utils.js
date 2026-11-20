@@ -15,7 +15,7 @@ export function validarFirmaArchivo(filePath) {
         const fd = fs.openSync(filePath, "r");
         fs.readSync(fd, buffer, 0, 16, 0);
         fs.closeSync(fd);
-        // 1. Firma PNG: 89 50 4E 47 0D 0A 1A 0A
+        // 1. Firma PNG
         if (buffer[0] === 0x89 &&
             buffer[1] === 0x50 &&
             buffer[2] === 0x4e &&
@@ -26,25 +26,25 @@ export function validarFirmaArchivo(filePath) {
             buffer[7] === 0x0a) {
             return { valido: true, formatoDetectado: "png" };
         }
-        // 2. Firma JPEG / JPG: FF D8 FF
+        // 2. Firma JPEG / JPG
         if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
             return { valido: true, formatoDetectado: "jpeg" };
         }
-        // 3. Firma PDF: 25 50 44 46 (%PDF-)
+        // 3. Firma PDF
         if (buffer[0] === 0x25 &&
             buffer[1] === 0x50 &&
             buffer[2] === 0x44 &&
             buffer[3] === 0x46) {
             return { valido: true, formatoDetectado: "pdf" };
         }
-        // 4. Firma DOCX (formato zip contenedor de office): 50 4B 03 04 (PK..)
+        // 4. Firma DOCX 
         if (buffer[0] === 0x50 &&
             buffer[1] === 0x4b &&
             buffer[2] === 0x03 &&
             buffer[3] === 0x04) {
             return { valido: true, formatoDetectado: "docx" };
         }
-        // 5. Firma DOC (antiguo OLE Compound File): D0 CF 11 E0 A1 B1 1A E1
+        // 5. Firma DOC 
         if (buffer[0] === 0xd0 &&
             buffer[1] === 0xcf &&
             buffer[2] === 0x11 &&

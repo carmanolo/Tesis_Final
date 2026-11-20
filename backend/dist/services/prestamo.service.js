@@ -1,6 +1,11 @@
 import { AppDataSource } from "../config/configDb.js";
 import PrestamoEntity from "../entity/prestamo.entity.js";
 import MaterialEntity from "../entity/material.entity.js";
+import { LessThan } from "typeorm";
+const TZ = "America/Santiago";
+function fechaHoyChile() {
+    return new Date().toLocaleDateString("en-CA", { timeZone: TZ });
+}
 export async function createPrestamoSer(materialId, prestatario, fecha_prestamo, tne_entregada = false) {
     try {
         if (!materialId || !prestatario) {
@@ -8,6 +13,24 @@ export async function createPrestamoSer(materialId, prestatario, fecha_prestamo,
         }
         if (!tne_entregada) {
             return { data: null, error: "La TNE debe haber sido entregada en garantía para registrar el préstamo" };
+        }
+        const nombreLimpio = prestatario.trim();
+        const prestamoRepository = AppDataSource.getRepository(PrestamoEntity);
+        // Bloqueo: Verificar si el usuario tiene préstamos pendientes de devolución (o vencidos hace más de 1 día)
+        const hoy = fechaHoyChile();
+        const prestamoPendiente = await prestamoRepository.findOne({
+            where: [
+                { prestatario: nombreLimpio, estado_prestamo: "pendiente" },
+                { prestatario: nombreLimpio, estado_prestamo: "prestado", fecha_prestamo: LessThan(hoy) }
+            ],
+            relations: { material: true }
+        });
+        if (prestamoPendiente) {
+            const nomMat = prestamoPendiente.material?.nombre_material || "un material";
+            return {
+                data: null,
+                error: `El usuario "${nombreLimpio}" tiene un préstamo pendiente de devolución (${nomMat}). No puede solicitar más materiales hasta que devuelva el material pendiente.`
+            };
         }
         const materialRepository = AppDataSource.getRepository(MaterialEntity);
         const material = await materialRepository.findOne({ where: { id_material: materialId } });
@@ -17,11 +40,10 @@ export async function createPrestamoSer(materialId, prestatario, fecha_prestamo,
         if (Number(material.stock) < 1) {
             return { data: null, error: "No hay unidades disponibles para prestar este material" };
         }
-        const prestamoRepository = AppDataSource.getRepository(PrestamoEntity);
         const newPrestamo = prestamoRepository.create({
             materialId,
             material,
-            prestatario: prestatario.trim(),
+            prestatario: nombreLimpio,
             fecha_prestamo: fecha_prestamo ? new Date(fecha_prestamo) : new Date(),
             estado_prestamo: "prestado",
             tne_entregada: true,

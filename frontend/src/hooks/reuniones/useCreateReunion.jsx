@@ -6,7 +6,7 @@ import { fireDynamicSwal } from "../utils/dynamicSwal.jsx";
 
 function parseFechaLocal(fechaStr) {
     const [year, month, day] = fechaStr.split("-").map(Number);
-    return new Date(year, month - 1, day); // mes es 0-indexado
+    return new Date(year, month - 1, day); 
 }
 
 function esFechaAnteriorAHoy(fechaStr) {

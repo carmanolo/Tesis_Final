@@ -7,8 +7,9 @@ import { createValidation, integrityValidation, updateValidation } from "../vali
 import { SHOW_ERRORS } from "../constants/ajustes.constants.js"
 import { idValidation } from "../validations/modules/id.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
-import { USER_NO_ENCONTRADO } from "../constants/user.constants.js";
+import { USER_NO_ENCONTRADO, isRoleCEE } from "../constants/user.constants.js";
 import { obtenerCarreraPorSigla, getCarreraSer } from "../services/carrera.service.js";
+import { enviarCorreoRegistroCEE } from "../services/mail.service.js";
 
 export async function createUser(req: Request, res: Response): Promise<any> {
   try {
@@ -81,6 +82,13 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       return handleErrorServer(res, 500, errSer || "error al registrar usuario");
     }
     newUser.password = undefined;
+
+    if (isRoleCEE(role) && email) {
+      enviarCorreoRegistroCEE(email, username, role).catch((err) => {
+        console.error("Error al enviar correo automático de registro CEE al crear usuario:", err);
+      });
+    }
+
     return handleSuccess(res, 201, "Usuario registrado exitosamente", newUser.data || newUser);
   } catch (error: any) {
     console.error("error en registro de usuario");
@@ -179,6 +187,8 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
       return handleErrorClient(res, 404, "Usuario no encontrado");
     }
 
+    const rolAnterior = userUpdate.role;
+
     const userRole = req.user?.role || req.user?.rol;
     let userCarreraId = req.user?.carreraId;
 
@@ -231,6 +241,21 @@ export async function patchUserById(req: Request, res: Response): Promise<any> {
     const updateUser = await patchUserSer(userUpdate);
     if (!(updateUser.data)) {
       return handleErrorClient(res, 400, updateUser.message);
+    }
+
+    const nuevoRol = updateUser.data.role;
+    const cambioACEE =
+      isRoleCEE(nuevoRol) &&
+      String(rolAnterior).toLowerCase().trim() !== String(nuevoRol).toLowerCase().trim();
+
+    if (cambioACEE && updateUser.data.email) {
+      enviarCorreoRegistroCEE(
+        updateUser.data.email,
+        updateUser.data.username,
+        updateUser.data.role
+      ).catch((err) => {
+        console.error("Error al enviar correo automático de registro CEE:", err);
+      });
     }
 
     return handleSuccess(res, 200, "Usuario actualizado con éxito", updateUser.data);
