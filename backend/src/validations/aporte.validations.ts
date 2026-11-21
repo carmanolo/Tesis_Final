@@ -11,17 +11,6 @@ function hoyEnChile(): string {
     }).format(new Date());
 }
 
-// Disponible por si se requiere impedir fechas pasadas; actualmente no se aplica a fecha_aporte
-export function fechaNoPasadaValidation(value: any, helpers: Joi.CustomHelpers) {
-    const original = String(helpers.original ?? value);
-    const fechaStr = original.slice(0, 10);
-
-    if (fechaStr < hoyEnChile()) {
-        return helpers.error("date.min");
-    }
-    return value;
-}
-
 export const integrityValidation = Joi.object({
     id_aporte: Joi.any().custom(idValidationFunction),
 
