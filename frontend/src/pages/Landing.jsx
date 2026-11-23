@@ -22,8 +22,8 @@ const accesos = [
     color: "bg-primary/10 text-primary",
   },
   {
-    titulo: "Aportes",
-    texto: "Consulta los aportes y su estado.",
+    titulo: "Movimientos",
+    texto: "Consulta los movimientos y su estado.",
     Icono: FaHandHoldingUsd,
     color: "bg-success/15 text-success",
   },
