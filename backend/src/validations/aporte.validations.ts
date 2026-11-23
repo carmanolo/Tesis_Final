@@ -55,8 +55,9 @@ export const integrityValidation = Joi.object({
 });
 
 export const createValidation = Joi.object({
-    descripcion_aporte: Joi.any().required().messages({
-        "any.required": NOMBRE_OBLIGATORIO,
+    descripcion_aporte: Joi.any().when("tipo", {
+        is: "egreso",
+        then: Joi.required().messages({ "any.required": NOMBRE_OBLIGATORIO }),
     }),
     fecha_aporte: Joi.any().required().messages({
         "any.required": APORTE_OBLIGATORIO,
