@@ -3,6 +3,16 @@ import { OPCIONES_DESCRIPCION } from "../constants/compromiso.constants.jsx";
 
 const STORAGE_KEY_DESCRIPCIONES = "compromiso_descripciones_custom";
 
+const compromisoVigenteDeAporte = (aporteId: number, compromisos: any[], excluirId?: number) =>
+    compromisos.find(
+        (c: any) =>
+            c.id_compromiso !== excluirId &&
+            (diasHasta(c.fecha_compromiso) ?? -1) >= 0 &&
+            (c.aportes ?? []).some(
+                (a: any) => Number(a.aporteId) === aporteId && (Number(a.monto_asignado) || 0) > 0,
+            ),
+    ) ?? null;
+
 export const getOpcionesDescripcionCompromiso = (): string[] => {
     try {
         const guardadas = JSON.parse(localStorage.getItem(STORAGE_KEY_DESCRIPCIONES) || "[]");
@@ -140,6 +150,7 @@ export const aportesAsignables = (aportes: any[], compromisos: any[], compromiso
 
     return aportes
         .filter((a: any) => a.tipo !== "egreso" && a.carreraId === compromiso?.carreraId)
+        .filter((a: any) => !compromisoVigenteDeAporte(a.id_aporte, compromisos, compromiso?.id_compromiso))
         .map((aporte: any) => {
             const asignadoAqui = propios.get(aporte.id_aporte) ?? 0;
             // Disponible = monto original - todo lo asignado en otros compromisos
@@ -166,8 +177,11 @@ export const compromisosAsignables = (compromisos: any[], aporte: any) => {
     }
     const disponibleAporte = Math.max((Number(aporte.monto) || 0) - totalAsignado, 0);
 
+    const bloqueo = compromisoVigenteDeAporte(aporte.id_aporte, compromisos);
+
     return compromisos
-        .filter((c: any) => c.carreraId === aporte.carreraId)
+        .filter((c: any) => c.carreraId === aporte.carreraId &&
+        (!bloqueo || c.id_compromiso === bloqueo.id_compromiso))
         .map((c: any) => {
             const asignadoAqui = (c.aportes ?? []).find((a: any) => Number(a.aporteId) === aporte.id_aporte);
             const montoAqui = asignadoAqui ? Number(asignadoAqui.monto_asignado) || 0 : 0;
