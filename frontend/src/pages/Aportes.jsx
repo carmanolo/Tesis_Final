@@ -96,10 +96,10 @@ const Aporte = () => {
     return (
         <div className="Clase-page w-full max-w-full overflow-x-hidden">
             <div className="flex gap-4 mb-4">
-                <h2 className="text-xl font-semibold">Aportes</h2>
+                <h2 className="text-xl font-semibold">Movimientos </h2>
                 {canCrudAportes && (
                     <button className="btn btn-primary ml-auto" onClick={() => setCreando(true)}>
-                        Crear Aporte
+                        Crear Movimiento
                     </button>
                 )}
             </div>
@@ -126,7 +126,7 @@ const Aporte = () => {
             <GraficoAportes aportes={aportes} />
 
             <div className="flex flex-wrap items-center justify-between gap-3 mt-6 mb-3">
-                <h3 className="text-lg font-semibold">Lista de aportes</h3>
+                <h3 className="text-lg font-semibold">Lista de movimientos</h3>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                     <input
                         type="text"
@@ -173,7 +173,7 @@ const Aporte = () => {
                                                 {egreso ? "Egreso" : "Ingreso"}
                                             </span>
                                         </td>
-                                        <td>{aporte.descripcion_aporte}</td>
+                                        <td>{aporte.descripcion_aporte || (egreso ? "—" : "No comprometido")}</td>
                                         <td>{aporte.procedencia}</td>
                                         <td className={`text-right ${egreso ? "text-error" : ""}`}>
                                             {egreso ? "-" : ""}

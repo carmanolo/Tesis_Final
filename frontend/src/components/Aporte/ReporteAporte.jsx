@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { useDownloadReporteAporte } from "../../hooks/aportes/useDownloadReporteAporte.jsx";
+import { FORMATOS } from "../../constants/aporte.constants.jsx";
 
-const FORMATOS = [
-    { id: "pdf", etiqueta: "PDF" },
-    { id: "excel", etiqueta: "Excel (.xlsx)" },
-];
 
 export const ReporteAporte = () => {
     const [formato, setFormato] = useState("pdf");

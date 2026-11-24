@@ -15,8 +15,8 @@ async function confirmDeleteAporte() {
 
 async function confirmAlert() {
     await Swal.fire({
-        title: "Aporte eliminado",
-        text: "El aporte ha sido eliminado correctamente",
+        title: "Movimiento eliminado",
+        text: "El movimiento ha sido eliminado correctamente",
         icon: "success",
         timer: 2000,
         showConfirmButton: false,
@@ -26,7 +26,7 @@ async function confirmAlert() {
 async function confirmError(mensaje) {
     await Swal.fire({
         title: "Error",
-        text: mensaje || "No se pudo eliminar el aporte",
+        text: mensaje || "No se pudo eliminar el movimiento",
         icon: "error",
         confirmButtonText: "Aceptar",
     });
@@ -47,7 +47,7 @@ export const useDeleteAporte = (fetchAportes) => {
             confirmAlert();
             return true;
         } catch (error) {
-            console.error("Error al eliminar aporte:", error);
+            console.error("Error al eliminar movimiento:", error);
             confirmError(error?.response?.data?.message);
             return false;
         }

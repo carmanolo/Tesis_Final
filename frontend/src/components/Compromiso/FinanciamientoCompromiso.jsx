@@ -47,11 +47,11 @@ export const FinanciamientoCompromiso = ({ compromiso, aportes, puedeGestionar, 
                         <li key={asignacion.aporteId} className="py-3 flex flex-wrap items-center gap-x-3 gap-y-1">
                             <div className="min-w-0 flex-1 basis-full sm:basis-0">
                                 <p className="font-medium break-words">
-                                    {aporte?.descripcion_aporte ?? `Aporte #${asignacion.aporteId}`}
+                                    {aporte?.procedencia ?? `Aporte #${asignacion.aporteId}`}
                                 </p>
                                 {aporte && (
                                     <p className="text-sm text-base-content/60">
-                                        {aporte.procedencia}, {formatearFechaDDMMAAAA(aporte.fecha_aporte)}
+                                        {formatearFechaDDMMAAAA(aporte.fecha_aporte)}
                                     </p>
                                 )}
                             </div>

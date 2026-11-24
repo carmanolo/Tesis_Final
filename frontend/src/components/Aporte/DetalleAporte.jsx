@@ -1,19 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatearFechaDDMMAAAA } from "../../utils/calendar.utils.js";
-import {
-    APORTE_DESCRIPCION_MIN,
-    APORTE_DESCRIPCION_MAX,
-    MONTO_MINIMO,
-    OPCIONES_TIPO,
-    PUEDE_CREAR_OTRO_APORTE,
-} from "../../constants/aporte.constants.jsx";
-import {
-    formatoCLP,
-    valoresIniciales,
-    getOpcionesDescripcionAporte,
-    guardarNuevaDescripcionAporte,
-    getOpcionesProcedenciaAporte,
-    guardarNuevaProcedenciaAporte,
+import { APORTE_DESCRIPCION_MIN, APORTE_DESCRIPCION_MAX, MONTO_MINIMO, OPCIONES_TIPO, PUEDE_CREAR_OTRO_APORTE} from "../../constants/aporte.constants.jsx";
+import { formatoCLP, valoresIniciales, getOpcionesDescripcionAporte, guardarNuevaDescripcionAporte, getOpcionesProcedenciaAporte, guardarNuevaProcedenciaAporte,
 } from "../../utils/aporte.utils.js";
 import { compromisosAsignables } from "../../utils/compromiso.utils.js";
 import { getUserRole } from "../../services/user.service.js";
@@ -21,17 +9,20 @@ import { getUserRole } from "../../services/user.service.js";
 const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedencia, otra_procedencia, monto, tipo }, puedeCrearOtro = false) => {
     const errores = {};
 
-    if (!descripcion_aporte) {
-        errores.descripcion_aporte = "Selecciona una descripción";
-    } else if (descripcion_aporte.toLowerCase() === "otro") {
-        if (!puedeCrearOtro) {
-            errores.descripcion_aporte = "No tienes permisos para registrar una nueva descripción";
-        } else {
-            const descripcionTrim = (otra_descripcion || "").trim();
-            if (!descripcionTrim) {
-                errores.descripcion_aporte = "Debes ingresar la nueva descripción";
-            } else if (descripcionTrim.length < APORTE_DESCRIPCION_MIN || descripcionTrim.length > APORTE_DESCRIPCION_MAX) {
-                errores.descripcion_aporte = `La descripción debe tener entre ${APORTE_DESCRIPCION_MIN} y ${APORTE_DESCRIPCION_MAX} caracteres`;
+    // La descripción solo se exige en egresos; los ingresos usan un valor fijo en el backend
+    if (tipo === "egreso") {
+        if (!descripcion_aporte) {
+            errores.descripcion_aporte = "Selecciona una descripción";
+        } else if (descripcion_aporte.toLowerCase() === "otro") {
+            if (!puedeCrearOtro) {
+                errores.descripcion_aporte = "No tienes permisos para registrar una nueva descripción";
+            } else {
+                const descripcionTrim = (otra_descripcion || "").trim();
+                if (!descripcionTrim) {
+                    errores.descripcion_aporte = "Debes ingresar la nueva descripción";
+                } else if (descripcionTrim.length < APORTE_DESCRIPCION_MIN || descripcionTrim.length > APORTE_DESCRIPCION_MAX) {
+                    errores.descripcion_aporte = `La descripción debe tener entre ${APORTE_DESCRIPCION_MIN} y ${APORTE_DESCRIPCION_MAX} caracteres`;
+                }
             }
         }
     }
@@ -49,7 +40,6 @@ const validar = ({ descripcion_aporte, otra_descripcion, fecha_aporte, procedenc
         }
     }
 
-    // El backend exige un entero >= MONTO_MINIMO
     const numero = Number(monto);
     if (!Number.isInteger(numero) || numero < MONTO_MINIMO) {
         errores.monto = `El monto debe ser un número entero de al menos ${formatoCLP.format(MONTO_MINIMO)}`;
@@ -170,6 +160,8 @@ export const DetalleAporte = ({
         setErrores(erroresForm);
         if (Object.keys(erroresForm).length > 0) return;
 
+        const esEgresoForm = form.tipo === "egreso";
+
         const descripcionFinal =
             form.descripcion_aporte.toLowerCase() === "otro"
                 ? form.otra_descripcion.trim()
@@ -180,10 +172,10 @@ export const DetalleAporte = ({
                 ? form.otra_procedencia.trim()
                 : form.procedencia.trim();
 
-        // Solo campos que el backend acepta
+        // Solo campos que el backend acepta; la descripción solo se envía en egresos
         const datos = {
-            descripcion_aporte: descripcionFinal,
-            fecha_aporte: form.fecha_aporte, 
+            ...(esEgresoForm && { descripcion_aporte: descripcionFinal }),
+            fecha_aporte: form.fecha_aporte,
             procedencia: procedenciaFinal,
             monto: Number(form.monto),
             tipo: form.tipo,
@@ -195,7 +187,7 @@ export const DetalleAporte = ({
 
         if (!ok) return;
 
-        if (form.descripcion_aporte.toLowerCase() === "otro" && puedeCrearOtro) {
+        if (esEgresoForm && form.descripcion_aporte.toLowerCase() === "otro" && puedeCrearOtro) {
             guardarNuevaDescripcionAporte(descripcionFinal);
             setOpcionesDescripcion(getOpcionesDescripcionAporte());
         }
@@ -207,16 +199,6 @@ export const DetalleAporte = ({
 
         if (esNuevo) onCerrar();
         else setEditando(false);
-    };
-
-    const handleCancelar = () => {
-        if (esNuevo) {
-            onCerrar();
-            return;
-        }
-        setForm(valoresIniciales(aporte));
-        setErrores({});
-        setEditando(false);
     };
 
     const handleEliminar = async () => {
@@ -233,6 +215,10 @@ export const DetalleAporte = ({
     );
 
     const etiquetaTipo = OPCIONES_TIPO.find((t) => t.id === (aporte?.tipo || "ingreso"))?.etiqueta;
+
+    // La descripción solo aplica a egresos (en edición sigue el tipo elegido en el formulario)
+    const tipoActual = editando ? form.tipo : (aporte?.tipo || "ingreso");
+    const mostrarDescripcion = tipoActual === "egreso";
 
     return (
         <div
@@ -252,7 +238,7 @@ export const DetalleAporte = ({
                 </button>
 
                 <h3 className="text-2xl font-bold text-center w-full mb-6">
-                    {esNuevo ? "Crear Aporte" : editando ? "Editar Aporte" : "Detalle Aporte"}
+                    {esNuevo ? "Crear Movimiento" : editando ? "Editar Movimiento" : "Detalle Movimiento"}
                 </h3>
 
                 <div className="space-y-4 mb-6">
@@ -272,7 +258,7 @@ export const DetalleAporte = ({
                             ))}
                         </select>
                     )}
-                    {campoTexto(
+                    {mostrarDescripcion && campoTexto(
                         "Descripción:",
                         "descripcion_aporte",
                         aporte?.descripcion_aporte,

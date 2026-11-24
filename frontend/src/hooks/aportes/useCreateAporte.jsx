@@ -13,13 +13,13 @@ export const useCreateAporte = (fetchAportes) => {
         try {
             const response = await createAporteService(aporteData);
             status = response?.status ?? 201;
-            mensaje = extraerMensaje(response) || "Aporte registrado exitosamente";
+            mensaje = extraerMensaje(response) || "Movimiento registrado exitosamente";
 
             if (typeof fetchAportes === "function") {
                 await fetchAportes();
             }
         } catch (error) {
-            console.error("Error al crear aporte:", error);
+            console.error("Error al crear movimiento:", error);
             status = error?.response?.status ?? 500;
             mensaje = extraerMensaje(error?.response) || "Error desconocido";
         }

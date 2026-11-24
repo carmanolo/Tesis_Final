@@ -15,7 +15,7 @@ export const usePatchAporte = (fetchAportes) => {
             const response = await patchAporteService(aporteId, aporteData);
             // Si el service no lanzó error, la edición fue exitosa (el backend responde 200)
             status = response?.status ?? 200;
-            mensaje = extraerMensaje(response) || "Aporte actualizado con éxito";
+            mensaje = extraerMensaje(response) || "Movimiento actualizado con éxito";
 
             if (typeof fetchAportes === "function") {
                 await fetchAportes();
