@@ -3,7 +3,7 @@ import type { Carrera } from "./carrera.entity.js";
 
 export interface Aporte {
     id_aporte: number;
-    descripcion_aporte: string;
+    descripcion_aporte: string | null;
     procedencia: string;
     monto: number;
     fecha_aporte: Date | string;
@@ -23,7 +23,7 @@ export const AporteEntity = new EntitySchema<Aporte>({
         },
         descripcion_aporte: {
             type: String,
-            nullable: false
+            nullable: true
         },
         procedencia: {
             type: String,
@@ -33,7 +33,6 @@ export const AporteEntity = new EntitySchema<Aporte>({
             type: Number,
             nullable: false
         },
-        // Fecha elegida por el usuario al registrar el aporte
         fecha_aporte: {
             type: "date",
             nullable: false

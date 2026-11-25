@@ -126,7 +126,9 @@ export const obtenerEstadoDescripcion = (descripcion: string) => {
 
 export const valoresIniciales = (aporte: any) => {
     const estadoProcedencia = obtenerEstadoProcedencia(aporte?.procedencia);
-    const estadoDescripcion = obtenerEstadoDescripcion(aporte?.descripcion_aporte);
+    const estadoDescripcion = obtenerEstadoDescripcion(
+        aporte?.tipo === "egreso" ? aporte.descripcion_aporte : ""
+    );
     return {
         descripcion_aporte: estadoDescripcion.descripcion_aporte,
         otra_descripcion: estadoDescripcion.otra_descripcion,

@@ -1,17 +1,28 @@
 import { AppDataSource } from "../config/configDb.js";
+import { In } from "typeorm";
 import CompromisoEntity, { Compromiso } from "../entity/compromiso.entity.js";
 import CompromisoAporteEntity from "../entity/compromisoAporte.entity.js";
 import AporteEntity from "../entity/aporte.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
 import { isAdminRole } from "../utils/user.utils.js";
 import { formatearMonto } from "../utils/aporte.utils.js";
-import { calcularResumenCompromiso } from "../utils/compromiso.utils.js";
+import { calcularResumenCompromiso, hoyChile, aISO } from "../utils/compromiso.utils.js";
 import type { CompromisoReporte } from "../utils/compromiso.utils.js";
+import { DESCRIPCION_INGRESO, DESCRIPCION_COMPROMETIDO } from "../constants/aporte.constants.js";
 
 const repo = () => AppDataSource.getRepository(CompromisoEntity as any);
 
 const sumaAsignada = (asignaciones: any[]) =>
     asignaciones.reduce((suma, a) => suma + (Number(a.monto_asignado) || 0), 0);
+
+async function sincronizarDescripcionAporte(manager: any, aporteId: number) {
+    const asignaciones = await manager.count(CompromisoAporteEntity as any, { where: { aporteId } });
+    await manager.update(
+        AporteEntity as any,
+        { id_aporte: aporteId },
+        { descripcion_aporte: asignaciones > 0 ? DESCRIPCION_COMPROMETIDO : DESCRIPCION_INGRESO },
+    );
+}
 
 // Agrega el resumen de financiamiento y evita exponer el hash de la contraseña del creador
 function conResumen(c: any) {
@@ -151,8 +162,10 @@ export async function deleteCompromisoSer(id_compromiso: number): Promise<any> {
                 where: { compromisoId: id_compromiso },
             })) as any[];
 
-            // No se modifica aporte.monto al eliminar: el disponible se calcula dinámicamente
             const result = await manager.delete(CompromisoEntity as any, { id_compromiso });
+            for (const aporteId of new Set(asignaciones.map((a) => a.aporteId))) {
+                await sincronizarDescripcionAporte(manager, Number(aporteId));
+            }
             return { result, message: "Compromiso eliminado exitosamente" };
         });
     } catch (error) {
@@ -220,6 +233,24 @@ export async function asignarAporteSer(
                 };
             }
 
+            const otras = todasLasAsignaciones.filter(
+                (a) => a.compromisoId !== compromisoId && (Number(a.monto_asignado) || 0) > 0,
+            );
+            if (otras.length > 0) {
+                const otrosCompromisos = (await manager.find(CompromisoEntity as any, {
+                    where: { id_compromiso: In(otras.map((a) => a.compromisoId)) },
+                })) as any[];
+                const hoy = hoyChile();
+                const vigente = otrosCompromisos.find((c) => aISO(c.fecha_compromiso) >= hoy);
+                if (vigente) {
+                    const [y, m, d] = aISO(vigente.fecha_compromiso).split("-");
+                    return { 
+                        data: null, 
+                        error: `Este aporte está comprometido con "${vigente.descripcion_compromiso}" hasta el ${d}/${m}/${y}`,
+                    };
+                }
+            }
+
             // El monto asociado al aporte asignado se calcula dinámicamente desde compromiso_aportes
 
             const guardado = await manager.save(
@@ -228,6 +259,7 @@ export async function asignarAporteSer(
                     ? { ...existente, monto_asignado: montoAsignado }
                     : { compromisoId, aporteId, monto_asignado: montoAsignado },
             );
+            await sincronizarDescripcionAporte(manager, aporteId);
             return { data: guardado, error: null, creada: !existente };
         });
     } catch (error) {
@@ -245,6 +277,7 @@ export async function desasignarAporteSer(compromisoId: number, aporteId: number
             if (!asignacion) return { result: null, message: "Aporte no asignado a este compromiso" };
 
             const result = await manager.delete(CompromisoAporteEntity as any, { compromisoId, aporteId });
+            await sincronizarDescripcionAporte(manager, aporteId);
             return { result, message: "Aporte quitado del compromiso" };
         });
     } catch (error) {

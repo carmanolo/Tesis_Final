@@ -53,7 +53,7 @@ export const DUSidebar = ({ PageContent, SidebarTitle }) => {
     },
     {
       icon: FaMoneyBillWave,
-      label: "Aportes",
+      label: "Movimientos",
       destination: "/aportes",
       iconColor: "text-[#16a34a]",
       roles: [ "presidente cee","vicepresidente cee", "secretario cee", "tesorero cee"]

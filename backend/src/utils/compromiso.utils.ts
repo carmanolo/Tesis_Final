@@ -303,3 +303,8 @@ export const processCompromisos = (compromisos: Compromiso[] | unknown): string[
 
     return processedCompromisos;
 }
+
+export const hoyChile = () =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "America/Santiago" }).format(new Date());
+
+export const aISO = (f: any) => (f instanceof Date ? f.toISOString() : String(f)).slice(0, 10);

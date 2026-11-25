@@ -11,17 +11,6 @@ function hoyEnChile(): string {
     }).format(new Date());
 }
 
-// Disponible por si se requiere impedir fechas pasadas; actualmente no se aplica a fecha_aporte
-export function fechaNoPasadaValidation(value: any, helpers: Joi.CustomHelpers) {
-    const original = String(helpers.original ?? value);
-    const fechaStr = original.slice(0, 10);
-
-    if (fechaStr < hoyEnChile()) {
-        return helpers.error("date.min");
-    }
-    return value;
-}
-
 export const integrityValidation = Joi.object({
     id_aporte: Joi.any().custom(idValidationFunction),
 
@@ -66,8 +55,9 @@ export const integrityValidation = Joi.object({
 });
 
 export const createValidation = Joi.object({
-    descripcion_aporte: Joi.any().required().messages({
-        "any.required": NOMBRE_OBLIGATORIO,
+    descripcion_aporte: Joi.any().when("tipo", {
+        is: "egreso",
+        then: Joi.required().messages({ "any.required": NOMBRE_OBLIGATORIO }),
     }),
     fecha_aporte: Joi.any().required().messages({
         "any.required": APORTE_OBLIGATORIO,

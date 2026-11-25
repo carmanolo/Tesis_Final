@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { getAportesSer, getAporteSer, createAporteSer, patchAporteSer, deleteAporteSer, getAportesReporteSer } from "../services/aporte.service.js";
 import { createValidation, integrityValidation, updateValidation } from "../validations/aporte.validations.js";
-import { FECHA_ISO } from "../constants/aporte.constants.js";
+import { FECHA_ISO, DESCRIPCION_INGRESO, DESCRIPCION_COMPROMETIDO } from "../constants/aporte.constants.js";
 import { calcularResumen, formatearFecha, generarExcelAportes, generarPdfAportes } from "../utils/aporte.utils.js";
 import { idValidation } from "../validations/modules/id.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
@@ -129,7 +129,20 @@ export async function patchAporteById(req: Request, res: Response): Promise<any>
 
     if (restData.monto !== undefined) restData.monto = Number(restData.monto);
 
+    const eraEgreso = Aporte.tipo === "egreso";
+
     Object.assign(Aporte, restData);
+
+    if (Aporte.tipo === "egreso") {
+    // Si pasa de ingreso a egreso, la descripción debe venir en la petición
+      const sinDescripcion = !eraEgreso && restData.descripcion_aporte === undefined;
+      if (sinDescripcion || !String(Aporte.descripcion_aporte ?? "").trim()) {
+        return handleErrorClient(res, 400, "La descripción es obligatoria para un egreso");
+      }
+    } else {
+      const sigueComprometido = !eraEgreso && Aporte.descripcion_aporte === DESCRIPCION_COMPROMETIDO;
+      Aporte.descripcion_aporte = sigueComprometido ? DESCRIPCION_COMPROMETIDO : DESCRIPCION_INGRESO;
+    }
 
     if (nuevaCarrera && esAdmin) {
       Aporte.carreraId = Number(nuevaCarrera);

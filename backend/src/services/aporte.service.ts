@@ -3,11 +3,9 @@ import { Between, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import AporteEntity from "../entity/aporte.entity.js";
 import CarreraEntity from "../entity/carrera.entity.js";
 import { isAdminRole } from "../utils/user.utils.js";
-
+import { DESCRIPCION_INGRESO } from "../constants/aporte.constants.js";
 
 const repo = () => AppDataSource.getRepository(AporteEntity as any);
-
-
 
 export async function createAporteSer(
     descripcion_aporte: string,
@@ -26,7 +24,7 @@ export async function createAporteSer(
         }
 
         const nueva = repo().create({
-            descripcion_aporte,
+            descripcion_aporte: tipo === "egreso" ? descripcion_aporte : DESCRIPCION_INGRESO,
             fecha_aporte,
             procedencia,
             monto,

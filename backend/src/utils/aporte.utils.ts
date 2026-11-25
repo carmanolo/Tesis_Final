@@ -1,20 +1,17 @@
 import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
-
-
 // Tipos
 
 export type TipoMovimiento = "ingreso" | "egreso";
 
 export interface AporteReporte {
     id_aporte: number;
-    descripcion_aporte: string;
+    descripcion_aporte: string | null;
     fecha_aporte: Date | string;
     procedencia: string;
     monto: number;
     tipo?: TipoMovimiento | string | null;
     comprobante?: string | null;
-    //fecha_recepcion?: Date | string | null;
 }
 
 export interface ResumenProcedencia {
@@ -90,6 +87,7 @@ export function formatearFecha(valor?: Date | string | null): string {
 // Los registros sin tipo (anteriores al cambio) se consideran ingresos.
 const esEgreso = (a: AporteReporte): boolean => a.tipo === "egreso";
 const etiquetaTipo = (a: AporteReporte): string => (esEgreso(a) ? "Egreso" : "Ingreso");
+const textoDescripcion = (a: AporteReporte): string => a.descripcion_aporte?.trim() || "-";
 
 // Devuelve el mes (YYYY-MM) de una fecha. Las fechas tipo "date" no se convierten por zona horaria.
 function mesDe(valor?: Date | string | null): string {
@@ -227,24 +225,23 @@ export async function generarExcelAportes(
         { key: "tipo", width: 12 },
         { key: "descripcion", width: 46 },
         { key: "procedencia", width: 28 },
-        { key: "recepcion", width: 20 },
         { key: "monto", width: 18 },
     ];
 
-    ws.mergeCells("A1:G1");
+    ws.mergeCells("A1:F1");
     const titulo = ws.getCell("A1");
     titulo.value = "Reporte de ingresos y egresos";
     titulo.font = { bold: true, size: 16, color: { argb: COLOR_PRIMARIO } };
     titulo.alignment = { horizontal: "center" };
 
-    ws.mergeCells("A2:G2");
+    ws.mergeCells("A2:F2");
     const subtitulo = ws.getCell("A2");
     subtitulo.value = `Generado el ${formatearFecha(new Date())}${opciones.periodo ? "  |  " + opciones.periodo : ""}`;
     subtitulo.font = { italic: true, size: 10, color: { argb: "FF595959" } };
     subtitulo.alignment = { horizontal: "center" };
 
     const cabecera = ws.getRow(4);
-    cabecera.values = ["N°", "Fecha", "Tipo", "Descripción", "Procedencia", "Fecha de recepción", "Monto (CLP)"];
+    cabecera.values = ["N°", "Fecha", "Tipo", "Descripción", "Procedencia", "Monto (CLP)"];
     cabecera.height = 22;
     cabecera.eachCell((celda) => {
         celda.font = { bold: true, color: { argb: "FFFFFFFF" } };
@@ -259,9 +256,8 @@ export async function generarExcelAportes(
             id: a.id_aporte,
             fecha: formatearFecha(a.fecha_aporte),
             tipo: etiquetaTipo(a),
-            descripcion: a.descripcion_aporte,
+            descripcion: textoDescripcion(a),
             procedencia: a.procedencia,
-            //recepcion: egreso ? "-" : a.fecha_recepcion ? formatearFecha(a.fecha_recepcion) : "Pendiente",
             monto: Number(a.monto) || 0,
         });
         fila.eachCell((celda) => {
@@ -272,7 +268,6 @@ export async function generarExcelAportes(
         fila.getCell("id").alignment = { horizontal: "center", vertical: "top" };
         fila.getCell("fecha").alignment = { horizontal: "center", vertical: "top" };
         fila.getCell("tipo").alignment = { horizontal: "center", vertical: "top" };
-        fila.getCell("recepcion").alignment = { horizontal: "center", vertical: "top" };
         if (egreso) {
             fila.getCell("tipo").font = { color: { argb: COLOR_EGRESO } };
             fila.getCell("monto").font = { color: { argb: COLOR_EGRESO } };
@@ -288,7 +283,7 @@ export async function generarExcelAportes(
         formula: string,
         resultado: number,
     ): ExcelJS.Row => {
-        const fila = ws.addRow({ recepcion: etiqueta });
+        const fila = ws.addRow({ procedencia: etiqueta });
         const celda = fila.getCell("monto");
         celda.value = hayDatos ? { formula, result: resultado } : 0;
         celda.numFmt = FORMATO_PESOS;
@@ -297,23 +292,23 @@ export async function generarExcelAportes(
             c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLOR_TOTAL } };
             c.border = bordeFino;
         });
-        fila.getCell("recepcion").alignment = { horizontal: "right" };
+        fila.getCell("procedencia").alignment = { horizontal: "right" };
         return fila;
     };
 
     const filaIng = agregarFilaTotal(
         "TOTAL INGRESOS",
-        `SUMIF(C${primeraFila}:C${ultimaFila},"Ingreso",G${primeraFila}:G${ultimaFila})`,
+        `SUMIF(C${primeraFila}:C${ultimaFila},"Ingreso",F${primeraFila}:F${ultimaFila})`,
         resumen.totalIngresos,
     );
     const filaEgr = agregarFilaTotal(
         "TOTAL EGRESOS",
-        `SUMIF(C${primeraFila}:C${ultimaFila},"Egreso",G${primeraFila}:G${ultimaFila})`,
+        `SUMIF(C${primeraFila}:C${ultimaFila},"Egreso",F${primeraFila}:F${ultimaFila})`,
         resumen.totalEgresos,
     );
     agregarFilaTotal(
         "BALANCE",
-        `G${filaIng.number}-G${filaEgr.number}`,
+        `F${filaIng.number}-F${filaEgr.number}`,
         resumen.balance,
     );
 
@@ -420,9 +415,8 @@ const COLUMNAS_PDF: ColumnaPdf[] = [
     { title: "N°", w: 28, align: "left" },
     { title: "Fecha", w: 58, align: "left" },
     { title: "Tipo", w: 48, align: "left" },
-    { title: "Descripción", w: 140, align: "left" },
-    { title: "Procedencia", w: 85, align: "left" },
-    { title: "Recepción", w: 58, align: "left" },
+    { title: "Descripción", w: 170, align: "left" },
+    { title: "Procedencia", w: 113, align: "left" },
     { title: "Monto", w: 98, align: "right" },
 ];
 const IDX_MONTO = COLUMNAS_PDF.length - 1;
@@ -509,9 +503,8 @@ export function generarPdfAportes(
                         String(a.id_aporte),
                         formatearFecha(a.fecha_aporte),
                         etiquetaTipo(a),
-                        a.descripcion_aporte ?? "",
+                        textoDescripcion(a),
                         a.procedencia ?? "",
-                        //egreso ? "-" : a.fecha_recepcion ? formatearFecha(a.fecha_recepcion) : "Pendiente",
                         formatearMonto(Number(a.monto) || 0),
                     ];
 

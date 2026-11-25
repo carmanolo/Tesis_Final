@@ -9,6 +9,7 @@ export const OPCIONES_DESCRIPCION = [
     "Aniversario Universidad",
     "Actividad del 18 de Septiembre",
     "Evento de Halloween",
+    "Cierre de fin de año",
     "Otro",
 ];
 
