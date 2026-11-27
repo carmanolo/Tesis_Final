@@ -12,6 +12,7 @@ import {
     CAMPOS_ADICIONALES,
     ERROR_CANTIDAD_INVALIDA,
 } from "../constants/compromiso.constants.js";
+import { fechaNoPasadaValidation } from "./reunion.validations.js";
 
 export const integrityValidation = Joi.object({
     id_compromiso: Joi.any().custom(idValidationFunction),
@@ -22,7 +23,7 @@ export const integrityValidation = Joi.object({
         "string.min": `La descripción del compromiso debe tener al menos ${MIN_DESCRIPCION_COMPROMISO} caracteres`,
         "string.max": `La descripción del compromiso no puede tener más de ${MAX_DESCRIPCION_COMPROMISO} caracteres`,
     }),
-    fecha_compromiso: Joi.date().iso().messages({
+    fecha_compromiso: Joi.date().custom(fechaNoPasadaValidation).iso().messages({
         "date.base": "La fecha del compromiso debe ser una fecha válida",
         "date.format": "La fecha del compromiso debe tener formato YYYY-MM-DD",
     }),
