@@ -6,7 +6,21 @@ import { valoresIniciales, resumenDe, getOpcionesDescripcionCompromiso, guardarN
 import { getUserRole } from "../../services/user.service.js";
 import { FinanciamientoCompromiso } from "./FinanciamientoCompromiso.jsx";
 
-const validar = ({ descripcion_compromiso, otra_descripcion, fecha_compromiso, monto_total }, financiado = 0) => {
+function parseFechaLocal(fechaStr) {
+    if (!fechaStr) return new Date();
+    const [year, month, day] = fechaStr.split("-").map(Number);
+    return new Date(year, month - 1, day);
+}
+
+function esFechaAnteriorAHoy(fechaStr) {
+    if (!fechaStr) return false;
+    const fecha = parseFechaLocal(fechaStr);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    return fecha < hoy;
+}
+
+const validar = ({ descripcion_compromiso, otra_descripcion, fecha_compromiso, monto_total }, financiado = 0, esNuevo = false) => {
     const errores = {};
 
     if (!descripcion_compromiso) {
@@ -20,7 +34,11 @@ const validar = ({ descripcion_compromiso, otra_descripcion, fecha_compromiso, m
         }
     }
 
-    if (!fecha_compromiso) errores.fecha_compromiso = "Selecciona una fecha";
+    if (!fecha_compromiso) {
+        errores.fecha_compromiso = "Selecciona una fecha";
+    } else if (esNuevo && esFechaAnteriorAHoy(fecha_compromiso)) {
+        errores.fecha_compromiso = "La fecha no puede ser anterior a hoy";
+    }
 
     const monto = Number(monto_total);
     if (!Number.isInteger(monto) || monto <= 10) {
@@ -79,7 +97,7 @@ export const DetalleCompromiso = ({ abierto, compromiso, compromisos, aportes, p
 
     const handleGuardar = async () => {
         const financiado = compromiso ? resumenDe(compromiso).totalFinanciado : 0;
-        const erroresForm = validar(form, financiado);
+        const erroresForm = validar(form, financiado, esNuevo);
         setErrores(erroresForm);
         if (Object.keys(erroresForm).length > 0) return;
 
@@ -189,7 +207,7 @@ export const DetalleCompromiso = ({ abierto, compromiso, compromisos, aportes, p
                         compromiso && formatearFechaDDMMAAAA(compromiso.fecha_compromiso),
                         <input
                             type="date"
-                            className="input input-bordered w-full"
+                            className={`input input-bordered w-full ${errores.fecha_compromiso ? "input-error" : ""}`}
                             value={form.fecha_compromiso}
                             onChange={cambiar("fecha_compromiso")}
                         />
