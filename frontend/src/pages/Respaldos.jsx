@@ -13,7 +13,6 @@ import { TarjetaRespaldo } from "../components/Respaldo/TarjetaRespaldo.jsx";
 import { DUPageBrowser } from "../components/daisyUI/DUPageBrowser.jsx";
 import { getUserRole } from "../services/user.service.js";
 import { PUEDE_GESTIONAR_PUBLICACION } from "../constants/respaldo.constants.jsx";
-import { getCompromisoId, getCompromisoTitulo } from "../utils/respaldo.utils.ts";
 
 const POSTS_PER_PAGE = 6;
 
@@ -53,17 +52,6 @@ const Respaldos = () => {
         }
     }, [fetchRespaldos, fetchCompromisoList]);
 
-    const opcionesCompromiso = useMemo(() => {
-        const lista = Array.isArray(compromisoList) ? compromisoList : [];
-        return lista
-            .filter((c) => Boolean(c) && (typeof c === "string" ? c.trim().length > 0 : typeof c === "object"))
-            .map((c) => ({
-                id: getCompromisoId(c),
-                titulo: getCompromisoTitulo(c),
-                raw: c,
-            }))
-            .filter((o) => o.id !== null);
-    }, [compromisoList]);
 
     const abrirCrear = () => {
         setRespaldoSeleccionado(null);
@@ -132,26 +120,6 @@ const Respaldos = () => {
                             Buscar
                         </button>
                     </div>
-
-                    {/* Selector de filtro por compromiso */}
-                    {opcionesCompromiso.length > 0 && (
-                        <select
-                            className="select select-bordered select-sm max-w-xs"
-                            value={compromisoFiltro}
-                            onChange={(e) => {
-                                setCompromisoFiltro(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                        >
-                            <option value="">Todos los compromisos</option>
-                            {opcionesCompromiso.map((opt) => (
-                                <option key={opt.id} value={opt.id}>
-                                    {opt.titulo}
-                                </option>
-                            ))}
-                        </select>
-                    )}
-
                     {(buscar || compromisoFiltro) && (
                         <button
                             className="btn btn-sm btn-outline"
